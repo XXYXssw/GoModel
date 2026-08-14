@@ -1,4 +1,4 @@
-.PHONY: all build run demo clean tidy mod-check frontend test test-race test-dashboard test-e2e test-integration test-contract test-all lint lint-fix fix fix-check record-api swagger docs-openapi install-tools perf-check perf-bench infra image seed-demo-data
+.PHONY: all build build-tray app run clean tidy mod-check frontend test test-race test-dashboard test-e2e test-integration test-contract test-all lint lint-fix fix fix-check swagger install-tools perf-check perf-bench infra image
 
 all: build
 
@@ -26,6 +26,7 @@ install-tools:
 
 build:
 	go build -ldflags '$(LDFLAGS)' -o bin/gomodel ./cmd/gomodel
+
 # Run the application.
 #
 # Built and exec'd rather than `go run`: `go run` exits 1 when it is
@@ -36,10 +37,6 @@ build:
 run:
 	go build -tags=swagger -ldflags '$(LDFLAGS)' -o bin/gomodel ./cmd/gomodel
 	LOG_LEVEL="$(LOG_LEVEL)" SWAGGER_ENABLED="$(SWAGGER_ENABLED)" exec ./bin/gomodel
-
-# Seed the local SQLite database and start GoModel with a populated dashboard.
-demo: seed-demo-data
-	$(MAKE) run GOMODEL_DEMO_MODE=true
 
 # Clean build artifacts
 clean:
@@ -62,11 +59,6 @@ infra:
 # Docker Compose: full stack (GoModel + Prometheus; builds app image when needed)
 image:
 	docker compose --profile app up -d
-
-# Seed rolling demo telemetry and dashboard configuration into SQLite.
-# Usage: SQLITE_PATH=data/gomodel.db make seed-demo-data
-seed-demo-data:
-	bash tools/seed-demo-data.sh
 
 # Run unit tests only
 test:
@@ -106,17 +98,6 @@ perf-check:
 perf-bench:
 	go test -bench=. -benchmem ./tests/perf/...
 
-# Record API responses for contract tests
-# Usage: OPENAI_API_KEY=sk-xxx make record-api
-record-api:
-	@echo "Recording OpenAI chat completion..."
-	go run ./cmd/recordapi -provider=openai -endpoint=chat \
-		-output=tests/contract/testdata/openai/chat_completion.json
-	@echo "Recording OpenAI models..."
-	go run ./cmd/recordapi -provider=openai -endpoint=models \
-		-output=tests/contract/testdata/openai/models.json
-	@echo "Done! Golden files saved to tests/contract/testdata/"
-
 swagger:
 	go run github.com/swaggo/swag/v2/cmd/swag init --generalInfo main.go \
 		--dir cmd/gomodel,internal \
@@ -125,20 +106,6 @@ swagger:
 		--parseDependency
 	@command -v node >/dev/null 2>&1 || { echo "node is required to build docs; install from https://nodejs.org" >&2; exit 1; }
 	node tools/swagger-postprocess.mjs cmd/gomodel/docs/docs.go
-	$(MAKE) docs-openapi
-
-docs-openapi:
-	@command -v node >/dev/null 2>&1 || { echo "node is required to build docs; install from https://nodejs.org" >&2; exit 1; }
-	@command -v npx >/dev/null 2>&1 || { echo "npx is required; install npm (includes npx)" >&2; exit 1; }
-	@tmp_dir=$$(mktemp -d); \
-	trap 'rm -rf "$$tmp_dir"' EXIT; \
-	go run github.com/swaggo/swag/v2/cmd/swag init --quiet --generalInfo main.go \
-		--dir cmd/gomodel,internal \
-		--output "$$tmp_dir" \
-		--outputTypes json \
-		--parseDependency; \
-	npx -y swagger2openapi@7.0.8 --patch -o docs/openapi.json "$$tmp_dir/swagger.json"; \
-	DOCS_API_SERVERS="$(DOCS_API_SERVERS)" node tools/openapi-postprocess.mjs docs/openapi.json
 
 # Run linter
 lint:

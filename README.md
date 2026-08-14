@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="GoModel logo" src="docs/logo.svg" width="96">
+  <img alt="GoModel logo" src="assets/logo.svg" width="96">
 </p>
 
 <h1 align="center">
@@ -26,12 +26,9 @@
   GoModel is the fastest and the most resource-efficient AI Gateway (<a href="https://gomodel.enterpilot.io/docs/about/benchmarks?utm_source=readme">the self-reproducible benchmarks</a>). It's an alternative to LiteLLM (which was hacked recently) and Portkey (which is no longer maintained on GitHub).
 </p>
 
-<a href="https://demo.enterpilot.io/admin/dashboard?utm_source=readme">
-  <img src="docs/2026-07-07_demo.gif" alt="GoModel AI gateway dashboard showing AI usage analytics, observability panel, token and costs tracking, and estimated cost monitoring" width="100%">
-</a>
-<p align="center">
-  (click on the animation ↑ to see the live demo)
-</p>
+Try the live demo: [demo.enterpilot.io/admin/dashboard](https://demo.enterpilot.io/admin/dashboard?utm_source=readme).
+
+The GoModel dashboard (usage analytics, observability, token and cost tracking) is included in the binary at `/admin/dashboard`; on macOS you can also run the menu-bar app with `make app`.
 
 <p>
   GoModel saves you money and nerves.

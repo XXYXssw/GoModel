@@ -42,8 +42,6 @@ Makefile
 Dockerfile
 .dockerignore
 docker-compose.yaml
-helm/
-prometheus.yml
 
 # ===================
 # IDE & Editor configs

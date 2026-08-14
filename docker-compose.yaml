@@ -1,5 +1,5 @@
 # Infra (redis, postgres, mongodb, adminer): `docker compose up -d`
-# App + Prometheus: `docker compose --profile app up -d`
+# App profile: `docker compose --profile app up -d`
 
 services:
   gomodel:
@@ -88,25 +88,7 @@ services:
       - postgres
     restart: unless-stopped
 
-  prometheus:
-    profiles:
-      - app
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--web.enable-lifecycle"
-    depends_on:
-      - gomodel
-    restart: unless-stopped
-
 volumes:
   redis_data:
   postgres_data:
   mongodb_data:
-  prometheus_data:
