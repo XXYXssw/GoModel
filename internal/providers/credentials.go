@@ -16,6 +16,16 @@ import (
 // credential row was not found.
 var ErrCredentialNotFound = errors.New("provider credential not found")
 
+// providerCredentialRefreshTimeout bounds how long a credential save waits for
+// the new provider's model-catalog refresh. The catalog fetch is best-effort:
+// an unreachable host must not leave the dashboard's save request hanging for
+// the full upstream HTTP client timeout (which was minutes on a dead dial).
+// 3s keeps the save snappy while still covering reachable providers (their
+// /models call usually answers in well under a second); a provider that misses
+// the bound stays registered and the background recheck loop loads its models
+// within the next refresh cycle. Kept as a var so tests can shorten it.
+var providerCredentialRefreshTimeout = 3 * time.Second
+
 // ManagedProviderCredential is one admin-managed provider instance: the
 // dashboard equivalent of a `providers.<name>:` entry in config.yaml. Name is
 // the configured provider instance name (what shows up as the qualifier in
@@ -267,14 +277,22 @@ func (s *CredentialsService) Upsert(ctx context.Context, cred ManagedProviderCre
 		s.install(name, provider, cfg)
 	} else {
 		s.registry.UnregisterProvider(name)
+		return nil
 	}
-	// A Refresh error here means the provider's /models call itself failed
-	// (bad key, unreachable host, ...) -- registration still succeeded, and
-	// the provider correctly shows Unhealthy on the status endpoint instead
-	// of silently vanishing. That is not a save failure: an admin fixing a
-	// typo'd API key should see "saved", not a scary error on every attempt
-	// until the key happens to be valid.
-	if err := s.registry.Refresh(ctx); err != nil {
+	// Refresh only this provider's catalog, with a bounded timeout. The old
+	// code refreshed every provider synchronously, so saving one credential
+	// blocked the dashboard request for the full upstream HTTP timeout when
+	// any provider's /models call hung (unreachable host, dead proxy, ...),
+	// leaving "卡住" and then a client-side save failure. A failure here means
+	// the new provider's /models call itself failed (bad key, unreachable
+	// host, ...) -- registration still succeeded, and the provider correctly
+	// shows Unhealthy on the status endpoint (the background recheck loop
+	// probes it) instead of silently vanishing. That is not a save failure:
+	// an admin fixing a typo'd API key should see "saved", not a scary error
+	// on every attempt until the key happens to be valid.
+	refreshCtx, cancel := context.WithTimeout(ctx, providerCredentialRefreshTimeout)
+	defer cancel()
+	if _, err := s.registry.RefreshProviderModels(refreshCtx, name); err != nil {
 		slog.Warn("provider credential saved but its model catalog refresh failed", "provider", name, "error", err)
 	}
 	return nil
@@ -290,12 +308,12 @@ func (s *CredentialsService) Delete(ctx context.Context, name string) error {
 	if err := s.store.Delete(ctx, name); err != nil {
 		return err
 	}
+	// UnregisterProvider removes the provider and its models from routing
+	// in-memory, so no network refresh is needed for the delete itself. The
+	// old synchronous full-registry Refresh here could hang the dashboard
+	// request whenever any remaining provider's /models call was unreachable;
+	// the background refresh loop keeps remaining providers' catalogs fresh.
 	s.registry.UnregisterProvider(name)
-	// See the matching comment in Upsert: a Refresh failure here reflects a
-	// remaining provider's own health, not whether the delete succeeded.
-	if err := s.registry.Refresh(ctx); err != nil {
-		slog.Warn("provider credential deleted but the model catalog refresh failed", "provider", name, "error", err)
-	}
 	return nil
 }
 

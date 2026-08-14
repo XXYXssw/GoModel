@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/enterpilot/gomodel/config"
 	"github.com/enterpilot/gomodel/internal/core"
@@ -196,6 +197,56 @@ func TestCredentialsService_UpsertSucceedsWhenTheProviderRejectsTheKey(t *testin
 	}
 	if registry.ProviderByName("bad-key") == nil {
 		t.Error("ProviderByName(bad-key) = nil, want registered even though model discovery failed")
+	}
+}
+
+// TestCredentialsService_UpsertDoesNotHangOnUnreachableProvider guards the
+// dashboard save path against a provider whose /models call never returns:
+// the save must complete (successfully persisting and registering the row)
+// once the bounded catalog-refresh timeout fires, instead of blocking the
+// HTTP request for the upstream client's full timeout.
+func TestCredentialsService_UpsertDoesNotHangOnUnreachableProvider(t *testing.T) {
+	ctx := t.Context()
+	oldTimeout := providerCredentialRefreshTimeout
+	providerCredentialRefreshTimeout = 150 * time.Millisecond
+	t.Cleanup(func() { providerCredentialRefreshTimeout = oldTimeout })
+
+	factory := NewProviderFactory()
+	factory.Add(Registration{
+		Type: "test",
+		New: func(cfg ProviderConfig, _ ProviderOptions) core.Provider {
+			return &registryMockProvider{
+				name:            cfg.Type,
+				listModelsDelay: time.Hour, // /models never answers; only ctx cancel unblocks it
+			}
+		},
+	})
+	registry := NewModelRegistry()
+	store := newFakeCredentialStore()
+	svc, err := NewCredentialsService(ctx, factory, registry, store, nil, config.ResilienceConfig{})
+	if err != nil {
+		t.Fatalf("NewCredentialsService() error = %v", err)
+	}
+
+	start := time.Now()
+	err = svc.Upsert(ctx, ManagedProviderCredential{
+		Name:    "unreachable",
+		Type:    "test",
+		APIKeys: []string{"sk-test"},
+		Enabled: true,
+	})
+	elapsed := time.Since(start)
+	if err != nil {
+		t.Fatalf("Upsert() error = %v, want nil (unreachable /models is not a save failure)", err)
+	}
+	if elapsed > 5*time.Second {
+		t.Fatalf("Upsert() took %v, want bounded by providerCredentialRefreshTimeout", elapsed)
+	}
+	if registry.ProviderByName("unreachable") == nil {
+		t.Error("ProviderByName(unreachable) = nil, want registered even though model discovery hung")
+	}
+	if _, err := store.Get(ctx, "unreachable"); err != nil {
+		t.Errorf("store.Get() after Upsert error = %v, want row persisted", err)
 	}
 }
 
