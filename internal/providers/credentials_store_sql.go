@@ -56,6 +56,7 @@ func NewSQLCredentialStore(ctx context.Context, db sqlx.DB) (*SQLCredentialStore
 	}
 	if err := sqlx.AddColumns(ctx, db,
 		`ALTER TABLE provider_credentials ADD COLUMN session_sticky_keys `+sqlx.TypeBool+` NOT NULL DEFAULT TRUE`,
+		`ALTER TABLE provider_credentials ADD COLUMN responses_mode TEXT NOT NULL DEFAULT ''`,
 	); err != nil {
 		return nil, fmt.Errorf("migrate provider_credentials: %w", err)
 	}
