@@ -3,6 +3,9 @@
 /recordapi
 /bin
 
+# Icon/asset build staging (make app regenerates it)
+/build
+
 # Environment variables
 /.env
 

@@ -27,6 +27,34 @@ install-tools:
 build:
 	go build -ldflags '$(LDFLAGS)' -o bin/gomodel ./cmd/gomodel
 
+# Build the menu-bar app binary (macOS/Windows/Linux tray). Requires cgo on
+# macOS; the server-only `build` target stays CGO-free for releases.
+build-tray:
+	go build -tags=swagger -ldflags '$(LDFLAGS)' -o bin/gomodel-tray ./cmd/gomodel-tray
+
+# Package the macOS menu-bar app: GoModel.app with LSUIElement=true so it runs
+# from the status bar without a Dock icon. Regenerates the iconset/icns from
+# the committed logo mark. Requires macOS tooling (iconutil, codesign).
+app: build-tray
+	@mkdir -p bin/GoModel.app/Contents/MacOS bin/GoModel.app/Contents/Resources
+	cp bin/gomodel-tray bin/GoModel.app/Contents/MacOS/gomodel
+	cp assets/GoModel.icns bin/GoModel.app/Contents/Resources/GoModel.icns
+	@printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' \
+	  '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">' \
+	  '<plist version="1.0"><dict>' \
+	  '<key>CFBundleExecutable</key><string>gomodel</string>' \
+	  '<key>CFBundleIdentifier</key><string>io.github.enterpilot.gomodel</string>' \
+	  '<key>CFBundleName</key><string>GoModel</string>' \
+	  '<key>CFBundleDisplayName</key><string>GoModel</string>' \
+	  '<key>CFBundleIconFile</key><string>GoModel</string>' \
+	  '<key>CFBundlePackageType</key><string>APPL</string>' \
+	  '<key>CFBundleShortVersionString</key><string>$(VERSION)</string>' \
+	  '<key>LSMinimumSystemVersion</key><string>11.0</string>' \
+	  '<key>LSUIElement</key><true/>' \
+	  '<key>NSHighResolutionCapable</key><true/>' \
+	  '</dict></plist>' > bin/GoModel.app/Contents/Info.plist
+	codesign --force --deep -s - bin/GoModel.app
+	@echo "Built bin/GoModel.app — open with: open bin/GoModel.app"
 # Run the application.
 #
 # Built and exec'd rather than `go run`: `go run` exits 1 when it is
