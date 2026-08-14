@@ -10,6 +10,7 @@
   import EditorDialog from "$lib/components/organisms/EditorDialog.svelte";
   import { mcpServers } from "./mcpServers.svelte.js";
   import { Plus, Trash2 } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 </script>
 
 <EditorDialog
@@ -25,41 +26,41 @@
     <p class="form-hint">The display name can change. The slug is the stable client-facing identity.</p>
   {/snippet}
 
-  <FormField id="mcp-server-name" label="Name">
+  <FormField id="mcp-server-name" label={t("common.name")}>
     <input
       id="mcp-server-name"
       type="text"
-      placeholder="Linear MCP"
+      placeholder={t("mcp.namePlaceholder")}
       bind:value={mcpServers.form.name}
       oninput={() => mcpServers.syncSlugFromName()}
       data-modal-autofocus
     />
-    <small class="form-hint">Human-readable and Unicode-friendly. You can change it later.</small>
+    <small class="form-hint">{t("mcp.nameHint")}</small>
   </FormField>
 
-  <FormField id="mcp-server-slug" label="Slug">
+  <FormField id="mcp-server-slug" label={t("mcp.slug")}>
     <input
       id="mcp-server-slug"
       type="text"
       class="mono"
-      placeholder="linear-mcp"
+      placeholder={t("mcp.slugPlaceholder")}
       bind:value={mcpServers.form.slug}
       oninput={() => mcpServers.markSlugEdited()}
       disabled={mcpServers.formMode === "edit"}
     />
     {#if mcpServers.formMode === "create"}
-      <small class="form-hint">Derived from the name. You may edit it before saving.</small>
+      <small class="form-hint">{t("mcp.slugHint")}</small>
     {:else}
       <small class="form-hint">Immutable because it is used in URLs, scope headers, and aggregated tool names.</small>
     {/if}
   </FormField>
 
-  <FormField id="mcp-server-transport" label="Transport">
+  <FormField id="mcp-server-transport" label={t("mcp.transport")}>
     <select id="mcp-server-transport" class="form-select" bind:value={mcpServers.form.transport}>
-      <option value="http">Streamable HTTP</option>
-      <option value="sse">SSE (legacy)</option>
+      <option value="http">{t("mcp.streamableHttp")}</option>
+      <option value="sse">{t("mcp.sse")}</option>
     </select>
-    <small class="form-hint">stdio servers are config-only: declare them in <code>config.yaml</code> under <code>mcp.servers</code>.</small>
+    <small class="form-hint">{t("mcp.stdioHint")} <code>config.yaml</code> under <code>mcp.servers</code>.</small>
   </FormField>
 
   <FormField id="mcp-server-url" label="URL">
@@ -73,7 +74,7 @@
   </FormField>
 
   <div class="form-field">
-    <span class="form-field-label">Headers</span>
+    <span class="form-field-label">{t("mcp.headers")}</span>
     <div class="vm-target-list">
       {#each mcpServers.form.headers as header, index (index)}
         <div class="vm-target-row">
@@ -108,10 +109,10 @@
         onclick={() => mcpServers.addHeader()}
       >
         <Icon icon={Plus} class="form-action-icon" />
-        <span>Add header</span>
+        <span>{t("mcp.addHeader")}</span>
       </button>
     </div>
-    <small class="form-hint">Sent only to the configured server origin. Saved values are shown as <code>***</code>; leave <code>***</code> unchanged to keep the stored value.</small>
+    <small class="form-hint">{t("mcp.headersHint")} <code>***</code>; leave <code>***</code> unchanged to keep the stored value.</small>
   </div>
 
   <div class="vm-status-row">
@@ -131,14 +132,14 @@
   >
     <summary>
       <span class="mcp-server-advanced-summary-copy">
-        <span class="mcp-server-advanced-title">Advanced settings</span>
-        <span class="form-hint">Description, access rules, and timeout</span>
+        <span class="mcp-server-advanced-title">{t("mcp.advanced")}</span>
+        <span class="form-hint">{t("mcp.advancedHint")}</span>
       </span>
     </summary>
 
     <div class="mcp-server-advanced-fields">
       <div class="form-field">
-        <label class="form-field-label" for="mcp-server-description">Description</label>
+        <label class="form-field-label" for="mcp-server-description">{t("common.description")}</label>
         <input
           id="mcp-server-description"
           type="text"
@@ -148,7 +149,7 @@
       </div>
 
       <div class="form-field">
-        <label class="form-field-label" for="mcp-server-allowed-tools">Allowed tools</label>
+        <label class="form-field-label" for="mcp-server-allowed-tools">{t("mcp.allowedTools")}</label>
         <input
           id="mcp-server-allowed-tools"
           type="text"
@@ -159,7 +160,7 @@
       </div>
 
       <div class="form-field">
-        <label class="form-field-label" for="mcp-server-disallowed-tools">Disallowed tools</label>
+        <label class="form-field-label" for="mcp-server-disallowed-tools">{t("mcp.disallowedTools")}</label>
         <input
           id="mcp-server-disallowed-tools"
           type="text"
@@ -170,7 +171,7 @@
       </div>
 
       <div class="form-field">
-        <label class="form-field-label" for="mcp-server-user-paths">User paths (empty means all)</label>
+        <label class="form-field-label" for="mcp-server-user-paths">{t("mcp.userPaths")}</label>
         <textarea
           id="mcp-server-user-paths"
           rows="4"
@@ -181,7 +182,7 @@
       </div>
 
       <div class="form-field">
-        <label class="form-field-label" for="mcp-server-tool-timeout">Tool timeout (seconds)</label>
+        <label class="form-field-label" for="mcp-server-tool-timeout">{t("mcp.toolTimeout")}</label>
         <input
           id="mcp-server-tool-timeout"
           type="number"

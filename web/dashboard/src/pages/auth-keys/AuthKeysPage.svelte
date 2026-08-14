@@ -11,6 +11,7 @@
   import AuthKeyLabelsEditor from "./AuthKeyLabelsEditor.svelte";
   import AuthKeyList from "./AuthKeyList.svelte";
   import { Plus } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   const PAGE = "auth-keys";
 
@@ -23,7 +24,7 @@
 
 <div>
   <div class="page-header">
-    <h2>API Keys</h2>
+    <h2>{t("authKeys.title")}</h2>
     <div class="page-header-controls">
       {#if store.available && !auth.authError}
         <button
@@ -35,14 +36,14 @@
           }}
         >
           <Icon icon={Plus} class="table-icon-svg" />
-          <span>Create API Key</span>
+          <span>{t("authKeys.createKey")}</span>
         </button>
       {/if}
     </div>
   </div>
 
   {#if !store.available && !auth.authError}
-    <div class="alert alert-warning">API key management is unavailable.</div>
+    <div class="alert alert-warning">{t("authKeys.unavailable")}</div>
   {/if}
   {#if store.error && !auth.authError && !store.formOpen}
     <p class="form-error" role="alert" aria-live="assertive">{store.error}</p>
@@ -60,7 +61,7 @@
 
   {#if store.loading && store.keys.length === 0}
     <div class="auth-keys-loading">
-      <Spinner size={18} label="Loading API keys" />
+      <Spinner size={18} label={t("authKeys.loading")} />
     </div>
   {/if}
 
@@ -68,8 +69,8 @@
     <div class="table-toolbar">
       <div class="table-toolbar-main">
         <FilterInput
-          placeholder="Filter by name, description, user path, label, or token..."
-          label="Filter API keys by name, description, user path, label, or token"
+          placeholder={t("authKeys.filterPlaceholder")}
+          label={t("authKeys.filterLabel")}
           bind:value={store.filter}
         />
       </div>
@@ -98,7 +99,7 @@
   {/if}
 
   {#if store.keys.length === 0 && !store.loading && !auth.authError && !store.error && store.available}
-    <p class="empty-state">No API keys yet. Issue a key to get started.</p>
+    <p class="empty-state">{t("authKeys.empty")}</p>
   {/if}
 </div>
 

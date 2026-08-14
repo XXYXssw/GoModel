@@ -1,6 +1,7 @@
 <script>
   // Daily/weekly/monthly/yearly token usage chart with the interval picker.
   import ChartCanvas from "$lib/components/molecules/ChartCanvas.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import Spinner from "$lib/components/atoms/Spinner.svelte";
   import NoDataIllustration from "$lib/components/atoms/NoDataIllustration.svelte";
   import SegmentedControl from "$lib/components/atoms/SegmentedControl.svelte";
@@ -63,7 +64,7 @@
     <ChartCanvas build={buildChart} />
     {#if usageData.daily.length === 0 && usageData.loading}
       <div class="chart-empty-overlay">
-        <Spinner size={24} label="Loading usage" />
+        <Spinner size={24} label={t("overview.loadingUsage")} />
       </div>
     {:else if usageData.daily.length === 0 && !auth.authError}
       <div class="chart-empty-overlay">

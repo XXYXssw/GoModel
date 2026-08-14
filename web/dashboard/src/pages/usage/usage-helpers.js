@@ -2,6 +2,7 @@
 // Kept free of Svelte/DOM dependencies so node:test can exercise it.
 
 import { formatCost, formatNumber, formatTokensShort } from "../../lib/utils/format.js";
+import { t } from "../../lib/i18n/core.js";
 
 // emptyUsagePageSummary: the filtered usage-page summaries carry the cache
 // split and rewrite-savings fields on top of the shared totals.
@@ -123,7 +124,7 @@ export function rewriteCostSaved(summary) {
 // Keep the estimator disclosure in one helper so every future surface uses
 // the same wording as the Pro compressor's net-characters / 4 calculation.
 export function rewriteTokenEstimateMethodText() {
-  return "Estimated at 4 net characters removed per token";
+  return t("usage.estimatedChars");
 }
 
 // Card value: priced savings in costs mode, removed prompt tokens otherwise.
@@ -167,12 +168,12 @@ export function proSavedTitle(summary, mode) {
   const lines = [
     formatNumber(tokens) + " estimated prompt token-transmissions removed across provider requests",
     rewriteTokenEstimateMethodText(),
-    "Savings are summed per provider request; resent conversation history is counted again",
+    t("usage.savingsSummed"),
   ];
   const cost = rewriteCostSaved(summary);
   if (cost !== null && cost !== undefined) {
     lines.push(formatCost(cost) + " estimated gross input cost avoided");
-    lines.push("Prompt-cache changes caused by rewriting are not included");
+    lines.push(t("usage.promptCacheChanges"));
   }
   const pct = proSavedPercentText(summary, mode);
   if (pct) {
@@ -197,9 +198,9 @@ export function usesResponseCostPricing(entry) {
 export function costSourceTooltip(entry) {
   switch (costSource(entry)) {
     case "openrouter_credits":
-      return "Costs from OpenRouter USD-based credits.";
+      return t("usage.openrouterCredits");
     case "xai_cost_in_usd_ticks":
-      return "Costs from xAI usage.cost_in_usd_ticks.";
+      return t("usage.xaiTicks");
     default:
       return "";
   }
@@ -218,15 +219,15 @@ export function usageEntryCached(entry) {
 
 export function usageEntryCacheLabel(entry) {
   const type = usageEntryCacheType(entry);
-  if (type === "exact") return "Exact";
-  if (type === "semantic") return "Semantic";
+  if (type === "exact") return t("usage.exact");
+  if (type === "semantic") return t("usage.semantic");
   return "-";
 }
 
 export function cachedCostTitle(entry, baseTitle) {
   const base = baseTitle ? String(baseTitle) : "";
   if (!usageEntryCached(entry)) return base;
-  const prefix = "Saved by cache — not charged";
+  const prefix = t("usage.savedByCache");
   return base ? prefix + "\n" + base : prefix;
 }
 
@@ -265,8 +266,8 @@ export function formatCostTooltip(entry) {
     lines.push(costSourceTooltip(entry));
     lines.push("");
   }
-  lines.push("Input: " + formatCost(entry.input_cost));
-  lines.push("Output: " + formatCost(entry.output_cost));
+  lines.push(t("usage.inputLabel", { cost: formatCost(entry.input_cost) }));
+  lines.push(t("usage.outputLabel", { cost: formatCost(entry.output_cost) }));
   if (entry.raw_data) {
     lines.push("");
     for (const [key, value] of Object.entries(entry.raw_data)) {
@@ -373,7 +374,7 @@ export function divergingDataFrom(items, labelFor, costs) {
   const localOuts = top.map(localOutputOf);
 
   if (rest.length > 0) {
-    labels.push("Other");
+    labels.push(t("usage.other"));
     const sum = (of) => rest.reduce((total, row) => total + of(row), 0);
     inputs.push(sum(inputOf));
     outputs.push(sum(outputOf));

@@ -1,6 +1,7 @@
 <script>
-  // Requests by Status + Provider Latency charts fed by /admin/audit/stats.
+  // {t("overview.requestsByStatus")} + {t("overview.providerLatency")} charts fed by /admin/audit/stats.
   import ChartCanvas from "$lib/components/molecules/ChartCanvas.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import InlineHelpSection from "$lib/components/molecules/InlineHelpSection.svelte";
   import { chartColors, resolveCssColor as resolveColor } from "$lib/utils/chartTheme.js";
   import { formatNumber } from "$lib/utils/format.js";
@@ -40,13 +41,13 @@
 {#if auditStatsHasData(stats)}
   <div class="model-chart-section audit-stats-section">
     <div class="model-chart-header audit-stats-header">
-      <h3>Requests by Status</h3>
-      <div class="audit-stats-kpis" role="group" aria-label="Request status summary">
+      <h3>{t("overview.requestsByStatus")}</h3>
+      <div class="audit-stats-kpis" role="group" aria-label={t("overview.requestStatusSummary")}>
         <span
           class="audit-stats-kpi"
-          title="Share of requests answered with a 2xx status"
+          title={t("overview.share2xx")}
         >
-          <span class="audit-stats-kpi-label">Success</span>
+          <span class="audit-stats-kpi-label">{t("overview.success")}</span>
           <span class="audit-stats-kpi-value mono"
           >{auditStatsSuccessRateText(stats)}</span>
         </span>
@@ -86,17 +87,17 @@
       <div class="model-chart-header audit-stats-header">
         <InlineHelpSection
           copyId="audit-latency-help-copy"
-          label="provider latency help"
+          label={t("overview.providerLatencyHelpLabel")}
           text={LATENCY_HELP_TEXT}
         >
-          {#snippet title()}<h3>Provider Latency</h3>{/snippet}
+          {#snippet title()}<h3>{t("overview.providerLatency")}</h3>{/snippet}
         </InlineHelpSection>
         <div class="audit-stats-kpis">
           <span
             class="audit-stats-kpi"
-            title="Average duration of successful, uncached requests across all providers"
+            title={t("overview.avgDurationHelp")}
           >
-            <span class="audit-stats-kpi-label">Avg</span>
+            <span class="audit-stats-kpi-label">{t("overview.avg")}</span>
             <span class="audit-stats-kpi-value mono"
             >{auditStatsAvgLatencyText(stats)}</span>
           </span>
@@ -118,7 +119,7 @@
 {/if}
 
 <style>
-  /* Audit stats charts (Requests by Status / Provider Latency) */
+  /* Audit stats charts ({t("overview.requestsByStatus")} / {t("overview.providerLatency")}) */
   /* The Activity calendar above only spaces itself upward, so these sections
      bring their own top margin; between the two charts it collapses with the
      24px bottom margin into a single gap. */

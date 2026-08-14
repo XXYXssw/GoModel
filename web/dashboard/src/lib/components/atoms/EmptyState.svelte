@@ -2,8 +2,9 @@
   // Empty-table / empty-list placeholder.
   import Icon from "./Icon.svelte";
   import { Inbox } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
-  let { icon = Inbox, title = "No data", hint = "", children } = $props();
+  let { icon = Inbox, title = t("common.noData"), hint = "", children } = $props();
 </script>
 
 <div class="empty-state">

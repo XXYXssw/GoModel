@@ -1,9 +1,10 @@
 <script>
   // The workflow-id pill in the pipeline chart's top-right corner. Collapsed
-  // to "id: ..." until hovered/focused, and click-to-copy.
+  // to "{t("workflows.id")}: ..." until hovered/focused, and click-to-copy.
   import Icon from "$lib/components/atoms/Icon.svelte";
   import { createCopyState } from "$lib/utils/clipboard.svelte.js";
   import { Copy } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   let { workflowID = "" } = $props();
 
@@ -41,7 +42,7 @@
   aria-label={ariaLabel}
   onclick={copy}
 >
-  <span class="workflow-pipeline-meta-label">id:</span>
+  <span class="workflow-pipeline-meta-label">{t("workflows.id")}:</span>
   <span class="workflow-pipeline-meta-placeholder">...</span>
   <span class="workflow-pipeline-meta-value">{workflowID}</span>
   <span class="workflow-pipeline-meta-icon" aria-hidden="true">

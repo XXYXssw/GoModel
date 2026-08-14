@@ -7,6 +7,7 @@
   import { runtimeConfig } from "$lib/stores/runtimeConfig.svelte.js";
   import { liveLogs } from "./liveLogs.svelte.js";
   import { auditLivePauseMessage } from "./live-logs-logic.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   const pauseReason = $derived(liveLogs.auditLivePauseReason());
   const live = $derived(liveLogs.liveLogsStreaming && !pauseReason);
@@ -16,11 +17,11 @@
   <span class="audit-live-status" role="status">
     <span class="live-dot" class:is-streaming={live} aria-hidden="true"></span>
     {#if !liveLogs.liveLogsStreaming}
-      <span class="audit-live-status-text">Live stream connecting…</span>
+      <span class="audit-live-status-text">{t("audit.liveConnecting")}</span>
     {:else if pauseReason}
       <span class="audit-live-status-text">{auditLivePauseMessage(pauseReason)}</span>
     {:else}
-      <span class="audit-live-status-text is-live">Live</span>
+      <span class="audit-live-status-text is-live">{t("audit.live")}</span>
     {/if}
   </span>
 {/if}

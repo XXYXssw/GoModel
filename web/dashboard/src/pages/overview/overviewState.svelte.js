@@ -3,6 +3,7 @@
 // activity-calendar data.
 
 import { getJSON, isAbortError } from "$lib/api/client.js";
+import { t } from "$lib/i18n/i18n.svelte.js";
 import { dateRange } from "$lib/stores/dateRange.svelte.js";
 import { runtimeConfig } from "$lib/stores/runtimeConfig.svelte.js";
 import {
@@ -58,7 +59,7 @@ class ProviderStatusState {
   }
 
   detailsToggleLabel() {
-    return this.detailsExpanded ? "Show Details" : "Hide Details";
+    return this.detailsExpanded ? t("overview.hideDetails") : t("overview.showDetails");
   }
 
   async fetch() {

@@ -3,6 +3,7 @@
 // exercise it directly; the failover store delegates here.
 
 import { qualifiedModelName } from "./virtualModelsLogic.js";
+import { t } from "../../lib/i18n/core.js";
 
 export { qualifiedModelName };
 
@@ -33,7 +34,7 @@ export function failoverTargetLabel(rule) {
 
 export function failoverRuleStatus(rule) {
   if (rule && rule.enabled === false) return "Off";
-  if (rule && rule.managed) return "Config";
+  if (rule && rule.managed) return t("vm.config");
   return "On";
 }
 
@@ -65,7 +66,7 @@ export function failoverButtonClass(rules, row) {
 
 export function failoverButtonLabel(rules, row) {
   const label = row && row.display_name ? row.display_name : "model";
-  const base = "Edit failover for " + label;
+  const base = t("failover.editFor", { label });
   return hasActiveFailoverMapping(rules, row) ? base + " (active)" : base;
 }
 

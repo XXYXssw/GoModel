@@ -2,6 +2,7 @@
   // Request log: paginated per-request usage entries following the page's
   // window and facet filters.
   import Icon from "$lib/components/atoms/Icon.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import NoDataIllustration from "$lib/components/atoms/NoDataIllustration.svelte";
   import Spinner from "$lib/components/atoms/Spinner.svelte";
   import FilterInput from "$lib/components/molecules/FilterInput.svelte";
@@ -64,12 +65,12 @@
 {/snippet}
 
 <div class="usage-log-section">
-  <h3>Request Log</h3>
+  <h3>{t("usage.requestLog")}</h3>
   <div class="usage-log-toolbar">
     <div class="usage-filter-row usage-filter-row-search">
       <FilterInput
-        placeholder="Search by request ID, model, provider..."
-        label="Search by request ID, model, provider"
+        placeholder={t("usage.searchPlaceholder")}
+        label={t("usage.searchLabel")}
         bind:value={usagePage.usageLogSearch}
         oninput={onSearchInput}
       />
@@ -81,7 +82,7 @@
           bind:checked={usagePage.usageLogHideCached}
           onchange={() => usagePage.fetchUsageLog(true)}
         />
-        <span>Hide cached requests</span>
+        <span>{t("usage.hideCached")}</span>
       </label>
     </div>
   </div>
@@ -90,20 +91,20 @@
       <table class="data-table usage-log-table">
         <thead>
           <tr>
-            <th>Timestamp</th>
-            <th>Provider</th>
-            <th>Model</th>
-            <th>User Path</th>
+            <th>{t("usage.timestamp")}</th>
+            <th>{t("usage.provider")}</th>
+            <th>{t("usage.model")}</th>
+            <th>{t("usage.userPath")}</th>
             {#if hasLabels}
-              <th>Labels</th>
+              <th>{t("usage.labels")}</th>
             {/if}
-            <th>Cache</th>
-            <th title="Share of input tokens served from the provider's prompt cache">Provider Cache</th>
+            <th>{t("usage.cache")}</th>
+            <th title={t("usage.providerCacheHint")}>{t("usage.providerCache")}</th>
             <th class="col-price">{costsMode ? "Input Cost" : "Input"}</th>
             <th class="col-price">{costsMode ? "Output Cost" : "Output"}</th>
             <th class="col-price">{costsMode ? "Total Cost" : "Total"}</th>
             {#if !costsMode}
-              <th class="col-price">Cost</th>
+              <th class="col-price">{t("usage.cost")}</th>
             {/if}
           </tr>
         </thead>
@@ -193,7 +194,7 @@
   {:else if usagePage.usageLogLoading}
     <!-- Loading affordance while the log fetch is in flight. -->
     <div class="empty-state usage-log-loading">
-      <Spinner size={20} label="Loading request log" />
+      <Spinner size={20} label={t("usage.loadingLog")} />
     </div>
   {:else}
     <div class="empty-state">

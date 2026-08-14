@@ -1,6 +1,7 @@
 <script>
-  // Pricing override editor (EditorDialog shell).
+  // {t("pricing.override")} editor (EditorDialog shell).
   import TableActionButton from "$lib/components/atoms/TableActionButton.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import EditorDialog from "$lib/components/organisms/EditorDialog.svelte";
   import FormField from "$lib/components/molecules/FormField.svelte";
   import Icon from "$lib/components/atoms/Icon.svelte";
@@ -13,21 +14,21 @@
 
 <EditorDialog
   open={po.modelPricingOverrideFormOpen}
-  ariaLabel="Model pricing editor"
+  ariaLabel={t("pricing.editorAria")}
   dialogClass="model-pricing-editor"
   error={po.modelPricingOverrideError}
   submitting={po.modelPricingOverrideSubmitting}
-  submitLabel="Save Pricing"
+  submitLabel={t("pricing.savePricing")}
   onclose={() => po.closeModelPricingOverrideForm()}
   onsubmit={() => po.submitModelPricingOverrideForm()}
 >
   {#snippet header()}
-    <p class="form-kicker">Pricing override</p>
-    <h3>{po.modelPricingOverrideFormDisplayName || po.modelPricingOverrideForm.selector || "Pricing"}</h3>
+    <p class="form-kicker">{t("pricing.override")}</p>
+    <h3>{po.modelPricingOverrideFormDisplayName || po.modelPricingOverrideForm.selector || t("pricing.title")}</h3>
   {/snippet}
 
   <div class="form-grid">
-    <FormField id="model-pricing-override-selector" label="Selector">
+    <FormField id="model-pricing-override-selector" label={t("pricing.selector")}>
       <input
         id="model-pricing-override-selector"
         type="text"
@@ -38,7 +39,7 @@
     </FormField>
 
     {#if po.modelPricingOverrideFormScopeOptions.length > 1}
-      <FormField id="model-pricing-override-scope" label="Scope">
+      <FormField id="model-pricing-override-scope" label={t("pricing.scope")}>
         <select
           id="model-pricing-override-scope"
           class="form-select"
@@ -62,7 +63,7 @@
     {#each po.modelPricingOverrideRows as row (row.id)}
       <div class="pricing-override-row">
         <div class="form-field pricing-override-type-field">
-          <label class="form-field-label" for={"pricing-type-" + row.id}>Price Type</label>
+          <label class="form-field-label" for={"pricing-type-" + row.id}>{t("pricing.priceType")}</label>
           <select
             id={"pricing-type-" + row.id}
             class="form-select"
@@ -75,7 +76,7 @@
           </select>
         </div>
         <div class="form-field pricing-override-value-field">
-          <label class="form-field-label" for={"pricing-value-" + row.id}>USD Value</label>
+          <label class="form-field-label" for={"pricing-value-" + row.id}>{t("pricing.usdValue")}</label>
           <input
             id={"pricing-value-" + row.id}
             type="number"
@@ -86,7 +87,7 @@
           />
         </div>
         <TableActionButton
-          label={"Remove " + po.pricingFieldLabel(row.field)}
+          label={t("common.remove") + " " + po.pricingFieldLabel(row.field)}
           class="table-action-btn-danger table-icon-btn pricing-override-remove-row"
           onclick={() => po.removeModelPricingOverrideRow(row)}
         >
@@ -103,7 +104,7 @@
       onclick={() => po.addModelPricingOverrideRow()}
     >
       <Icon icon={Plus} class="form-action-icon" />
-      <span>Add Price</span>
+      <span>{t("pricing.addPrice")}</span>
     </button>
   </div>
 
@@ -116,12 +117,12 @@
 
   <div class="pricing-preview">
     <div class="pricing-preview-header">
-      <span>Price Type</span>
+      <span>{t("pricing.priceType")}</span>
       <span>USD</span>
-      <span>Source</span>
+      <span>{t("pricing.source")}</span>
     </div>
     {#if po.modelPricingEffectivePreviewRows().length === 0}
-      <div class="pricing-preview-row pricing-preview-row-empty">No pricing fields set.</div>
+      <div class="pricing-preview-row pricing-preview-row-empty">{t("pricing.noFields")}</div>
     {/if}
     {#each po.modelPricingEffectivePreviewRows() as row (row.field)}
       <div class="pricing-preview-row">

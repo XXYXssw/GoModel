@@ -2,6 +2,7 @@
   // Budget editor modal (EditorDialog shell) + the "override existing budget"
   // confirmation dialog.
   import DialogCloseButton from "$lib/components/atoms/DialogCloseButton.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import Modal from "$lib/components/atoms/Modal.svelte";
   import Icon from "$lib/components/atoms/Icon.svelte";
   import EditorDialog from "$lib/components/organisms/EditorDialog.svelte";
@@ -36,7 +37,7 @@
   onsubmit={() => store.submitForm()}
 >
   <div class="form-grid">
-    <FormField id="budget-scope" label="Scope">
+    <FormField id="budget-scope" label={t("budgets.scope")}>
       <select
         id="budget-scope"
         class="form-select settings-select"
@@ -61,7 +62,7 @@
         data-modal-autofocus={!store.editing || undefined}
       />
     </FormField>
-    <FormField id="budget-period" label="Period">
+    <FormField id="budget-period" label={t("budgets.period")}>
       <select
         id="budget-period"
         class="form-select settings-select"
@@ -75,7 +76,7 @@
       </select>
     </FormField>
     {#if store.form.period === "custom"}
-      <FormField id="budget-period-seconds" label="Period Seconds">
+      <FormField id="budget-period-seconds" label={t("budgets.periodSeconds")}>
         <input
           id="budget-period-seconds"
           class="form-input"
@@ -87,7 +88,7 @@
         />
       </FormField>
     {/if}
-    <FormField id="budget-amount" label="Amount">
+    <FormField id="budget-amount" label={t("budgets.amount")}>
       <input
         id="budget-amount"
         class="form-input"
@@ -121,9 +122,9 @@
     aria-describedby="budgetOverrideDialogDescription"
   >
     <div class="auth-dialog-header">
-      <h2 id="budgetOverrideDialogTitle">Override Existing Budget</h2>
+      <h2 id="budgetOverrideDialogTitle">{t("budgets.overrideExisting")}</h2>
       <DialogCloseButton
-        label="Close budget override dialog"
+        label={t("budgets.closeEditor")}
         onclick={() => store.closeOverrideDialog()}
         class="auth-dialog-close"
         iconClass=""
@@ -147,7 +148,7 @@
           type="button"
           class="btn"
           data-modal-autofocus
-          onclick={() => store.closeOverrideDialog()}>Cancel</button
+          onclick={() => store.closeOverrideDialog()}>{t("common.cancel")}</button
         >
         <button
           type="submit"

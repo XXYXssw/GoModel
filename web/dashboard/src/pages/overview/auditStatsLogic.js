@@ -2,6 +2,7 @@
 // so bucketing, labels, and chart configs are testable with node.
 
 import { barColors, chartTickFont, chartTooltip } from "../../lib/utils/chartTheme.js";
+import { t } from "../../lib/i18n/core.js";
 import { formatTokensShort } from "../../lib/utils/format.js";
 
 export function emptyAuditStats() {
@@ -162,7 +163,7 @@ export function auditStatusChartConfig(colors, buckets, options = {}) {
   ];
   if (buckets.some((b) => num(b.status_other) > 0)) {
     datasets.push(
-      bar("Other", buckets.map((b) => num(b.status_other)), statusColors.other),
+      bar(t("overview.other"), buckets.map((b) => num(b.status_other)), statusColors.other),
     );
   }
   return {
@@ -191,7 +192,7 @@ export function auditStatusChartConfig(colors, buckets, options = {}) {
             items.forEach((it) => {
               total += Number(it.parsed.y) || 0;
             });
-            return "Total: " + total.toLocaleString();
+            return t("overview.chartTotal", { total: total.toLocaleString() });
           },
         }),
       },

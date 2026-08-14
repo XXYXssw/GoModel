@@ -3,6 +3,7 @@
 // servers are configured.
 
 import { mcpServerStatus } from "../mcp-servers/mcp-servers.js";
+import { t } from "../../lib/i18n/core.js";
 
 export { mcpServerStatus };
 
@@ -55,7 +56,7 @@ export function mcpOverviewSummaryText(servers) {
   const total = mcpOverviewTotal(servers);
   const connected = mcpOverviewConnectedCount(servers);
   if (total > 0 && connected === total) {
-    return "All MCP servers connected";
+    return t("overview.allMcpConnected");
   }
   return (
     String(connected) +

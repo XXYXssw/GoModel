@@ -1,7 +1,8 @@
 <script>
-  // Tokens cache meter: share of input tokens over the selected period split
+  // {t("overview.tokens")} cache meter: share of input tokens over the selected period split
   // into regular / prompt-cached / locally-cached segments.
   import { usageData } from "$lib/stores/usageData.svelte.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import { formatNumber } from "$lib/utils/format.js";
   import {
     cacheMeterCategories,
@@ -25,8 +26,8 @@
 
 <div class="cache-meter">
   <div class="cache-meter-header">
-    <h3>Tokens</h3>
-    <span class="cache-meter-subtitle">Share of input tokens over the selected period</span>
+    <h3>{t("overview.tokens")}</h3>
+    <span class="cache-meter-subtitle">{t("overview.cacheShareHint")}</span>
   </div>
   <div
     class="cache-meter-bar"
@@ -46,7 +47,7 @@
       </div>
     {/each}
     {#if !visible}
-      <span class="cache-meter-empty">No usage in the selected period yet</span>
+      <span class="cache-meter-empty">{t("overview.cacheNoUsage")}</span>
     {/if}
   </div>
   <div class="cache-meter-legend">

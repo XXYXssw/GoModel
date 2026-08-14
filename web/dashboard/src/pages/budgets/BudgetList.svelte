@@ -1,6 +1,7 @@
 <script>
   // Budget rows with usage/period progress bars.
   import TableActionButton from "$lib/components/atoms/TableActionButton.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import Icon from "$lib/components/atoms/Icon.svelte";
   import { timezone } from "$lib/stores/timezone.svelte.js";
   import { formatCost } from "$lib/utils/format.js";
@@ -75,12 +76,12 @@
             </div>
             <div class="budget-row-actions">
               <TableActionButton
-                label="Edit budget"
+                label={t("budgets.editBudget")}
                 class="budget-action-btn"
                 onclick={() => store.openForm(item)}
               >
                 <Icon icon={Pencil} class="budget-action-icon" />
-                <span class="budget-action-label">Edit</span>
+                <span class="budget-action-label">{t("common.edit")}</span>
               </TableActionButton>
               <TableActionButton
                 label={store.resettingKey === budgetKey(item) ? "Resetting budget" : "Reset budget"}
@@ -110,7 +111,7 @@
         <div class="budget-bars">
           <div class="budget-bar-line">
             <div class="budget-bar-label">
-              <span>Usage</span>
+              <span>{t("budgets.usage")}</span>
               <span class="budget-bar-percent">{budgetUsagePercentLabel(item)}</span>
             </div>
             <div
@@ -152,13 +153,13 @@
           </div>
           <div class="budget-bar-line">
             <div class="budget-bar-label">
-              <span>Period</span>
+              <span>{t("budgets.period")}</span>
               <span class="budget-bar-percent">{budgetPeriodPercentLabel(item)}</span>
             </div>
             <div
               class="budget-bar-track {budgetPeriodTrackClass(item)}"
               role="progressbar"
-              aria-label="Budget period elapsed"
+              aria-label={t("budgets.periodElapsed")}
               aria-valuemin="0"
               aria-valuemax="100"
               aria-valuenow={budgetPeriodPercent(item)}

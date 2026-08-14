@@ -8,6 +8,7 @@
   import { timezone } from "$lib/stores/timezone.svelte.js";
   import { runtimeConfig } from "$lib/stores/runtimeConfig.svelte.js";
   import { appVersion } from "$lib/api/paths.js";
+  import LanguageSettings from "./LanguageSettings.svelte";
   import TimezoneSettings from "./TimezoneSettings.svelte";
   import FailoverSettings from "./FailoverSettings.svelte";
   import BudgetSettings from "./BudgetSettings.svelte";
@@ -16,6 +17,7 @@
   import PricingRecalculation from "./PricingRecalculation.svelte";
   import RuntimeRefresh from "./RuntimeRefresh.svelte";
   import RuntimeSettings from "./RuntimeSettings.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   const PAGE = "settings";
 
@@ -31,11 +33,12 @@
 <div>
   <div class="page-header">
     <div>
-      <h2>Settings</h2>
+      <h2>{t("settings.title")}</h2>
     </div>
   </div>
 
   <div class="settings-panel">
+    <LanguageSettings />
     <TimezoneSettings />
     <FailoverSettings />
     <BudgetSettings />

@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n/core.js";
 // Pure workflow form/scope/payload logic.
 // No Svelte runes here so node:test can import it directly.
 //
@@ -220,12 +221,12 @@ export function workflowModelOptions(models, providerName, hydratedScope) {
 
 export function workflowScopeTypeLabel(workflow) {
   const scopeType = String((workflow && workflow.scope_type) || "").trim();
-  if (scopeType === "provider_model") return "Provider Name + Model";
-  if (scopeType === "provider_model_path") return "Provider Name + Model + Path";
-  if (scopeType === "provider_path") return "Provider Name + Path";
+  if (scopeType === "provider_model") return t("workflows.scopeProviderModel");
+  if (scopeType === "provider_model_path") return t("workflows.scopeProviderModelPath");
+  if (scopeType === "provider_path") return t("workflows.scopeProviderPath");
   if (scopeType === "path") return "Path";
-  if (scopeType === "provider") return "Provider Name";
-  return "Global";
+  if (scopeType === "provider") return t("workflows.scopeProvider");
+  return t("workflows.scopeGlobal");
 }
 
 export function workflowScopeLabel(workflow) {
@@ -239,7 +240,7 @@ export function workflowDisplayName(workflow) {
   }
   const scopeLabel = workflowScopeLabel(workflow);
   if (scopeLabel === "global") {
-    return "All models";
+    return t("workflows.allModels");
   }
   return scopeLabel;
 }
@@ -527,18 +528,18 @@ export function validateWorkflowRequest(payload, { models = [], hydratedScope = 
   if (providerName) {
     const providers = workflowProviderOptions(models, hydrated);
     if (!providers.includes(providerName) && providerName !== preservedProvider) {
-      return "Choose a registered provider name.";
+      return t("workflows.chooseProvider");
     }
   }
   if (scopeModel && !providerName) {
-    return "Model selection requires a provider name.";
+    return t("workflows.modelNeedsProvider");
   }
   if (scopeModel) {
     const modelOptions = workflowModelOptions(models, providerName, hydrated);
     const isPreservedModel =
       providerName === preservedProvider && scopeModel === preservedModel;
     if (!modelOptions.includes(scopeModel) && !isPreservedModel) {
-      return "Choose a registered model for the selected provider name.";
+      return t("workflows.chooseModel");
     }
   }
   const userPathError = workflowScopeUserPathValidationError(payload.scope_user_path);
@@ -561,13 +562,13 @@ export function validateWorkflowRequest(payload, { models = [], hydratedScope = 
   const seen = new Set();
   for (const step of guardrails) {
     if (!step.ref) {
-      return "Each guardrail step needs a guardrail ref.";
+      return t("workflows.stepNeedsRef");
     }
     if (!Number.isInteger(step.step) || step.step < 0) {
-      return "Each guardrail step must use a non-negative integer step number.";
+      return t("workflows.stepNumberInvalid");
     }
     if (seen.has(step.ref)) {
-      return "Each guardrail ref may appear only once in a workflow.";
+      return t("workflows.stepRefDuplicate");
     }
     seen.add(step.ref);
   }

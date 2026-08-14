@@ -6,6 +6,7 @@
   import { debounced } from "$lib/utils/debounce.js";
   import { auditList } from "./auditList.svelte.js";
   import { X } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   const onSearchInput = debounced(() => auditList.fetchAuditLog(true));
   $effect(() => onSearchInput.cancel);
@@ -15,8 +16,8 @@
   <div class="audit-filter-row audit-filter-row-search">
     <FilterInput
       id="audit-filter-search"
-      placeholder="Search by request ID, model, provider, path, user path, or error..."
-      label="Search by request ID, model, provider, path, user path, or error"
+      placeholder={t("audit.searchPlaceholder")}
+      label={t("audit.searchLabel")}
       bind:value={auditList.auditSearch}
       oninput={onSearchInput}
     />
@@ -24,12 +25,12 @@
   <div class="audit-filter-row audit-filter-row-controls">
     <select
       id="audit-filter-method"
-      aria-label="HTTP method filter"
+      aria-label={t("audit.methodFilter")}
       class="usage-log-select audit-filter-select"
       bind:value={auditList.auditMethod}
       onchange={() => auditList.fetchAuditLog(true)}
     >
-      <option value="">All Methods</option>
+      <option value="">{t("audit.allMethods")}</option>
       <option value="GET">GET</option>
       <option value="POST">POST</option>
       <option value="PUT">PUT</option>
@@ -38,12 +39,12 @@
     </select>
     <select
       id="audit-filter-status"
-      aria-label="Status code filter"
+      aria-label={t("audit.statusFilter")}
       class="usage-log-select audit-filter-select"
       bind:value={auditList.auditStatusCode}
       onchange={() => auditList.fetchAuditLog(true)}
     >
-      <option value="">All Statuses</option>
+      <option value="">{t("audit.allStatuses")}</option>
       <option value="200">200</option>
       <option value="201">201</option>
       <option value="400">400</option>
@@ -58,14 +59,14 @@
     </select>
     <select
       id="audit-filter-stream"
-      aria-label="Streaming mode filter"
+      aria-label={t("audit.modeFilter")}
       class="usage-log-select audit-filter-select"
       bind:value={auditList.auditStream}
       onchange={() => auditList.fetchAuditLog(true)}
     >
-      <option value="">All Modes</option>
-      <option value="true">Streaming</option>
-      <option value="false">Non-streaming</option>
+      <option value="">{t("audit.allModes")}</option>
+      <option value="true">{t("audit.streaming")}</option>
+      <option value="false">{t("audit.nonStreaming")}</option>
     </select>
     <button
       type="button"
@@ -73,7 +74,7 @@
       onclick={() => auditList.clearAuditFilters()}
     >
       <Icon icon={X} class="table-icon-svg" />
-      <span>Clear</span>
+      <span>{t("audit.clearFilters")}</span>
     </button>
   </div>
 </div>

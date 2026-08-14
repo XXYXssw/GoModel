@@ -3,6 +3,7 @@
   // budget-settings section lives here; the budgets page itself is
   // src/pages/budgets/.
   import { auth } from "$lib/stores/auth.svelte.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import { flash } from "$lib/stores/flash.svelte.js";
   import { runtimeConfig } from "$lib/stores/runtimeConfig.svelte.js";
   import { getJSON, sendJSON } from "$lib/api/client.js";
@@ -95,26 +96,26 @@
   <div class="settings-refresh-section budget-settings-section">
     <InlineHelpSection
       copyId="budget-settings-help-copy"
-      label="budget help"
+      label={t("settings.budgetHelp")}
       text="Budget reset anchors are stored in the database and evaluated in UTC. Hourly budgets reset at the top of each hour."
     >
-      {#snippet title()}<h3>Budget Resets</h3>{/snippet}
+      {#snippet title()}<h3>{t("settings.budgetResets")}</h3>{/snippet}
     </InlineHelpSection>
     <div class="budget-settings-grid">
       <div class="budget-settings-row">
-        <div class="budget-settings-period">Monthly</div>
+        <div class="budget-settings-period">{t("settings.monthly")}</div>
         <div class="form-field">
           <!-- external: the copy renders in the budget-settings-help-cell
                grid cell below, keyed off the same bound open state. -->
           <InlineHelpSection
             copyId="budget-monthly-day-help-copy"
-            label="day of month help"
+            label={t("settings.dayOfMonthHelp")}
             external
             bind:open={monthlyDayHelpOpen}
           >
             {#snippet title()}
               <label class="form-field-label" for="budget-monthly-day"
-                >Day of Month</label
+                >{t("settings.dayOfMonth")}</label
               >
             {/snippet}
           </InlineHelpSection>
@@ -130,7 +131,7 @@
           />
         </div>
         <div class="form-field">
-          <label class="form-field-label" for="budget-monthly-hour">Hour</label>
+          <label class="form-field-label" for="budget-monthly-hour">{t("settings.hour")}</label>
           <input
             id="budget-monthly-hour"
             class="form-input"
@@ -143,7 +144,7 @@
         </div>
         <div class="form-field">
           <label class="form-field-label" for="budget-monthly-minute"
-            >Minute</label
+            >{t("settings.minute")}</label
           >
           <input
             id="budget-monthly-minute"
@@ -165,10 +166,10 @@
         </div>
       </div>
       <div class="budget-settings-row">
-        <div class="budget-settings-period">Weekly</div>
+        <div class="budget-settings-period">{t("settings.weekly")}</div>
         <div class="form-field">
           <label class="form-field-label" for="budget-weekly-day"
-            >Day of Week</label
+            >{t("settings.dayOfWeek")}</label
           >
           <select
             id="budget-weekly-day"
@@ -181,7 +182,7 @@
           </select>
         </div>
         <div class="form-field">
-          <label class="form-field-label" for="budget-weekly-hour">Hour</label>
+          <label class="form-field-label" for="budget-weekly-hour">{t("settings.hour")}</label>
           <input
             id="budget-weekly-hour"
             class="form-input"
@@ -194,7 +195,7 @@
         </div>
         <div class="form-field">
           <label class="form-field-label" for="budget-weekly-minute"
-            >Minute</label
+            >{t("settings.minute")}</label
           >
           <input
             id="budget-weekly-minute"
@@ -209,10 +210,10 @@
         <div class="budget-settings-help-cell" aria-hidden="true"></div>
       </div>
       <div class="budget-settings-row">
-        <div class="budget-settings-period">Daily</div>
+        <div class="budget-settings-period">{t("settings.daily")}</div>
         <div class="budget-settings-spacer" aria-hidden="true"></div>
         <div class="form-field">
-          <label class="form-field-label" for="budget-daily-hour">Hour</label>
+          <label class="form-field-label" for="budget-daily-hour">{t("settings.hour")}</label>
           <input
             id="budget-daily-hour"
             class="form-input"
@@ -225,7 +226,7 @@
         </div>
         <div class="form-field">
           <label class="form-field-label" for="budget-daily-minute"
-            >Minute</label
+            >{t("settings.minute")}</label
           >
           <input
             id="budget-daily-minute"
@@ -250,10 +251,10 @@
         onclick={save}
       >
         <Icon icon={Save} class="form-action-icon" />
-        <span>Save Budget Settings</span>
+        <span>{t("settings.saveBudgetSettings")}</span>
       </button>
       {#if loading}
-        <Spinner size={16} label="Loading budget settings" />
+        <Spinner size={16} label={t("settings.loadingBudgetSettings")} />
       {/if}
     </div>
   </div>

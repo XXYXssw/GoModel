@@ -3,6 +3,7 @@
 // Vite and plain node).
 
 import { formatCost } from "../../lib/utils/format.js";
+import { t } from "../../lib/i18n/core.js";
 import { Calendar, CalendarDays, Clock, Settings2, Sun } from "lucide";
 
 export function defaultBudgetForm() {
@@ -23,13 +24,13 @@ export function budgetScopeMeta(scope) {
     user_path: {
       label: "User path",
       chip: "user path",
-      fieldLabel: "User Path",
+      fieldLabel: t("budgets.userPath"),
       placeholder: "/team/alpha",
     },
     label: {
       label: "Label",
       chip: "label",
-      fieldLabel: "Label",
+      fieldLabel: t("budgets.label"),
       placeholder: "Mobile-App-iOS",
     },
   };
@@ -142,7 +143,7 @@ export function findExistingBudget(budgets, payload) {
 export function budgetUserPathValidationError(value) {
   const trimmed = String(value || "").trim();
   if (!trimmed) {
-    return "User path is required.";
+    return t("budgets.userPathRequired");
   }
   const raw = trimmed.startsWith("/") ? trimmed : "/" + trimmed;
   const segments = raw.split("/");
@@ -252,11 +253,11 @@ export function buildBudgetFormPayload(form) {
       return { payload: null, error: userPathError };
     }
   } else if (!subject) {
-    return { payload: null, error: "Label is required." };
+    return { payload: null, error: t("budgets.labelRequired") };
   }
   const amount = Number(f.amount);
   if (!Number.isFinite(amount) || amount <= 0) {
-    return { payload: null, error: "Amount must be greater than 0." };
+    return { payload: null, error: t("budgets.amountPositive") };
   }
   const period = String(f.period || "").trim();
   let periodSeconds = budgetPeriodSeconds(period);
@@ -264,7 +265,7 @@ export function buildBudgetFormPayload(form) {
     periodSeconds = Number(f.period_seconds);
   }
   if (!Number.isFinite(periodSeconds) || periodSeconds <= 0) {
-    return { payload: null, error: "Period seconds must be greater than 0." };
+    return { payload: null, error: t("budgets.periodPositive") };
   }
   return {
     payload: {
@@ -372,16 +373,16 @@ export function budgetPeriodLabel(item) {
   const seconds = Number((item && item.period_seconds) || 0);
   switch (seconds) {
     case 3600:
-      return "Hourly";
+      return t("budgets.hourly");
     case 86400:
-      return "Daily";
+      return t("budgets.daily");
     case 604800:
-      return "Weekly";
+      return t("budgets.weekly");
     case 2592000:
-      return "Monthly";
+      return t("budgets.monthly");
     default: {
       const label = String((item && item.period_label) || "").trim();
-      return label ? "Custom " + label : "Custom " + String(seconds || "") + "s";
+      return label ? t("budgets.custom", { label }) : t("budgets.customSeconds", { seconds: String(seconds || "") });
     }
   }
 }

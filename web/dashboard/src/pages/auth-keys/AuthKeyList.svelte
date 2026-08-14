@@ -7,17 +7,18 @@
   import { authKeyDeactivated, authKeyExpired, labelChipStyle } from "./authKeysLogic.js";
   import { authKeysStore as store } from "./authKeys.svelte.js";
   import { Info, Pencil, Power, ShieldCheck, ShieldOff } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 </script>
 
 <div class="table-wrapper">
   <table class="data-table">
     <thead>
       <tr>
-        <th>Name</th>
-        <th>Description</th>
-        <th>User Path</th>
-        <th>Labels</th>
-        <th>Token</th>
+        <th>{t("authKeys.name")}</th>
+        <th>{t("authKeys.description")}</th>
+        <th>{t("authKeys.userPath")}</th>
+        <th>{t("authKeys.labels")}</th>
+        <th>{t("authKeys.token")}</th>
         <th>
           <span
             class="auth-key-th-help"
@@ -27,9 +28,9 @@
             <Icon icon={Info} width="13" height="13" />
           </span>
         </th>
-        <th>Expires</th>
-        <th>Created</th>
-        <th aria-label="Actions"></th>
+        <th>{t("authKeys.expires")}</th>
+        <th>{t("authKeys.created")}</th>
+        <th aria-label={t("common.actions")}></th>
       </tr>
     </thead>
     <tbody>
@@ -65,7 +66,7 @@
               <span class="auth-key-expiry">
                 <span>{formatDateUTC(key.expires_at)}</span>
                 {#if authKeyExpired(key)}
-                  <span class="auth-key-status-badge auth-key-status-inactive">Expired</span>
+                  <span class="auth-key-status-badge auth-key-status-inactive">{t("authKeys.expired")}</span>
                 {/if}
               </span>
             {:else}
@@ -105,7 +106,7 @@
                   title={key.deactivated_at
                     ? "Deactivated on " + formatTimestampUTC(key.deactivated_at)
                     : "Deactivated"}
-                >Deactivated</span>
+                >{t("authKeys.deactivated")}</span>
               {/if}
             </div>
           </td>

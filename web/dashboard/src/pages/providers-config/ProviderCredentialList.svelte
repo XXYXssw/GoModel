@@ -2,6 +2,7 @@
   // Provider credential table. Managed rows (declared in config.yaml or env
   // vars) show a Config badge and expose no edit/delete actions.
   import TableActionButton from "$lib/components/atoms/TableActionButton.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import Icon from "$lib/components/atoms/Icon.svelte";
   import { timezone } from "$lib/stores/timezone.svelte.js";
   import { providersConfig } from "./providersConfig.svelte.js";
@@ -16,14 +17,14 @@
   <table class="data-table">
     <thead>
       <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Base URL</th>
-        <th>Auth</th>
-        <th>Models</th>
-        <th>Enabled</th>
-        <th>Updated</th>
-        <th class="col-actions">Actions</th>
+        <th>{t("common.name")}</th>
+        <th>{t("common.type")}</th>
+        <th>{t("providers.baseUrl")}</th>
+        <th>{t("providers.auth")}</th>
+        <th>{t("providers.models")}</th>
+        <th>{t("providers.enabled")}</th>
+        <th>{t("providers.updated")}</th>
+        <th class="col-actions">{t("common.actions")}</th>
       </tr>
     </thead>
     <tbody>
@@ -35,7 +36,7 @@
               <span
                 class="alias-kind-badge"
                 title="Declared in configuration (config.yaml or env vars); read-only in the dashboard"
-                >Config</span>
+                >{t("vm.config")}</span>
             {/if}
           </td>
           <td><span class="budget-source mono">{row.type}</span></td>

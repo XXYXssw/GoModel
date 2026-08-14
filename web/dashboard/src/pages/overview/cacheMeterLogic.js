@@ -2,6 +2,7 @@
 // summary / cache overview payloads.
 
 import { formatNumber } from "../../lib/utils/format.js";
+import { t } from "../../lib/i18n/core.js";
 
 export function summaryTotalTokens(summary) {
   const s = summary || {};
@@ -80,7 +81,7 @@ function cacheMeterRawSegments(summary, cacheOverview, cacheEnabled) {
       colorVar: "--cache-meter-uncached",
       note:
         cacheWrite > 0
-          ? "Includes " + formatNumber(cacheWrite) + " cache-write tokens"
+          ? t("overview.includesCacheWrite", { count: formatNumber(cacheWrite) })
           : "",
     },
     {
@@ -88,14 +89,14 @@ function cacheMeterRawSegments(summary, cacheOverview, cacheEnabled) {
       label: "Prompt cached",
       tokens: promptCached,
       colorVar: "--cache-meter-prompt",
-      note: "Provider prompt-cache reads",
+      note: t("overview.providerPromptCacheReads"),
     },
     {
       key: "local",
       label: "Locally cached",
       tokens: locallyCached,
       colorVar: "--cache-meter-local",
-      note: "Served from GoModel response cache",
+      note: t("overview.servedFromResponseCache"),
     },
   ];
 }
@@ -165,7 +166,7 @@ export function cacheMeterSegmentTitle(segment) {
 export function cacheMeterAriaLabel(segments) {
   const parts = (segments || []).map((seg) => seg.label + " " + seg.pct + "%");
   return (
-    "Cache breakdown of input tokens — " +
+    t("overview.cacheBreakdown") + " " +
     (parts.length ? parts.join(", ") : "no data")
   );
 }

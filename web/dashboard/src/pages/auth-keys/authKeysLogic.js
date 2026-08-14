@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n/core.js";
 // Pure logic for the API Keys page.
 
 export function defaultAuthKeyForm() {
@@ -80,7 +81,7 @@ export function buildCreateAuthKeyPayload(form) {
   const source = form || {};
   const name = String(source.name || "").trim();
   if (!name) {
-    return { error: "Name is required." };
+    return { error: t("authKeys.nameRequired") };
   }
   const userPathError = authKeyUserPathValidationError(source.user_path);
   if (userPathError) {

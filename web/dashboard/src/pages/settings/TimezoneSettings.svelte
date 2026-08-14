@@ -5,6 +5,7 @@
   import { auth } from "$lib/stores/auth.svelte.js";
   import { timezone } from "$lib/stores/timezone.svelte.js";
   import InlineHelpSection from "$lib/components/molecules/InlineHelpSection.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   function save() {
     timezone.saveOverride();
@@ -20,17 +21,17 @@
 <div class="settings-panel-header">
   <InlineHelpSection
     copyId="timezone-help-copy"
-    label="timezone help"
+    label={t("settings.timezoneHelp")}
     text="Day-based analytics, charts, and date filters use your effective timezone. Usage and audit logs keep UTC in the hover title while rendering row timestamps in your effective timezone."
   >
-    {#snippet title()}<h3>Timezone</h3>{/snippet}
+    {#snippet title()}<h3>{t("settings.timezone")}</h3>{/snippet}
   </InlineHelpSection>
 </div>
 
 <div class="settings-form-grid">
   <div class="form-field">
     <label class="form-field-label" for="timezone-override-select"
-      >Timezone Override</label
+      >{t("settings.timezoneOverride")}</label
     >
     <select
       id="timezone-override-select"
@@ -50,7 +51,7 @@
 <div class="form-actions">
   {#if timezone.override}
     <button type="button" class="btn" onclick={clear}
-      >Use Browser Timezone</button
+      >{t("settings.useBrowserTimezone")}</button
     >
   {/if}
 </div>

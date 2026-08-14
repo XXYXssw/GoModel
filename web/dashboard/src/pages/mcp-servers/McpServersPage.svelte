@@ -14,6 +14,7 @@
   import McpServerList from "./McpServerList.svelte";
   import { mcpServers } from "./mcpServers.svelte.js";
   import { Plus } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   const PAGE = "mcp-servers";
   const HELP_TEXT =
@@ -29,8 +30,8 @@
 <div>
   <div class="page-header">
     <div>
-      <InlineHelpSection copyId="mcp-servers-help-copy" label="MCP servers help" text={HELP_TEXT}>
-        {#snippet title()}<h2>MCP Servers</h2>{/snippet}
+      <InlineHelpSection copyId="mcp-servers-help-copy" label={t("mcp.helpLabel")} text={HELP_TEXT}>
+        {#snippet title()}<h2>{t("mcp.title")}</h2>{/snippet}
       </InlineHelpSection>
     </div>
     <div class="page-header-controls">
@@ -42,20 +43,20 @@
           onclick={() => mcpServers.openCreate()}
         >
           <Icon icon={Plus} class="form-action-icon" />
-          <span>Add MCP Server</span>
+          <span>{t("mcp.addServer")}</span>
         </button>
       {/if}
     </div>
   </div>
 
   {#if !mcpServers.available && !auth.authError}
-    <div class="alert alert-warning">MCP server management is unavailable.</div>
+    <div class="alert alert-warning">{t("mcp.unavailable")}</div>
   {/if}
   {#if mcpServers.error && !auth.authError && !mcpServers.formOpen}
     <p class="form-error" role="alert" aria-live="assertive">{mcpServers.error}</p>
   {/if}
   {#if mcpServers.loading && !auth.authError}
-    <LoadingState label="Loading MCP servers..." />
+    <LoadingState label={t("mcp.loading")} />
   {/if}
 
   {#if (mcpServers.servers.length > 0 || mcpServers.filter) && mcpServers.available && !auth.authError}
@@ -63,8 +64,8 @@
       <div class="table-toolbar-main">
         <FilterInput
           id="mcp-server-filter"
-          placeholder="Filter by name, slug, URL, transport, or status..."
-          label="Filter MCP servers by name, slug, URL, transport, or status"
+          placeholder={t("mcp.filterPlaceholder")}
+          label={t("mcp.filterLabel")}
           bind:value={mcpServers.filter}
         />
       </div>
@@ -85,6 +86,6 @@
     </p>
   {/if}
   {#if mcpServers.servers.length > 0 && mcpServers.filtered.length === 0 && mcpServers.filter && !mcpServers.loading && !auth.authError && mcpServers.available}
-    <p class="empty-state">No MCP servers match your filter.</p>
+    <p class="empty-state">{t("mcp.emptyFilter")}</p>
   {/if}
 </div>

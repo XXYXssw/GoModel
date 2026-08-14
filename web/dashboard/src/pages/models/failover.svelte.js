@@ -3,6 +3,7 @@
 import { getJSON, sendJSON } from "$lib/api/client.js";
 import { flash } from "$lib/stores/flash.svelte.js";
 import { runtimeConfig } from "$lib/stores/runtimeConfig.svelte.js";
+import { t } from "$lib/i18n/i18n.svelte.js";
 import { confirmDialog } from "$lib/stores/confirm.svelte.js";
 import {
   qualifiedModelName,
@@ -96,7 +97,7 @@ class FailoverStore {
     } catch (e) {
       console.error("Failed to fetch failover mappings:", e);
       this.failoverRules = [];
-      this.failoverError = "Unable to load failover mappings.";
+      this.failoverError = t("failover.loadError");
     } finally {
       this.failoverLoading = false;
     }
@@ -205,11 +206,11 @@ class FailoverStore {
       return;
     const payload = this.failoverRulePayload();
     if (!payload.primary_model) {
-      this.failoverError = "Primary model is required.";
+      this.failoverError = t("failover.primaryRequired");
       return;
     }
     if (payload.enabled && payload.fallback_models.length === 0) {
-      this.failoverError = "Add at least one failover target.";
+      this.failoverError = t("failover.targetRequired");
       return;
     }
     this.failoverSaving = true;
@@ -222,15 +223,15 @@ class FailoverStore {
         return;
       }
       if (!result.ok) {
-        this.failoverError = "Failed to save failover mapping.";
+        this.failoverError = t("failover.saveError");
         return;
       }
-      flash.success("Failover mapping saved.");
+      flash.success(t("failover.saved"));
       this.closeFailoverForm();
       void this.fetchFailoverRules();
     } catch (e) {
       console.error("Failed to save failover mapping:", e);
-      this.failoverError = "Failed to save failover mapping.";
+      this.failoverError = t("failover.saveError");
     } finally {
       this.failoverSaving = false;
     }
@@ -241,7 +242,7 @@ class FailoverStore {
       (rule && this.failoverPrimaryModel(rule)) || this.failoverForm.source || "",
     ).trim();
     if (!source || this.failoverSaving || this.failoverGenerating) return;
-    if (!confirm('Remove failover mapping for "' + source + '"?')) return;
+    if (!confirm(t('failover.removeConfirm', { source }))) return;
     this.failoverSaving = true;
     this.failoverError = "";
     try {
@@ -255,15 +256,15 @@ class FailoverStore {
         return;
       }
       if (!result.ok) {
-        this.failoverError = "Failed to remove failover mapping.";
+        this.failoverError = t("failover.removeError");
         return;
       }
-      flash.success("Failover mapping removed.");
+      flash.success(t("failover.removed"));
       this.closeFailoverForm();
       void this.fetchFailoverRules();
     } catch (e) {
       console.error("Failed to remove failover mapping:", e);
-      this.failoverError = "Failed to remove failover mapping.";
+      this.failoverError = t("failover.removeError");
     } finally {
       this.failoverSaving = false;
     }
@@ -274,7 +275,7 @@ class FailoverStore {
       return;
     const source = String(this.failoverForm.source || "").trim();
     if (!source) {
-      this.failoverError = "Primary model is required.";
+      this.failoverError = t("failover.primaryRequired");
       return;
     }
     this.failoverGenerating = true;
@@ -290,7 +291,7 @@ class FailoverStore {
         return;
       }
       if (!result.ok) {
-        this.failoverError = "Failed to generate failover mapping.";
+        this.failoverError = t("failover.generateError");
         return;
       }
       const suggestions = normalizeFailoverRules(result.data);
@@ -303,12 +304,12 @@ class FailoverStore {
       const targets = this.failoverTargets(suggestion);
       if (targets.length === 0) {
         this.failoverError =
-          "No failover suggestions were generated for this model.";
+          t("failover.noSuggestions");
         return;
       }
       this.setFailoverFormTargets(targets);
       flash.success(
-        "Generated " +
+        t("failover.generatedCount") + " " +
           targets.length +
           " fallback model" +
           (targets.length === 1 ? "." : "s."),
@@ -316,7 +317,7 @@ class FailoverStore {
       this.focusFailoverEditor();
     } catch (e) {
       console.error("Failed to generate failover mapping:", e);
-      this.failoverError = "Failed to generate failover mapping.";
+      this.failoverError = t("failover.generateError");
     } finally {
       this.failoverGenerating = false;
     }
@@ -324,13 +325,13 @@ class FailoverStore {
 
   openFailoverResetDialog() {
     confirmDialog.open({
-      title: "Remove failover models",
+      title: t("failover.removeModelsTitle"),
       titleId: "failoverResetDialogTitle",
       inputId: "failover-reset-confirmation",
       message:
-        "Remove every dashboard-managed failover mapping. Configuration-managed mappings remain active.",
+        t("failover.removeModelsMessage"),
       requiredText: "remove",
-      confirmLabel: "Remove Failover",
+      confirmLabel: t("failover.removeFailover"),
       icon: Trash2,
       dialogClass: "budget-reset-dialog",
       onConfirm: async () => {
@@ -356,7 +357,7 @@ class FailoverStore {
         return;
       }
       if (!result.ok) {
-        this.failoverError = "Failed to remove failover mappings.";
+        this.failoverError = t("failover.removeAllError");
         return;
       }
       this.failoverRules = normalizeFailoverRules(result.data);
@@ -364,11 +365,11 @@ class FailoverStore {
       this.failoverDraftSelections = {};
       this.failoverDraftFilter = "";
       this.failoverDraftsOpen = false;
-      flash.success("Dashboard-managed failover mappings removed.");
+      flash.success(t("failover.removedAll"));
       confirmDialog.close();
     } catch (e) {
       console.error("Failed to remove failover mappings:", e);
-      this.failoverError = "Failed to remove failover mappings.";
+      this.failoverError = t("failover.removeAllError");
     } finally {
       this.failoverSaving = false;
     }
@@ -390,7 +391,7 @@ class FailoverStore {
         return;
       }
       if (!result.ok) {
-        this.failoverError = "Failed to generate failover mappings.";
+        this.failoverError = t("failover.generateAllError");
         return;
       }
       this.failoverGeneratedRules = normalizeFailoverRules(result.data);
@@ -399,7 +400,7 @@ class FailoverStore {
       // (or its empty state).
     } catch (e) {
       console.error("Failed to generate failover mappings:", e);
-      this.failoverError = "Failed to generate failover mappings.";
+      this.failoverError = t("failover.generateAllError");
     } finally {
       this.failoverGenerating = false;
     }
@@ -483,7 +484,7 @@ class FailoverStore {
     if (this.failoverDraftSaving || this.failoverGenerating) return;
     const drafts = this.selectedFailoverDrafts();
     if (drafts.length === 0) {
-      this.failoverError = "Select at least one failover draft.";
+      this.failoverError = t("failover.selectDraft");
       return;
     }
     this.failoverDraftSaving = true;
@@ -492,7 +493,7 @@ class FailoverStore {
       for (const draft of drafts) {
         const payload = this.failoverDraftPayload(draft);
         if (!payload.primary_model || payload.fallback_models.length === 0) {
-          this.failoverError = "Generated failover draft is missing model data.";
+          this.failoverError = t("failover.draftMissing");
           return;
         }
         const result = await sendJSON("/admin/failover", "PUT", payload, {
@@ -502,12 +503,12 @@ class FailoverStore {
           return;
         }
         if (!result.ok) {
-          this.failoverError = "Failed to save failover mapping.";
+          this.failoverError = t("failover.saveError");
           return;
         }
       }
       flash.success(
-        "Saved " +
+        t("failover.savedCount") + " " +
           drafts.length +
           " failover mapping" +
           (drafts.length === 1 ? "." : "s."),
@@ -519,7 +520,7 @@ class FailoverStore {
       void this.fetchFailoverRules();
     } catch (e) {
       console.error("Failed to save generated failover mappings:", e);
-      this.failoverError = "Failed to save failover mappings.";
+      this.failoverError = t("failover.saveAllError");
     } finally {
       this.failoverDraftSaving = false;
     }

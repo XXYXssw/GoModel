@@ -4,6 +4,7 @@
   // workflows, then renders the per-step report. A successful refresh bumps
   // auth.refreshTick so every page refetches.
   import { auth } from "$lib/stores/auth.svelte.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import { flash } from "$lib/stores/flash.svelte.js";
   import { sendJSON } from "$lib/api/client.js";
   import Icon from "$lib/components/atoms/Icon.svelte";
@@ -57,10 +58,10 @@
 <div class="settings-refresh-section">
   <InlineHelpSection
     copyId="runtime-refresh-help-copy"
-    label="runtime refresh help"
+    label={t("settings.runtimeRefreshHelp")}
     text="Pull the latest model metadata, provider inventory, API keys, aliases, model access rules, guardrails, and workflows."
   >
-    {#snippet title()}<h3>Runtime Refresh</h3>{/snippet}
+    {#snippet title()}<h3>{t("settings.runtimeRefresh")}</h3>{/snippet}
   </InlineHelpSection>
   <div class="settings-refresh-actions">
     <button
@@ -73,7 +74,7 @@
       onclick={refreshRuntime}
     >
       <Icon icon={RefreshCw} class="settings-refresh-icon" />
-      <span>Refresh</span>
+      <span>{t("common.refresh")}</span>
     </button>
   </div>
 </div>

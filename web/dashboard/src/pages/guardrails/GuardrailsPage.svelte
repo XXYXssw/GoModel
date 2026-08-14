@@ -10,6 +10,7 @@
   import GuardrailList from "./GuardrailList.svelte";
   import GuardrailEditor from "./GuardrailEditor.svelte";
   import { guardrailsStore as store } from "./guardrails.svelte.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   const PAGE = "guardrails";
 
@@ -28,11 +29,11 @@
     <div>
       <InlineHelpSection
         copyId="guardrails-help-copy"
-        label="guardrails help"
+        label={t("guardrails.helpLabel")}
         text="Reusable policy objects stored in the database and kept hot in memory for workflow execution."
       >
         {#snippet title()}
-          <h2>Guardrails</h2>
+          <h2>{t("guardrails.title")}</h2>
         {/snippet}
       </InlineHelpSection>
     </div>
@@ -40,8 +41,8 @@
 
   <div class="settings-guardrails-hero">
     <div>
-      <p class="settings-kicker">Reusable Policy Objects</p>
-      <h3>Guardrail Library</h3>
+      <p class="settings-kicker">{t("guardrails.reusablePolicies")}</p>
+      <h3>{t("guardrails.library")}</h3>
       <p>
         Store guardrails in the database, keep them hot in memory, and attach
         them to workflows by reference.
@@ -49,11 +50,11 @@
     </div>
     <div class="settings-guardrails-meta">
       <div class="settings-guardrails-stat">
-        <span class="settings-guardrails-stat-label">Instances</span>
+        <span class="settings-guardrails-stat-label">{t("guardrails.instances")}</span>
         <strong>{formatNumber(store.guardrails.length)}</strong>
       </div>
       <div class="settings-guardrails-stat">
-        <span class="settings-guardrails-stat-label">Types</span>
+        <span class="settings-guardrails-stat-label">{t("guardrails.types")}</span>
         <strong>{formatNumber(store.types.length)}</strong>
       </div>
     </div>
@@ -69,7 +70,7 @@
     </div>
   {/if}
   {#if !auth.authError && !store.available}
-    <div class="alert alert-warning">Guardrails feature is unavailable.</div>
+    <div class="alert alert-warning">{t("guardrails.unavailable")}</div>
   {/if}
   {#if !auth.authError && store.error && !store.formOpen}
     <div class="alert alert-warning">{store.error}</div>

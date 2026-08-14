@@ -63,7 +63,7 @@ export function mcpServerStatusTitle(server, formatTimestamp) {
   if (status === "connected" && server && server.connected_at) {
     const format =
       typeof formatTimestamp === "function" ? formatTimestamp : String;
-    return "Connected since " + format(server.connected_at);
+    return t("mcp.connectedSince", { time: format(server.connected_at) });
   }
   return "";
 }
@@ -102,6 +102,7 @@ export function deriveMcpServerSlug(name) {
 }
 
 import { splitCommaList } from "../../lib/utils/format.js";
+import { t } from "../../lib/i18n/core.js";
 
 export { splitCommaList };
 
@@ -196,12 +197,12 @@ export function buildMcpServerPayload(form, mode, servers) {
   const url = String(form.url || "").trim();
   const transport = form.transport === "sse" ? "sse" : "http";
   if (!name) {
-    return { error: "Name is required." };
+    return { error: t("mcp.nameRequired") };
   }
   if (!/^[a-z0-9][a-z0-9_-]{0,63}$/.test(slug)) {
     return {
       error:
-        "Slug must use 1–64 lowercase ASCII letters, numbers, hyphens, or underscores.",
+        t("mcp.slugInvalid"),
     };
   }
   if (
@@ -211,7 +212,7 @@ export function buildMcpServerPayload(form, mode, servers) {
     return { error: 'Slug "' + slug + '" is already in use.' };
   }
   if (!url) {
-    return { error: "URL is required." };
+    return { error: t("mcp.urlRequired") };
   }
   let toolTimeoutSeconds;
   const rawTimeout = String(form.tool_timeout_seconds || "").trim();
@@ -219,7 +220,7 @@ export function buildMcpServerPayload(form, mode, servers) {
     const parsed = Number(rawTimeout);
     if (!Number.isSafeInteger(parsed) || parsed < 0) {
       return {
-        error: "Tool timeout must be a non-negative whole number of seconds.",
+        error: t("mcp.timeoutInvalid"),
       };
     }
     toolTimeoutSeconds = parsed;
@@ -287,12 +288,12 @@ export function mcpCatalogSections(catalog) {
     { key: "tools", title: "Tools", items: (source.tools || []).map(feature("tool")) },
     {
       key: "prompts",
-      title: "Prompts",
+      title: t("mcp.prompts"),
       items: (source.prompts || []).map(feature("prompt")),
     },
     {
       key: "resources",
-      title: "Resources",
+      title: t("mcp.resources"),
       items: (source.resources || []).map((item) => ({
         key: "resource:" + String(item.uri || ""),
         name: String(item.uri || ""),
@@ -302,7 +303,7 @@ export function mcpCatalogSections(catalog) {
     },
     {
       key: "templates",
-      title: "Resource templates",
+      title: t("mcp.resourceTemplates"),
       items: (source.templates || []).map((item) => ({
         key: "template:" + String(item.uri_template || ""),
         name: String(item.uri_template || ""),

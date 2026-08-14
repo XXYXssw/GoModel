@@ -3,6 +3,7 @@
 // node:test can exercise it without a DOM.
 
 import { formatTokensShort } from "../../lib/utils/format.js";
+import { t } from "../../lib/i18n/core.js";
 import { chartTickFont, chartTooltip } from "../../lib/utils/chartTheme.js";
 
 // Horizontal input/output bars: one row per entity (model, user path, label).
@@ -30,21 +31,21 @@ export function horizontalUsageChartConfig(colors, labels, series, options) {
   });
   const hasData = (values) => (values || []).some((v) => Math.abs(v) > 0);
   const datasets = [
-    bar(costs ? "Input Cost" : "Input Tokens", inputSide(series.inputs), resolve("var(--token-input)")),
-    bar(costs ? "Output Cost" : "Output Tokens", series.outputs, resolve("var(--token-output)")),
+    bar(costs ? t("usage.inputCost") : t("usage.inputTokens"), inputSide(series.inputs), resolve("var(--token-input)")),
+    bar(costs ? t("usage.outputCost") : t("usage.outputTokens"), series.outputs, resolve("var(--token-output)")),
   ];
   if (hasData(series.prompts)) {
     datasets.push(
-      bar(costs ? "Prompt Cached Cost" : "Prompt Cached", inputSide(series.prompts), resolve("var(--token-prompt)")),
+      bar(costs ? t("usage.promptCachedCost") : t("usage.promptCached"), inputSide(series.prompts), resolve("var(--token-prompt)")),
     );
   }
   // Local cache hits carry both sides, so each joins its own half of the axis
   // (they pile together in the stacked view).
   if (!costs && hasData(series.localIns)) {
-    datasets.push(bar("Locally Cached (Input)", inputSide(series.localIns), resolve("var(--token-local)")));
+    datasets.push(bar(t("usage.locallyCachedInput"), inputSide(series.localIns), resolve("var(--token-local)")));
   }
   if (!costs && hasData(series.localOuts)) {
-    datasets.push(bar("Locally Cached (Output)", series.localOuts, resolve("var(--token-local)")));
+    datasets.push(bar(t("usage.locallyCachedOutput"), series.localOuts, resolve("var(--token-local)")));
   }
   return {
     type: "bar",
@@ -95,7 +96,7 @@ export function horizontalUsageChartConfig(colors, labels, series, options) {
             items.forEach((it) => {
               total += Math.abs(Number(it.parsed.x)) || 0;
             });
-            return "Total: " + fmtExact(total);
+            return t("usage.chartTotal", { total: fmtExact(total) });
           },
         }),
       },

@@ -6,6 +6,7 @@
   import { authenticationLoginURL } from "$lib/stores/external-auth.js";
   import { gomodelPath } from "$lib/api/paths.js";
   import { Check, KeyRound, LockKeyhole } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 </script>
 
 <Modal
@@ -22,11 +23,11 @@
     <div class="auth-dialog-header">
       <div>
         <h2 id="authDialogTitle">
-          {auth.needsAuth ? "Dashboard locked" : "Change API key"}
+          {auth.needsAuth ? t("auth.dashboardLocked") : t("auth.changeKey")}
         </h2>
       </div>
       <DialogCloseButton
-        label="Close authentication dialog"
+        label={t("auth.closeLabel")}
         onclick={() => auth.closeDialog()}
         class="auth-dialog-close"
         iconClass=""
@@ -46,9 +47,9 @@
           onclick={() => auth.selectExternalAuthentication()}
         >
           <Icon icon={KeyRound} />
-          <span>Sign in with SSO</span>
+          <span>{t("auth.signInWithSSO")}</span>
         </a>
-        <div class="auth-dialog-separator"><span>or use an API key</span></div>
+        <div class="auth-dialog-separator"><span>{t("auth.orUseApiKey")}</span></div>
       {/if}
       <div class="auth-dialog-input-shell">
         <Icon icon={LockKeyhole} class="auth-dialog-input-icon" />
@@ -56,8 +57,8 @@
           id="authDialogApiKey"
           class="auth-dialog-input"
           type="password"
-          placeholder="Master key or bearer token"
-          aria-label="API key"
+          placeholder={t("auth.keyPlaceholder")}
+          aria-label={t("common.apiKey")}
           autocomplete="current-password"
           data-modal-autofocus
           bind:value={auth.apiKey}
@@ -65,11 +66,11 @@
       </div>
       {#if auth.authError}
         <p class="auth-dialog-error" role="alert">
-          {auth.authErrorMessage || "Enter a valid API key to continue."}
+          {auth.authErrorMessage || t("auth.enterValidKey")}
         </p>
       {/if}
       <p class="auth-dialog-hint">
-        Stored in this browser. Requests use the Authorization bearer header.
+        {t("auth.storageHint")}
       </p>
       <div class="auth-dialog-actions">
         <button
@@ -77,7 +78,7 @@
           class="btn btn-primary btn-with-icon auth-dialog-submit-btn"
         >
           <Icon icon={Check} class="auth-dialog-submit-icon" />
-          <span>{auth.needsAuth ? "Unlock dashboard" : "Save API key"}</span>
+          <span>{auth.needsAuth ? t("auth.unlockDashboard") : t("auth.saveKey")}</span>
         </button>
       </div>
     </form>

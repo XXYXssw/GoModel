@@ -5,6 +5,7 @@
   import { auth } from "$lib/stores/auth.svelte.js";
   import { flash } from "$lib/stores/flash.svelte.js";
   import { getJSON, sendJSON } from "$lib/api/client.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   let settings = $state([]);
   let loading = $state(false);
@@ -75,7 +76,7 @@
 {#if settings.length > 0 || error}
   <div class="settings-refresh-section runtime-settings-section">
     <div class="runtime-settings-copy">
-      <h3>AI Processing</h3>
+      <h3>{t("settings.aiProcessing")}</h3>
       {#if error}
         <p class="form-field-error" role="alert">{error}</p>
       {/if}

@@ -3,6 +3,7 @@
   // (tools, prompts, resources, resource templates). Tools and prompts also
   // show their namespaced name on the aggregated /mcp endpoint.
   import LoadingState from "$lib/components/molecules/LoadingState.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import DialogCloseButton from "$lib/components/atoms/DialogCloseButton.svelte";
   import Modal from "$lib/components/atoms/Modal.svelte";
   import { mcpServers } from "./mcpServers.svelte.js";
@@ -17,10 +18,10 @@
 </script>
 
 <Modal open={mcpServers.catalogOpen} variant="editor" onclose={() => mcpServers.closeCatalog()}>
-  <div class="model-editor" role="dialog" aria-modal="true" aria-label="MCP server catalog">
+  <div class="model-editor" role="dialog" aria-modal="true" aria-label={t("mcp.catalogAria")}>
     <div class="editor-header">
       <div>
-        <h3>Server Catalog</h3>
+        <h3>{t("mcp.catalog")}</h3>
         <p class="form-hint mcp-catalog-subtitle">
           <code class="mono">{mcpServers.catalog.server}</code>
           <span class="audit-status-badge {mcpServerStatusClass(mcpServers.catalog)}"
@@ -29,13 +30,13 @@
         </p>
       </div>
       <DialogCloseButton
-        label="Close MCP server catalog"
+        label={t("mcp.closeCatalog")}
         onclick={() => mcpServers.closeCatalog()}
       />
     </div>
 
     {#if mcpServers.catalogLoading}
-      <LoadingState label="Loading catalog..." />
+      <LoadingState label={t("mcp.loadingCatalog")} />
     {:else if mcpServers.catalogError}
       <p class="form-error" role="alert" aria-live="assertive">{mcpServers.catalogError}</p>
     {:else}
@@ -70,12 +71,12 @@
       {/each}
 
       {#if mcpCatalogIsEmpty(mcpServers.catalog)}
-        <p class="empty-state">No tools listed — the server may still be connecting or degraded.</p>
+        <p class="empty-state">{t("mcp.noTools")}</p>
       {/if}
     {/if}
 
     <div class="form-actions">
-      <button type="button" class="btn" onclick={() => mcpServers.closeCatalog()}>Close</button>
+      <button type="button" class="btn" onclick={() => mcpServers.closeCatalog()}>{t("common.close")}</button>
     </div>
   </div>
 </Modal>

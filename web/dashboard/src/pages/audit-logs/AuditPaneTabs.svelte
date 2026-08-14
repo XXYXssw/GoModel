@@ -6,6 +6,7 @@
   import AuditPane from "./AuditPane.svelte";
   import { auditEffectiveTab, auditTabKeydownTarget, statusCodeClass } from "./audit-logic.js";
   import { ArrowLeft, ArrowRight } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   let { entry, panes = [] } = $props();
 
@@ -29,7 +30,7 @@
 </script>
 
 <div class="audit-request-response">
-  <div class="audit-pane-tablist" role="tablist" aria-label="Request and response">
+  <div class="audit-pane-tablist" role="tablist" aria-label={t("audit.requestResponse")}>
     {#each panes as p (p.id)}
       <button
         type="button"
@@ -68,7 +69,7 @@
         {#if p.pane.savingsLabel}
           <span
             class="audit-savings-pill mono"
-            title="Share of the request body removed by this rewrite"
+            title={t("audit.rewriteShare")}
             >{p.pane.savingsLabel}</span
           >
         {/if}

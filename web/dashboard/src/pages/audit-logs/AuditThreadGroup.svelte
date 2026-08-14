@@ -4,6 +4,7 @@
   // requests indented beneath it with L-shaped connector lines. Entries that
   // are alone in their session render as a plain row.
   import { slide } from "svelte/transition";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import Spinner from "$lib/components/atoms/Spinner.svelte";
   import { motionDuration } from "$lib/utils/motion.js";
   import AuditEntryRow from "./AuditEntryRow.svelte";
@@ -45,7 +46,7 @@
       >
         {#if children && children.loading}
           <div class="audit-thread-loading">
-            <Spinner size={14} label="Loading session requests" />
+            <Spinner size={14} label={t("audit.loadingSession")} />
           </div>
         {/if}
         {#each (children && children.entries) || [] as child (child.id)}

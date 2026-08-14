@@ -10,6 +10,7 @@
   import RateLimitEditor from "./RateLimitEditor.svelte";
   import RateLimitList from "./RateLimitList.svelte";
   import { Plus } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   const PAGE = "rate-limits";
 
@@ -31,8 +32,8 @@
 <div>
   <div class="page-header">
     <div>
-      <InlineHelpSection copyId="rate-limits-help-copy" label="rate limits help" text={HELP_TEXT}>
-        {#snippet title()}<h2>Rate Limits</h2>{/snippet}
+      <InlineHelpSection copyId="rate-limits-help-copy" label={t("rateLimits.helpLabel")} text={HELP_TEXT}>
+        {#snippet title()}<h2>{t("rateLimits.title")}</h2>{/snippet}
       </InlineHelpSection>
     </div>
     <div class="page-header-controls">
@@ -44,7 +45,7 @@
           onclick={() => rateLimits.openRateLimitForm()}
         >
           <Icon icon={Plus} class="form-action-icon" />
-          <span>Create Rate Limit</span>
+          <span>{t("rateLimits.create")}</span>
         </button>
       {/if}
     </div>
@@ -53,7 +54,7 @@
   <AuthBanner />
 
   {#if (!rateLimits.rateLimitsEnabled() || !rateLimits.rateLimitsAvailable) && !auth.authError}
-    <div class="alert alert-warning">Rate limit management is unavailable.</div>
+    <div class="alert alert-warning">{t("rateLimits.unavailable")}</div>
   {/if}
   {#if rateLimits.rateLimitError && !auth.authError}
     <p class="form-error" role="alert" aria-live="assertive">
@@ -61,7 +62,7 @@
     </p>
   {/if}
   {#if rateLimits.rateLimitsLoading && !auth.authError}
-    <LoadingState label="Loading rate limits..." />
+    <LoadingState label={t("rateLimits.loading")} />
   {/if}
 
   {#if (rateLimits.rateLimits.length > 0 || rateLimits.rateLimitFilter) && rateLimits.rateLimitsAvailable && !auth.authError && !rateLimits.rateLimitFormOpen}
@@ -69,8 +70,8 @@
       <div class="table-toolbar-main">
         <FilterInput
           id="rate-limit-filter"
-          placeholder="Filter by subject, scope, or period..."
-          label="Filter rate limits by subject, scope, or period"
+          placeholder={t("rateLimits.filterPlaceholder")}
+          label={t("rateLimits.filterLabel")}
           bind:value={rateLimits.rateLimitFilter}
         />
       </div>
@@ -84,9 +85,9 @@
   {/if}
 
   {#if rateLimits.rateLimits.length === 0 && !rateLimits.rateLimitFilter && !rateLimits.rateLimitsLoading && !auth.authError && !rateLimits.rateLimitError && rateLimits.rateLimitsAvailable && rateLimits.rateLimitsEnabled()}
-    <p class="empty-state">No rate limits configured yet.</p>
+    <p class="empty-state">{t("rateLimits.empty")}</p>
   {/if}
   {#if rateLimits.rateLimits.length > 0 && filtered.length === 0 && rateLimits.rateLimitFilter && !rateLimits.rateLimitsLoading && !auth.authError && !rateLimits.rateLimitError && rateLimits.rateLimitsAvailable && rateLimits.rateLimitsEnabled()}
-    <p class="empty-state">No rate limits match your filter.</p>
+    <p class="empty-state">{t("rateLimits.emptyFilter")}</p>
   {/if}
 </div>

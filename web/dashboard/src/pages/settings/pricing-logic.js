@@ -1,6 +1,7 @@
 // Pure pricing-recalculation logic.
 
 import { formatDateParam } from "../../lib/utils/format.js";
+import { t } from "../../lib/i18n/core.js";
 
 export { formatDateParam };
 
@@ -37,7 +38,7 @@ export function pricingRecalculateSummary(result) {
   const recalculated = Number((result && result.recalculated) || 0);
   const withoutPricing = Number((result && result.without_pricing) || 0);
   let message =
-    "Pricing recalculated for " +
+    t("settings.pricingRecalculated") + " " +
     recalculated +
     " of " +
     matched +

@@ -4,13 +4,14 @@
   import { auth } from "$lib/stores/auth.svelte.js";
   import { workflowsStore as wf } from "./workflows.svelte.js";
   import WorkflowCard from "./WorkflowCard.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 </script>
 
 <section class="workflows-list">
   {#if wf.loading && !auth.authError}
     <p class="empty-state workflow-list-loading">
-      <Spinner size={16} label="Loading workflows" />
-      Loading workflows...
+      <Spinner size={16} label={t("workflows.loading")} />
+      {t("workflows.loading")}...
     </p>
   {/if}
 
@@ -23,10 +24,10 @@
   {/if}
 
   {#if wf.workflows.length === 0 && !wf.loading && !auth.authError && wf.available}
-    <p class="empty-state">No active workflows found.</p>
+    <p class="empty-state">{t("workflows.empty")}</p>
   {/if}
   {#if wf.workflows.length > 0 && wf.filteredWorkflows.length === 0 && !wf.loading}
-    <p class="empty-state">No workflows match your filter.</p>
+    <p class="empty-state">{t("workflows.emptyFilter")}</p>
   {/if}
 </section>
 

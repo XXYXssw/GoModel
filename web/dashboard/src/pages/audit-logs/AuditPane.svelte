@@ -6,6 +6,7 @@
   import { formatJSON } from "./audit-logic.js";
   import { conversationDrawer } from "./conversationDrawer.svelte.js";
   import { isAudioBody, renderAudioBody } from "./conversation-helpers.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   let { pane } = $props();
 
@@ -52,7 +53,7 @@
 >
   {#if pane.showErrorMessage}
     <div class="audit-pane-block audit-pane-block-error">
-      <h5>Error Message</h5>
+      <h5>{t("audit.errorMessage")}</h5>
       <!-- Clickable error preview opens the Interactions drawer. -->
       <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role, a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
       <pre
@@ -75,8 +76,8 @@
         <h5>{pane.headersTitle || "Headers"}</h5>
         <CopyButton
           state={copyHeadersState}
-          label="Copy Headers"
-          errorLabel="Copy failed"
+          label={t("audit.copyHeaders")}
+          errorLabel={t("common.copyFailed")}
           class="audit-copy-btn"
           onclick={() => copyHeadersState.copy(pane.copyHeaders, formatJSON)}
         />
@@ -88,7 +89,7 @@
     <div class="audit-pane-block audit-pane-block-body">
       <div class="audit-pane-block-head">
         <div class="audit-pane-block-title">
-          <h5>Body</h5>
+          <h5>{t("audit.body")}</h5>
           {#if pane.bodyCacheRatioLabel}
             <span class="audit-prompt-cache-pill mono"
               >{pane.bodyCacheRatioLabel}</span
@@ -97,14 +98,14 @@
           {#if pane.streaming}
             <span class="audit-pane-streaming">
               <span class="live-dot is-streaming" aria-hidden="true"></span>
-              <span>streaming</span>
+              <span>{t("audit.streaming")}</span>
             </span>
           {/if}
         </div>
         <CopyButton
           state={copyBodyState}
-          label="Copy Body"
-          errorLabel="Copy failed"
+          label={t("audit.copyBody")}
+          errorLabel={t("common.copyFailed")}
           class="audit-copy-btn"
           onclick={() => copyBodyState.copy(pane.copyBody, formatJSON)}
         />

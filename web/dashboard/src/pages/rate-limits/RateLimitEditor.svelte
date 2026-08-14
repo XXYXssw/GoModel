@@ -5,6 +5,7 @@
   import EditorDialog from "$lib/components/organisms/EditorDialog.svelte";
   import FormField from "$lib/components/molecules/FormField.svelte";
   import { rateLimits } from "./rateLimits.svelte.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 </script>
 
 <!-- novalidate: validation lives in rateLimitFormPayload(), which surfaces
@@ -23,7 +24,7 @@
   onsubmit={() => rateLimits.submitRateLimitForm()}
 >
   <div class="form-grid">
-    <FormField id="rate-limit-scope" label="Scope">
+    <FormField id="rate-limit-scope" label={t("rateLimits.scope")}>
       <select
         id="rate-limit-scope"
         class="form-select settings-select"
@@ -50,7 +51,7 @@
           rateLimits.setRateLimitFormSubject(event.currentTarget.value)}
       />
     </FormField>
-    <FormField id="rate-limit-period" label="Period">
+    <FormField id="rate-limit-period" label={t("rateLimits.period")}>
       <select
         id="rate-limit-period"
         class="form-select settings-select"
@@ -63,7 +64,7 @@
       </select>
     </FormField>
     {#if rateLimits.rateLimitForm.period === "custom"}
-      <FormField id="rate-limit-period-seconds" label="Period Seconds">
+      <FormField id="rate-limit-period-seconds" label={t("rateLimits.periodSeconds")}>
         <input
           id="rate-limit-period-seconds"
           class="form-input"
@@ -92,7 +93,7 @@
       />
     </FormField>
     {#if rateLimits.rateLimitForm.period !== "concurrent"}
-      <FormField id="rate-limit-max-tokens" label="Max Tokens">
+      <FormField id="rate-limit-max-tokens" label={t("rateLimits.maxTokens")}>
         <input
           id="rate-limit-max-tokens"
           class="form-input"

@@ -2,6 +2,8 @@
   import Icon from "$lib/components/atoms/Icon.svelte";
   import GoModelLogo from "$lib/components/atoms/GoModelLogo.svelte";
   import ThemeToggle from "./ThemeToggle.svelte";
+  import LanguageToggle from "./LanguageToggle.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import { router } from "$lib/stores/router.svelte.js";
   import { sidebar } from "$lib/stores/ui.svelte.js";
   import { auth } from "$lib/stores/auth.svelte.js";
@@ -87,7 +89,7 @@
       <GoModelLogo />
     </div>
     <h1>GoModel</h1>
-    <span class="badge">Admin</span>
+    <span class="badge">{t("nav.adminBadge")}</span>
   </div>
   <nav class="sidebar-nav">
     {#each navItems as item (item.page)}
@@ -95,18 +97,19 @@
         href={gomodelPath("/admin/dashboard/" + item.page)}
         class="nav-item"
         class:active={router.page === item.page}
-        title={item.label}
+        title={t(item.labelKey)}
         onclick={(event) => {
           event.preventDefault();
           router.navigate(item.page);
         }}
       >
         <Icon icon={item.icon} class="nav-icon" />
-        <span class="nav-label">{item.label}</span>
+        <span class="nav-label">{t(item.labelKey)}</span>
       </a>
     {/each}
   </nav>
   <div class="sidebar-footer">
+    <LanguageToggle />
     <ThemeToggle compact={sidebar.collapsed} />
     {#if auth.externalLogoutURL}
       <div class="external-auth-section">
@@ -119,10 +122,10 @@
         <a
           class="api-key-open-btn"
           href={gomodelPath(auth.externalLogoutURL)}
-          aria-label="Sign out"
+          aria-label={t("nav.signOut")}
         >
           <Icon icon={LogOut} class="api-key-open-icon" />
-          <span>Sign out</span>
+          <span>{t("nav.signOut")}</span>
         </a>
       </div>
     {/if}
@@ -132,10 +135,10 @@
           type="button"
           class="api-key-open-btn"
           onclick={() => auth.openDialog()}
-          aria-label={auth.needsAuth ? "Enter API key" : "Change API key"}
+          aria-label={auth.needsAuth ? t("nav.enterApiKey") : t("nav.changeApiKey")}
         >
           <Icon icon={LockKeyhole} class="api-key-open-icon" />
-          <span>{auth.needsAuth ? "Enter API key" : "Change API key"}</span>
+          <span>{auth.needsAuth ? t("nav.enterApiKey") : t("nav.changeApiKey")}</span>
         </button>
       </div>
     {/if}
@@ -147,8 +150,8 @@
   class="sidebar-toggle"
   role="separator"
   tabindex="0"
-  title="Drag to resize; click to collapse or expand"
-  aria-label="Resize sidebar"
+  title={t("nav.resizeSidebar")}
+  aria-label={t("nav.resizeSidebar")}
   aria-orientation="vertical"
   aria-valuemin={MIN_SIDEBAR_WIDTH}
   aria-valuemax={MAX_SIDEBAR_WIDTH}

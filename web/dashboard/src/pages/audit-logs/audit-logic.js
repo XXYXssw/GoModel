@@ -4,6 +4,7 @@
 // directly.
 
 import { formatJSON, formatNumber } from "../../lib/utils/format.js";
+import { t } from "../../lib/i18n/core.js";
 import {
   findNestedErrorMessage,
   normalizeErrorText,
@@ -91,17 +92,17 @@ function auditRetentionDays(raw) {
 export function auditRetentionText(raw) {
   const days = auditRetentionDays(raw);
   if (days === null) return "";
-  if (days === 0) return "Audit logs are retained indefinitely.";
+  if (days === 0) return t("audit.retainedIndefinitely");
   if (days === 1) return "Audit logs are retained for 1 day.";
-  return "Audit logs are retained for " + days + " days.";
+  return t("audit.retainedDays", { days });
 }
 
 export function auditRetentionPrefix(raw) {
   const days = auditRetentionDays(raw);
   if (days === null) return "";
   return days === 0
-    ? "Audit logs are retained "
-    : "Audit logs are retained for ";
+    ? t("audit.retainedPrefix")
+    : t("audit.retainedFor");
 }
 
 export function auditRetentionHighlight(raw) {
@@ -600,7 +601,7 @@ function auditAttemptErrorMessage(attempt) {
   const code = String(attempt.error_code || "").trim();
   const type = String(attempt.error_type || "").trim();
   if (message && code) return code + ": " + message;
-  return message || code || type || "Provider attempt failed";
+  return message || code || type || t("audit.providerAttemptFailed");
 }
 
 function auditAttemptHeaders(entry, attempt) {
@@ -630,7 +631,7 @@ function auditAttemptResponsePane(entry, attempt) {
   const single = auditAttempts(entry).length <= 1;
 
   return {
-    title: "Response",
+    title: t("audit.response"),
     direction: "response",
     seq: single ? 0 : Number((attempt && attempt.seq) || 0),
     kind: single ? "" : kind === "attempt" ? "" : kind,
@@ -646,9 +647,9 @@ function auditAttemptResponsePane(entry, attempt) {
     showBody: hasBody,
     body,
     showEmpty: !errorMessage && !hasBody && !headers,
-    emptyMessage: "No response was captured for this attempt.",
+    emptyMessage: t("audit.noResponseCaptured"),
     showTooLarge: !!(success && data && data.response_body_too_big_to_handle),
-    tooLargeMessage: "Response body was too large to capture.",
+    tooLargeMessage: t("audit.responseTooLarge"),
   };
 }
 
@@ -721,7 +722,7 @@ export function auditRequestRevisionPane(entry, revision) {
   }
 
   return {
-    title: "Rewritten",
+    title: t("audit.rewritten"),
     direction: "request",
     seq: single ? 0 : Number((revision && revision.seq) || 0),
     kind: revision && revision.rewriter ? String(revision.rewriter) : "",
@@ -734,7 +735,7 @@ export function auditRequestRevisionPane(entry, revision) {
     errorMessage: null,
     showHeaders: true,
     headers: summary,
-    headersTitle: "What changed",
+    headersTitle: t("audit.whatChanged"),
     showBody: hasBody,
     body,
     showEmpty: false,
@@ -825,7 +826,7 @@ export function auditRequestPane(entry, extractSegments) {
   const pending = empty && auditEntryLiveInProgress(entry);
 
   return {
-    title: "Request",
+    title: t("audit.request"),
     direction: "request",
     layout: "split",
     entry,
@@ -843,11 +844,11 @@ export function auditRequestPane(entry, extractSegments) {
     // pills on the tab so the step is visible but costs no tab.
     noChangeSteps: auditNoChangeSteps(entry),
     showEmpty: empty && !pending,
-    emptyMessage: "Request details were not captured.",
+    emptyMessage: t("audit.noRequestCaptured"),
     showPending: pending,
     pendingMessage: "Waiting for request data…",
     showTooLarge: !!(data && data.request_body_too_big_to_handle),
-    tooLargeMessage: "Request body was too large to capture.",
+    tooLargeMessage: t("audit.requestTooLarge"),
   };
 }
 
@@ -859,7 +860,7 @@ export function auditResponsePane(entry) {
   const pending = empty && auditEntryLiveInProgress(entry);
 
   return {
-    title: "Response",
+    title: t("audit.response"),
     direction: "response",
     layout: "split",
     entry,
@@ -875,11 +876,11 @@ export function auditResponsePane(entry) {
       !!(entry && entry._response_partial && data && data.response_body) &&
       auditEntryLiveInProgress(entry),
     showEmpty: empty && !pending,
-    emptyMessage: "Response details were not captured.",
+    emptyMessage: t("audit.noResponseDetails"),
     showPending: pending,
     pendingMessage: "Response in progress…",
     showTooLarge: !!(data && data.response_body_too_big_to_handle),
-    tooLargeMessage: "Response body was too large to capture.",
+    tooLargeMessage: t("audit.responseTooLarge"),
   };
 }
 

@@ -3,6 +3,7 @@
   // (edit / inspect catalog / reconnect / delete). Managed (config-declared)
   // rows are read-only: no edit or delete buttons.
   import TableActionButton from "$lib/components/atoms/TableActionButton.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import Icon from "$lib/components/atoms/Icon.svelte";
   import { timezone } from "$lib/stores/timezone.svelte.js";
   import { formatNumber } from "$lib/utils/format.js";
@@ -26,13 +27,13 @@
   <table class="data-table">
     <thead>
       <tr>
-        <th>Name</th>
-        <th>Transport</th>
-        <th>Endpoint</th>
-        <th>Status</th>
-        <th>Tools</th>
-        <th>Enabled</th>
-        <th class="col-actions">Actions</th>
+        <th>{t("common.name")}</th>
+        <th>{t("mcp.transport")}</th>
+        <th>{t("mcp.endpoint")}</th>
+        <th>{t("common.status")}</th>
+        <th>{t("mcp.tools")}</th>
+        <th>{t("mcp.enabled")}</th>
+        <th class="col-actions">{t("common.actions")}</th>
       </tr>
     </thead>
     <tbody>
@@ -44,7 +45,7 @@
               <span
                 class="alias-kind-badge"
                 title="Declared in configuration (config.yaml mcp.servers); read-only in the dashboard"
-                >Config</span
+                >{t("vm.config")}</span
               >
             {/if}
             <div class="mcp-server-sub-counts mono">{mcpServerSlug(server)}</div>

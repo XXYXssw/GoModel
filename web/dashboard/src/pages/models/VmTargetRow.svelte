@@ -3,6 +3,7 @@
   // extra {#each} rows share this shape; two or more rows make the redirect
   // a load balancer (weights show only for round-robin).
   import Icon from "$lib/components/atoms/Icon.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import TableActionButton from "$lib/components/atoms/TableActionButton.svelte";
   import { virtualModels as vm } from "./virtualModels.svelte.js";
   import { Trash2 } from "lucide";
@@ -26,7 +27,7 @@
     {placeholder}
     bind:value={model}
     disabled={vm.vmFormManaged}
-    aria-label="Target model"
+    aria-label={t("vm.targetModel")}
   />
   {#if vm.vmFormShowWeights()}
     <input
@@ -38,12 +39,12 @@
       bind:value={weight}
       disabled={vm.vmFormManaged}
       required
-      aria-label="Target weight"
+      aria-label={t("vm.targetWeight")}
     />
   {/if}
   {#if showRemove}
     <TableActionButton
-      label="Remove target"
+      label={t("vm.removeTarget")}
       class="table-action-btn-danger table-icon-btn vm-target-remove"
       onclick={onremove}
       disabled={vm.vmFormManaged}

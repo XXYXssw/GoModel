@@ -1,8 +1,9 @@
 <script>
-  // Live Token Throughput widget (overview-only). A rolling, stacked bar
+  // {t("overview.liveTokenThroughput")} widget (overview-only). A rolling, stacked bar
   // chart of token volume bucketed by a selectable granularity; the data
   // engine (polling + usage SSE signal) lives in liveTokensState.svelte.js.
   import ChartCanvas from "$lib/components/molecules/ChartCanvas.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import SegmentedControl from "$lib/components/atoms/SegmentedControl.svelte";
   import { chartColors, resolveCssColor as resolveColor } from "$lib/utils/chartTheme.js";
   import { liveTokensState } from "./liveTokensState.svelte.js";
@@ -41,7 +42,7 @@
 <div class="chart-container live-tokens">
   <div class="chart-container-header">
     <div class="live-tokens-heading">
-      <h3>Live Token Throughput</h3>
+      <h3>{t("overview.liveTokenThroughput")}</h3>
       <span class="live-tokens-subtitle">
         <span
           class="live-dot"
@@ -82,7 +83,7 @@
     />
     {#if !liveTokensHasData(totals)}
       <div class="chart-empty-overlay live-tokens-empty">
-        <span class="live-tokens-empty-text">Waiting for live requests…</span>
+        <span class="live-tokens-empty-text">{t("overview.waitingLive")}</span>
       </div>
     {/if}
   </div>

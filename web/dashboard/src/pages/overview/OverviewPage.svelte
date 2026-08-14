@@ -3,6 +3,7 @@
   // reporting window, cache meter, usage chart, activity calendar, audit
   // status/latency charts, and the providers overview grid.
   import AuthBanner from "$lib/components/organisms/AuthBanner.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import { untrack } from "svelte";
   import { router } from "$lib/stores/router.svelte.js";
   import { auth } from "$lib/stores/auth.svelte.js";
@@ -68,7 +69,7 @@
   <LiveTokens />
 
   <div class="page-header date-range-page-header">
-    <h2>Usage Overview</h2>
+    <h2>{t("overview.title")}</h2>
   </div>
   <div class="sticky-date-range">
     <DatePicker onchange={onDateRangeChange} />

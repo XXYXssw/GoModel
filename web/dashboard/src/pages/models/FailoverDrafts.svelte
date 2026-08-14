@@ -2,6 +2,7 @@
   // Generated failover drafts modal: filter, select-all toggle, draft list
   // with per-draft checkboxes, save-selected.
   import LoadingState from "$lib/components/molecules/LoadingState.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import DialogCloseButton from "$lib/components/atoms/DialogCloseButton.svelte";
   import Modal from "$lib/components/atoms/Modal.svelte";
   import Icon from "$lib/components/atoms/Icon.svelte";
@@ -19,19 +20,19 @@
     class="model-editor failover-drafts-editor"
     role="dialog"
     aria-modal="true"
-    aria-label="Generated failover drafts"
+    aria-label={t("failover.generatedDrafts")}
   >
     <div class="editor-header">
       <div>
-        <p class="form-kicker">Generated drafts</p>
-        <h3>Failover models</h3>
+        <p class="form-kicker">{t("failover.generatedDraftsTitle")}</p>
+        <h3>{t("failover.failoverModels")}</h3>
       </div>
       <div class="failover-draft-header-actions">
         {#if failover.failoverGeneratedRules.length > 0}
           <span class="failover-draft-counter">{failover.failoverDraftCountLabel()}</span>
         {/if}
         <DialogCloseButton
-          label="Close failover drafts"
+          label={t("failover.closeDrafts")}
           onclick={() => failover.closeFailoverDraftsModal()}
           disabled={failover.failoverDraftSaving}
         />
@@ -45,8 +46,8 @@
     {#if !failover.failoverGenerating && failover.failoverGeneratedRules.length > 0}
       <div class="failover-draft-toolbar">
         <FilterInput
-          placeholder="Filter failover drafts..."
-          label="Filter failover drafts"
+          placeholder={t("failover.filterDraftsPlaceholder")}
+          label={t("failover.filterDrafts")}
           bind:value={failover.failoverDraftFilter}
         />
         <button
@@ -57,7 +58,7 @@
         >
           <Icon icon={Check} class="form-action-icon" />
           <span>
-            {failover.allFailoverDraftsSelected() ? "Deselect all" : "Select all"}
+            {failover.allFailoverDraftsSelected() ? t("failover.deselectAll") : t("failover.selectAll")}
           </span>
         </button>
       </div>
@@ -119,7 +120,7 @@
         onclick={() => failover.saveSelectedFailoverDrafts()}
       >
         <Icon icon={Save} class="form-action-icon" />
-        <span>{failover.failoverDraftSaving ? "Saving..." : "Save selected"}</span>
+        <span>{failover.failoverDraftSaving ? t("common.saving") : t("failover.saveSelected")}</span>
       </button>
     </div>
   </div>

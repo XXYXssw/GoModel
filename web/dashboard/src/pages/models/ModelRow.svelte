@@ -1,6 +1,7 @@
 <script>
   // One model/alias table row.
   import Icon from "$lib/components/atoms/Icon.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import TableActionButton from "$lib/components/atoms/TableActionButton.svelte";
   import { virtualModels } from "./virtualModels.svelte.js";
   import { pricingOverrides } from "./pricingOverrides.svelte.js";
@@ -59,36 +60,36 @@
           </span>
         {/if}
         {#if rowIsManaged(row)}
-          <span class="alias-kind-badge" title="Managed by config.yaml / VIRTUAL_MODELS">Config</span>
+          <span class="alias-kind-badge" title={t("vm.managedByConfig")}>{t("vm.config")}</span>
         {/if}
       </div>
       {#if row.is_alias}
         <div class="model-name-secondary">
-          Targets <span class="mono font-size-md">{row.secondary_name}</span>
+          {t("vm.targets")} <span class="mono font-size-md">{row.secondary_name}</span>
         </div>
       {/if}
       {#if !row.is_alias && row.masking_alias}
         <div class="model-name-secondary">
-          Redirects to <span class="mono font-size-md">{aliasTargetLabel(row.masking_alias)}</span>
+          {t("vm.redirectsTo")} <span class="mono font-size-md">{aliasTargetLabel(row.masking_alias)}</span>
           {#if virtualModels.virtualModelsAvailable && rowRedirectCanRemove(row)}
             <button
               type="button"
               class="model-redirect-remove-btn mono"
               aria-label={virtualModels.rowDeletingKey === row.key
-                ? "Removing redirect for " + row.display_name
-                : "Remove redirect for " + row.display_name}
+                ? t("vm.removingRedirectFor", { name: row.display_name })
+                : t("vm.removeRedirectFor", { name: row.display_name })}
               title={virtualModels.rowDeletingKey === row.key
-                ? "Removing redirect for " + row.display_name
-                : "Remove redirect for " + row.display_name}
+                ? t("vm.removingRedirectFor", { name: row.display_name })
+                : t("vm.removeRedirectFor", { name: row.display_name })}
               disabled={Boolean(virtualModels.rowDeletingKey)}
               onclick={() => virtualModels.removeRedirectRow(row)}
-            >[remove]</button>
+            >[{t("vm.remove")}]</button>
           {/if}
         </div>
       {/if}
       {#if slowdown > 0}
         <div class="model-name-secondary">
-          Slowdown <span class="mono font-size-md">+{slowdown}× inference time</span>
+          {t("vm.slowdown")} <span class="mono font-size-md">+{slowdown}× {t("vm.inferenceTime")}</span>
         </div>
       {/if}
     </div>
@@ -102,7 +103,7 @@
         <AccessToggle {row} />
         {#if virtualModels.virtualModelsAvailable && aliasRowCanRemove(row)}
           <TableActionButton
-            label={virtualModels.rowDeletingKey === row.key ? "Removing alias " + row.alias.name : "Remove alias " + row.alias.name}
+            label={virtualModels.rowDeletingKey === row.key ? t("vm.removingAlias", { name: row.alias.name }) : t("vm.removeAlias", { name: row.alias.name })}
             class="table-action-btn-danger table-icon-btn"
             onclick={() => virtualModels.removeAliasRow(row)}
             disabled={Boolean(virtualModels.rowDeletingKey)}
@@ -112,7 +113,7 @@
         {/if}
         {#if virtualModels.virtualModelsAvailable}
           <TableActionButton
-            label={"Edit alias " + row.alias.name}
+            label={t("vm.editAliasNamed", { name: row.alias.name })}
             class="table-icon-btn table-action-btn-active"
             onclick={() => virtualModels.openVirtualModelEditAlias(row.alias)}
           >
@@ -152,7 +153,7 @@
         {/if}
         {#if virtualModels.virtualModelsAvailable && row.masking_alias && row.masking_alias.name}
           <TableActionButton
-            label={"Edit redirect for " + row.display_name}
+            label={t("vm.editRedirectFor", { name: row.display_name })}
             class="table-icon-btn table-action-btn-active"
             onclick={() => virtualModels.openVirtualModelEditAlias(row.masking_alias)}
           >

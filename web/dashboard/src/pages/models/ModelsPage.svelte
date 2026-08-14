@@ -10,6 +10,7 @@
   import { modelsStore } from "$lib/stores/models.svelte.js";
   import Icon from "$lib/components/atoms/Icon.svelte";
   import FilterInput from "$lib/components/molecules/FilterInput.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import { virtualModels } from "./virtualModels.svelte.js";
   import { pricingOverrides } from "./pricingOverrides.svelte.js";
   import ModelTable from "./ModelTable.svelte";
@@ -54,21 +55,21 @@
 
 <div>
   <div class="page-header">
-    <h2>Models</h2>
+    <h2>{t("models.title")}</h2>
     {#if virtualModels.displayModels.length > 0}
       <div class="model-count">
         <span>
           {modelsStore.filter
-            ? virtualModels.filteredDisplayModels.length + " / " + virtualModels.displayModels.length
-            : virtualModels.displayModels.length}
-        </span> models
+            ? t("models.count", { count: virtualModels.filteredDisplayModels.length + " / " + virtualModels.displayModels.length })
+            : t("models.count", { count: virtualModels.displayModels.length })}
+        </span>
       </div>
     {/if}
   </div>
 
   <AuthBanner />
   {#if !virtualModels.virtualModelsAvailable && !authError}
-    <div class="alert alert-warning">Virtual models feature is unavailable.</div>
+    <div class="alert alert-warning">{t("models.virtualModelsUnavailable")}</div>
   {/if}
   {#if virtualModels.aliasError && !authError}
     <div class="alert alert-warning">{virtualModels.aliasError}</div>
@@ -97,8 +98,8 @@
     <div class="table-toolbar">
       <div class="table-toolbar-main">
         <FilterInput
-          placeholder="Filter by provider, provider/model, alias, or owner..."
-          label="Filter models by provider, provider/model, alias, or owner"
+          placeholder={t("models.filterPlaceholder")}
+          label={t("models.filterLabel")}
           bind:value={modelsStore.filter}
         />
       </div>
@@ -112,7 +113,7 @@
             onclick={() => virtualModels.openVirtualModelCreate()}
           >
             <Icon icon={Plus} class="alias-create-icon" />
-            <span>New&nbsp;virtual&nbsp;model</span>
+            <span>{t("models.newVirtualModel")}</span>
           </button>
         {/if}
       </div>
@@ -131,13 +132,13 @@
   {/if}
 
   {#if virtualModels.displayModels.length === 0 && !modelsStore.loading && !authError && !modelsStore.filter && (modelsStore.activeCategory === "all" || !modelsStore.activeCategory)}
-    <p class="empty-state">No models registered.</p>
+    <p class="empty-state">{t("models.empty")}</p>
   {/if}
   {#if virtualModels.displayModels.length === 0 && !modelsStore.loading && !authError && !modelsStore.filter && modelsStore.activeCategory && modelsStore.activeCategory !== "all"}
-    <p class="empty-state">No models in this category.</p>
+    <p class="empty-state">{t("models.emptyCategory")}</p>
   {/if}
   {#if virtualModels.displayModels.length > 0 && virtualModels.filteredDisplayModels.length === 0 && modelsStore.filter}
-    <p class="empty-state">No models match your filter.</p>
+    <p class="empty-state">{t("models.emptyFilter")}</p>
   {/if}
 
   <RateLimitInspector />

@@ -8,16 +8,17 @@
   import InlineHelpSection from "$lib/components/molecules/InlineHelpSection.svelte";
   import { authKeysStore as store } from "./authKeys.svelte.js";
   import { Check, Plus } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 </script>
 
 <EditorDialog
   open={store.formOpen}
-  title="Create API Key"
-  ariaLabel="API key editor"
+  title={t("authKeys.createKey")}
+  ariaLabel={t("authKeys.editorAria")}
   error={store.issuedValue ? "" : store.error}
   submitting={store.formSubmitting}
-  submitLabel={store.issuedValue ? "Done, I’ve stored it" : "Create API Key"}
-  submittingLabel="Creating..."
+  submitLabel={store.issuedValue ? t("authKeys.doneStored") : t("authKeys.createKey")}
+  submittingLabel={t("common.creating")}
   submitIcon={store.issuedValue ? Check : Plus}
   cancel={false}
   dialogClass="auth-key-editor"
@@ -53,7 +54,7 @@
           <input
             id="auth-key-name"
             type="text"
-            placeholder="e.g. ci-deploy"
+            placeholder={t("authKeys.namePlaceholder")}
             autocomplete="off"
             data-modal-autofocus
             bind:value={store.form.name}
@@ -67,9 +68,9 @@
         </div>
       </div>
       <div class="form-field">
-        <InlineHelpSection copyId="auth-key-user-path-help-copy" label="API key user path help">
+        <InlineHelpSection copyId="auth-key-user-path-help-copy" label={t("authKeys.userPathHelp")}>
           {#snippet title()}
-            <label class="form-field-label" for="auth-key-user-path">User Path (optional)</label>
+            <label class="form-field-label" for="auth-key-user-path">{t("authKeys.userPathOptional")}</label>
           {/snippet}
           {#snippet help()}
             When set, this key overrides the configured user path request
@@ -79,13 +80,13 @@
         <input
           id="auth-key-user-path"
           type="text"
-          placeholder="ex. /department1/team-a"
+          placeholder={t("authKeys.userPathPlaceholder")}
           aria-describedby="auth-key-user-path-help-copy"
           bind:value={store.form.user_path}
         />
       </div>
       <div class="form-field">
-        <InlineHelpSection copyId="auth-key-labels-help-copy" label="API key labels help">
+        <InlineHelpSection copyId="auth-key-labels-help-copy" label={t("authKeys.labelsHelp")}>
           {#snippet title()}
             <label class="form-field-label" for="auth-key-labels">
               Labels (optional, comma-separated)
@@ -100,15 +101,15 @@
         <input
           id="auth-key-labels"
           type="text"
-          placeholder="ex. team-a, batch-jobs"
+          placeholder={t("authKeys.labelsPlaceholder")}
           aria-describedby="auth-key-labels-help-copy"
           bind:value={store.form.labels}
         />
       </div>
       <div class="form-field">
-        <InlineHelpSection copyId="auth-key-dashboard-access-help-copy" label="API key dashboard access help">
+        <InlineHelpSection copyId="auth-key-dashboard-access-help-copy" label={t("authKeys.dashboardAccessHelp")}>
           {#snippet title()}
-            <label class="form-field-label" for="auth-key-dashboard-access">Dashboard access</label>
+            <label class="form-field-label" for="auth-key-dashboard-access">{t("authKeys.dashboardAccess")}</label>
           {/snippet}
           {#snippet help()}
             When off, this key is denied the dashboard and every /admin API
@@ -123,14 +124,14 @@
             aria-describedby="auth-key-dashboard-access-help-copy"
             bind:checked={store.form.dashboard_access}
           />
-          <span>Allow this key to use the dashboard and /admin API</span>
+          <span>{t("authKeys.dashboardAccessHint")}</span>
         </label>
       </div>
-      <FormField id="auth-key-description" label="Description (optional)">
+      <FormField id="auth-key-description" label={t("authKeys.descriptionOptional")}>
         <textarea
           id="auth-key-description"
           rows="2"
-          placeholder="What is this key used for?"
+          placeholder={t("authKeys.descriptionPlaceholder")}
           bind:value={store.form.description}
         ></textarea>
       </FormField>

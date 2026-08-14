@@ -4,11 +4,12 @@
   // button works for page-local state and store-held state.
   import Icon from "$lib/components/atoms/Icon.svelte";
   import { CircleCheck, Copy } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   let {
     state,
-    label = "Copy",
-    copiedLabel = "Copied",
+    label = t("common.copy"),
+    copiedLabel = t("common.copied"),
     // Left unset when the caller reports failures elsewhere (e.g. a form-error
     // line), so the label keeps reading "Copy".
     errorLabel = "",

@@ -7,6 +7,7 @@
   import Icon from "$lib/components/atoms/Icon.svelte";
   import { providersConfig } from "./providersConfig.svelte.js";
   import { Plus, Trash2 } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   let { field } = $props();
 
@@ -46,7 +47,7 @@
             id={index === 0 ? id : id + "-" + index}
             type="text"
             class="mono vm-target-model"
-            placeholder="sk-..."
+            placeholder={t("providers.keyPlaceholder")}
             aria-label={"API key " + (index + 1)}
             aria-invalid={error ? "true" : undefined}
             aria-describedby={index === 0 ? describedBy : undefined}
@@ -71,7 +72,7 @@
         onclick={() => providersConfig.addApiKeyRow()}
       >
         <Icon icon={Plus} class="form-action-icon" />
-        <span>Add key</span>
+        <span>{t("providers.addKey")}</span>
       </button>
     </div>
   {:else if field.control === "select"}
@@ -83,7 +84,7 @@
       bind:value={providersConfig.form[field.name]}
       onchange={onInput}
     >
-      <option value="">Provider default</option>
+      <option value="">{t("providers.providerDefault")}</option>
       {#each options as option (option)}
         <option value={option}>{option}</option>
       {/each}

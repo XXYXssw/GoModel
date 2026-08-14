@@ -1,6 +1,7 @@
 <script>
   import TableActionButton from "$lib/components/atoms/TableActionButton.svelte";
-  // Effective rate limits for one model or provider: the subject's own rules
+  import { t } from "$lib/i18n/i18n.svelte.js";
+  // {t("rateLimits.effective")} for one model or provider: the subject's own rules
   // plus the provider and global rules that also throttle its traffic.
   // Opened from the Models page via rateLimits.openRateLimitInspectorForModel /
   // openRateLimitInspectorForProvider. Mount RateLimitEditor alongside this
@@ -26,25 +27,25 @@
     class="model-editor budget-editor"
     role="dialog"
     aria-modal="true"
-    aria-label="Effective rate limits"
+    aria-label={t("rateLimits.effective")}
   >
     <div class="editor-header">
       <div>
-        <h3>Rate Limits</h3>
+        <h3>{t("rateLimits.title")}</h3>
         <p class="form-hint">
           <code class="mono">{rateLimits.rateLimitInspector.title}</code>
         </p>
       </div>
       <DialogCloseButton
-        label="Close rate limits inspector"
+        label={t("rateLimits.closeInspector")}
         onclick={() => rateLimits.closeRateLimitInspector()}
       />
     </div>
 
     {#if rateLimits.rateLimitsLoading}
-      <LoadingState label="Loading rate limits..." />
+      <LoadingState label={t("rateLimits.loading")} />
     {:else if !rateLimits.rateLimitsAvailable}
-      <div class="alert alert-warning">Rate limit management is unavailable.</div>
+      <div class="alert alert-warning">{t("rateLimits.unavailable")}</div>
     {:else}
       {#each rateLimits.rateLimitInspectorSections() as section (section.key)}
         <section class="form-section">
@@ -60,14 +61,14 @@
                 )}
             >
               <Icon icon={Plus} class="table-icon-svg" />
-              <span class="budget-action-label">Add</span>
+              <span class="budget-action-label">{t("common.add")}</span>
             </TableActionButton>
           </div>
           {#if section.hint}
             <p class="form-hint">{section.hint}</p>
           {/if}
           {#if section.items.length === 0}
-            <p class="empty-state">No rules.</p>
+            <p class="empty-state">{t("rateLimits.noRules")}</p>
           {:else}
             <div class="budget-list">
               {#each section.items as item (rateLimits.rateLimitKey(item))}
@@ -110,7 +111,7 @@
                         <div class="budget-row-actions">
                           {#if !rateLimits.rateLimitIsReadOnly(item)}
                             <TableActionButton
-                              label="Edit rate limit"
+                              label={t("rateLimits.editRule")}
                               class="budget-action-btn"
                               onclick={() =>
                                 rateLimits.openRateLimitFormFromInspector(
@@ -120,7 +121,7 @@
                                 )}
                             >
                               <Icon icon={Pencil} class="budget-action-icon" />
-                              <span class="budget-action-label">Edit</span>
+                              <span class="budget-action-label">{t("common.edit")}</span>
                             </TableActionButton>
                           {/if}
                         </div>

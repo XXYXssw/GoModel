@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n/core.js";
 // Pure guardrail logic. Everything here is side-effect free so it can be
 // unit-tested with node:test; the Svelte state module (guardrails.svelte.js)
 // owns fetches and reactive state.
@@ -115,7 +116,7 @@ export function filterGuardrails(guardrails, filter) {
 // guardrailTypeLabel returns the human label for a type.
 export function guardrailTypeLabel(types, type) {
   const definition = guardrailTypeDefinition(types, type);
-  return definition && definition.label ? definition.label : type || "Unknown";
+  return definition && definition.label ? definition.label : type || t("common.unknown");
 }
 
 // guardrailTypeFields returns the schema-driven form fields for a type.

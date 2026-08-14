@@ -2,6 +2,7 @@
   // Page-level data filters: every widget on the usage page follows them.
   // Each facet dropdown honors every filter except its own (faceted search).
   import FilterInput from "$lib/components/molecules/FilterInput.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import { debounced } from "$lib/utils/debounce.js";
   import { usagePage } from "./usage.svelte.js";
 
@@ -9,14 +10,14 @@
   $effect(() => onUserPathInput.cancel);
 </script>
 
-<div class="usage-page-filters" role="group" aria-label="Usage data filters">
+<div class="usage-page-filters" role="group" aria-label={t("usage.dataFilters")}>
   <select
     bind:value={usagePage.usageFilterModel}
     onchange={() => usagePage.onUsageFilterChanged()}
     class="usage-log-select"
-    aria-label="Filter by model"
+    aria-label={t("usage.filterByModel")}
   >
-    <option value="">All Models</option>
+    <option value="">{t("usage.allModels")}</option>
     {#each usagePage.usageFilterModelOptions() as m (m)}
       <option value={m}>{m}</option>
     {/each}
@@ -25,9 +26,9 @@
     bind:value={usagePage.usageFilterProvider}
     onchange={() => usagePage.onUsageFilterChanged()}
     class="usage-log-select"
-    aria-label="Filter by provider"
+    aria-label={t("usage.filterByProvider")}
   >
-    <option value="">All Providers</option>
+    <option value="">{t("usage.allProviders")}</option>
     {#each usagePage.usageFilterProviderOptions() as p (p)}
       <option value={p}>{p}</option>
     {/each}
@@ -37,9 +38,9 @@
       bind:value={usagePage.usageFilterLabel}
       onchange={() => usagePage.onUsageFilterChanged()}
       class="usage-log-select"
-      aria-label="Filter by label"
+      aria-label={t("usage.filterByLabel")}
     >
-      <option value="">All Labels</option>
+      <option value="">{t("usage.allLabels")}</option>
       {#each usagePage.usageFilterLabelOptions() as l (l)}
         <option value={l}>{l}</option>
       {/each}
@@ -48,7 +49,7 @@
   <FilterInput
     class="usage-page-filters-user-path"
     placeholder="User path /team/alpha"
-    label="Filter by user path"
+    label={t("usage.filterByUserPath")}
     bind:value={usagePage.usageFilterUserPath}
     oninput={onUserPathInput}
   />

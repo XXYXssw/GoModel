@@ -1,9 +1,10 @@
 <script>
-  // Failover mapping editor (EditorDialog shell). Self-contained:
+  // {t("failover.mapping")} editor (EditorDialog shell). Self-contained:
   // reads/writes the shared failover store; the datalist comes from the
   // shared model inventory. The [data-failover-editor] wrapper is the
   // store's focusFailoverEditor() query anchor.
   import TableActionButton from "$lib/components/atoms/TableActionButton.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import EditorDialog from "$lib/components/organisms/EditorDialog.svelte";
   import EnabledToggle from "$lib/components/atoms/EnabledToggle.svelte";
   import FormField from "$lib/components/molecules/FormField.svelte";
@@ -16,17 +17,17 @@
 
 <EditorDialog
   open={failover.failoverFormOpen}
-  ariaLabel="Failover editor"
+  ariaLabel={t("failover.editorAria")}
   error={failover.failoverError}
   submitting={failover.failoverSaving}
   submitDisabled={failover.failoverGenerating || failover.failoverFormManaged}
-  submitLabel="Save"
+  submitLabel={t("common.save")}
   onclose={() => failover.closeFailoverForm()}
   onsubmit={() => failover.submitFailoverForm()}
 >
   {#snippet header()}
-    <p class="form-kicker">Failover mapping</p>
-    <h3>{failover.failoverForm.source || "Failover"}</h3>
+    <p class="form-kicker">{t("failover.mapping")}</p>
+    <h3>{failover.failoverForm.source || t("failover.title")}</h3>
   {/snippet}
 
   <div data-failover-editor style="display: contents">
@@ -42,7 +43,7 @@
       {/each}
     </datalist>
 
-    <FormField id="failover-target" label="Fallback models">
+    <FormField id="failover-target" label={t("failover.fallbackModels")}>
       <div class="vm-target-list">
         <div class="vm-target-row">
           <input
@@ -53,12 +54,12 @@
             placeholder="azure/gpt-4o"
             bind:value={failover.failoverForm.target_model}
             disabled={failover.failoverFormManaged}
-            aria-label="Fallback model"
+            aria-label={t("failover.fallbackModel")}
             data-modal-autofocus
           />
           {#if failover.failoverForm.target_model}
             <TableActionButton
-              label="Remove fallback model"
+              label={t("failover.removeFallback")}
               class="table-action-btn-danger table-icon-btn vm-target-remove"
               onclick={() => failover.removePrimaryFailoverTarget()}
               disabled={failover.failoverFormManaged}
@@ -76,10 +77,10 @@
               placeholder="gemini/gemini-2.5-pro"
               bind:value={target.model}
               disabled={failover.failoverFormManaged}
-              aria-label="Fallback model"
+              aria-label={t("failover.fallbackModel")}
             />
             <TableActionButton
-              label="Remove fallback model"
+              label={t("failover.removeFallback")}
               class="table-action-btn-danger table-icon-btn vm-target-remove"
               onclick={() => failover.removeFailoverTarget(index)}
               disabled={failover.failoverFormManaged}
@@ -99,7 +100,7 @@
           onclick={() => failover.addFailoverTarget()}
         >
           <Icon icon={Plus} class="form-action-icon" />
-          <span>Add fallback model</span>
+          <span>{t("failover.addFallback")}</span>
         </button>
         <button
           type="button"
@@ -113,8 +114,8 @@
           <Icon icon={WandSparkles} class="form-action-icon" />
           <span>
             {failover.failoverGenerating
-              ? "Generating..."
-              : "Generate automatically"}
+              ? t("failover.generating")
+              : t("failover.generateAuto")}
           </span>
         </button>
       </div>

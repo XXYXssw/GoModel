@@ -1,4 +1,5 @@
 <script>
+  import { t } from "$lib/i18n/i18n.svelte.js";
   // Title row with an inline-help "?" toggle and collapsible copy below the
   // row (inline-help-section class names match dashboard.css selectors).
   // The heading is the `title` snippet (h2/h3/label/p — whatever the page
@@ -31,7 +32,7 @@
         type="button"
         class="inline-help-toggle"
         class:is-open={open}
-        aria-label={(open ? "Hide " : "Show ") + label}
+        aria-label={(open ? t("common.hide") + " " : t("common.show") + " ") + label}
         aria-expanded={open}
         aria-controls={copyId}
         onclick={() => (open = !open)}

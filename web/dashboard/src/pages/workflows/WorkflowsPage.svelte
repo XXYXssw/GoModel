@@ -6,6 +6,7 @@
   import WorkflowEditor from "./WorkflowEditor.svelte";
   import WorkflowList from "./WorkflowList.svelte";
   import { Plus } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   // Fetch on mount (the page renders only while its route is active) and
   // whenever the API key / timezone refresh tick changes.
@@ -18,7 +19,7 @@
 <div>
   <div class="page-header">
     <div>
-      <h2>Workflows</h2>
+      <h2>{t("workflows.title")}</h2>
       <p class="workflow-page-note">Active workflows are matched path-first: deepest user path wins first, then provider name and model specificity, then broader matches, then global.</p>
     </div>
     <div class="page-header-controls">
@@ -29,14 +30,14 @@
           onclick={() => wf.openCreate()}
         >
           <Icon icon={Plus} class="form-action-icon" aria-hidden="true" />
-          <span>New&nbsp;Workflow</span>
+          <span>{t("workflows.newWorkflow")}</span>
         </button>
       {/if}
     </div>
   </div>
 
   {#if !wf.available && !auth.authError}
-    <div class="alert alert-warning">Workflows feature is unavailable.</div>
+    <div class="alert alert-warning">{t("workflows.unavailable")}</div>
   {/if}
   {#if wf.error && !auth.authError}
     <div class="alert alert-warning">{wf.error}</div>
@@ -46,8 +47,8 @@
     <div class="table-toolbar">
       <div class="table-toolbar-main">
         <FilterInput
-          placeholder="Filter by scope, name, hash, or guardrail..."
-          label="Filter workflows by scope, name, hash, or guardrail"
+          placeholder={t("workflows.filterPlaceholder")}
+          label={t("workflows.filterLabel")}
           bind:value={wf.filter}
         />
       </div>

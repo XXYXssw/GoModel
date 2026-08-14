@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n/core.js";
 // Provider status card helpers.
 // Pure functions (state lives in overviewState.svelte.js) so status folding
 // and preference persistence are testable with node.
@@ -135,9 +136,9 @@ export function providerStatusSummaryText(summary) {
   const s = summary || {};
   const total = Number(s.total || 0);
   const healthy = Number(s.healthy || 0);
-  if (total === 0) return "None configured";
-  if (healthy === total) return "All healthy";
-  if (healthy === 0) return "None healthy";
+  if (total === 0) return t("overview.noneConfigured");
+  if (healthy === total) return t("overview.allHealthy");
+  if (healthy === 0) return t("overview.noneHealthy");
   const attention = total - healthy;
   return (
     String(attention) + (attention === 1 ? " needs" : " need") + " attention"
@@ -262,7 +263,7 @@ export function providerModelsSummary(provider) {
     provider && provider.config && Array.isArray(provider.config.models)
       ? provider.config.models.filter(Boolean)
       : [];
-  if (models.length === 0) return "Automatic";
+  if (models.length === 0) return t("overview.automatic");
   return models.join(", ");
 }
 
@@ -275,7 +276,7 @@ export function providerStatusPillTitle(provider) {
     parts.push(String(provider.status_reason));
   }
   if (provider.last_error) {
-    parts.push("Last error: " + String(provider.last_error));
+    parts.push(t("overview.lastError", { error: String(provider.last_error) }));
   }
   return parts.join("\n\n");
 }
@@ -351,7 +352,7 @@ export function providerHealthModelTitle(model) {
   const lastError = model && model.last_error;
   if (!lastError || !lastError.message) return "";
   const prefix = lastError.status_code
-    ? "HTTP " + String(lastError.status_code) + ": "
+    ? t("overview.httpError", { code: String(lastError.status_code) })
     : "";
   return prefix + lastError.message;
 }

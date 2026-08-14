@@ -7,6 +7,7 @@
   // Everything below Name is rendered from the selected type's credential
   // schema, so an operator only ever sees the fields that type actually uses.
   import EnabledToggle from "$lib/components/atoms/EnabledToggle.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import EditorDialog from "$lib/components/organisms/EditorDialog.svelte";
   import ProviderCredentialField from "./ProviderCredentialField.svelte";
   import { providersConfig } from "./providersConfig.svelte.js";
@@ -82,7 +83,7 @@
       onchange={onTypeChange}
       data-modal-autofocus
     >
-      <option value="" disabled>Select a provider type&hellip;</option>
+      <option value="" disabled>{t("providers.selectType")}</option>
       {#each typeOptions as type (type)}
         <option value={type}>{type}</option>
       {/each}
@@ -90,7 +91,7 @@
     {#if typeError}
       <small class="form-field-error" id="provider-credential-type-error" role="alert">{typeError}</small>
     {:else}
-      <small class="form-hint" id="provider-credential-type-hint">Determines which fields the gateway uses to build requests.</small>
+      <small class="form-hint" id="provider-credential-type-hint">{t("providers.typeHint")}</small>
     {/if}
   </div>
 
@@ -102,7 +103,7 @@
       id="provider-credential-name"
       type="text"
       class="mono"
-      placeholder="my-openai"
+      placeholder={t("providers.namePlaceholder")}
       bind:value={providersConfig.form.name}
       disabled={providersConfig.formMode === "edit"}
       aria-invalid={nameError ? "true" : undefined}
@@ -114,7 +115,7 @@
     {:else if providersConfig.formMode === "create"}
       <small class="form-hint" id="provider-credential-name-hint">Suggested from the selected type; used to route requests to this provider instance and editable before saving.</small>
     {:else}
-      <small class="form-hint" id="provider-credential-name-hint">Immutable once created.</small>
+      <small class="form-hint" id="provider-credential-name-hint">{t("providers.typeImmutable")}</small>
     {/if}
   </div>
 
@@ -144,7 +145,7 @@
     >
       <summary>
         <span class="mcp-server-advanced-summary-copy">
-          <span class="mcp-server-advanced-title">Advanced settings</span>
+          <span class="mcp-server-advanced-title">{t("providers.advanced")}</span>
           <span class="form-hint">{fields.advanced.map((field) => field.label).join(", ")}</span>
         </span>
       </summary>

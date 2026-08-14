@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n/core.js";
 // Pure runtime-refresh report logic.
 
 function runtimeRefreshStatus(report) {
@@ -6,17 +7,17 @@ function runtimeRefreshStatus(report) {
 
 export function runtimeRefreshSummary(report) {
   if (!report || typeof report !== "object") {
-    return "Runtime refresh completed.";
+    return t("settings.runtimeRefreshCompleted");
   }
   const modelCount = Number(report.model_count || 0);
   const providerCount = Number(report.provider_count || 0);
   const status = runtimeRefreshStatus(report);
   const prefix =
     status === "ok"
-      ? "Runtime refreshed."
+      ? t("settings.runtimeRefreshed")
       : status === "partial"
-        ? "Runtime refresh completed with warnings."
-        : "Runtime refresh failed.";
+        ? t("settings.runtimeRefreshWarnings")
+        : t("settings.runtimeRefreshFailed");
   return (
     prefix +
     " " +

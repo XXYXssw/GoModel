@@ -2,6 +2,7 @@
   // Audit Logs page: filterable, paginated audit-log list with expandable
   // entries, live-log merging, and the Interactions drawer trigger.
   import NoDataIllustration from "$lib/components/atoms/NoDataIllustration.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import AuthBanner from "$lib/components/organisms/AuthBanner.svelte";
   import { untrack } from "svelte";
   import { flip } from "svelte/animate";
@@ -67,11 +68,11 @@
 <div class="page-with-sticky-date">
   <div class="page-header date-range-page-header">
     <div class="inline-help-section">
-      <h2>Audit Logs</h2>
+      <h2>{t("audit.title")}</h2>
       {#if auditRetentionText(retentionRaw)}
         <InlineHelpSection
           copyId="audit-retention-help-copy"
-          label="retention help"
+          label={t("audit.retentionHelp")}
           text={RETENTION_HELP}
         >
           {#snippet title()}
@@ -120,7 +121,7 @@
             checked={auditList.auditGroupSessions}
             onchange={() => auditList.toggleAuditGroupSessions()}
           />
-          <span>Group by session</span>
+          <span>{t("audit.groupBySession")}</span>
         </label>
       </div>
       <AuditLiveStatus />
@@ -128,7 +129,7 @@
 
     {#if auditList.loading && auditList.auditLog.entries.length === 0}
       <div class="audit-log-loading">
-        <Spinner size={18} label="Loading audit logs" />
+        <Spinner size={18} label={t("audit.loading")} />
       </div>
     {:else if auditList.auditLog.entries.length > 0}
       <div class="audit-log-list">

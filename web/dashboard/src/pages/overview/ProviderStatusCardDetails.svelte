@@ -8,6 +8,7 @@
   // which keeps the compiler from pruning the is-healthy/is-degraded/
   // is-unhealthy selectors below; the scope hash is applied at runtime
   // alongside the class array, so the scoped selectors keep matching.
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import {
     providerRequestHealth,
     providerBreakerState,
@@ -63,7 +64,7 @@
         {@render configRow("Recent Requests", providerRecentTrafficSummary(provider))}
         {#if providerBreakerState(provider)}
           <div class="provider-status-config-row">
-            <span class="provider-status-config-label">Breaker State</span>
+            <span class="provider-status-config-label">{t("overview.breakerState")}</span>
             <span>
               <span
                 class={["provider-status-health-state", breakerClass]}
@@ -73,7 +74,7 @@
         {/if}
         {#if providerHealthModels(provider).length > 0}
           <div class="provider-status-config-row">
-            <span class="provider-status-config-label">Models (Recent Traffic)</span>
+            <span class="provider-status-config-label">{t("overview.modelsRecentTraffic")}</span>
             <div class="provider-status-health-models">
               {#each providerHealthModels(provider) as model (model.model)}
                 <div

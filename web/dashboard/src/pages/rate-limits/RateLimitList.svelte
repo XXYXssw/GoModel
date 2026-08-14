@@ -5,6 +5,7 @@
   import TableActionButton from "$lib/components/atoms/TableActionButton.svelte";
   import { rateLimits } from "./rateLimits.svelte.js";
   import { Activity, Box, Pencil, RotateCcw, Server, Timer, Trash2 } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   // rules: the filtered rule list to render (filtering stays on the page).
   let { rules } = $props();
@@ -62,12 +63,12 @@
                 <div class="budget-row-actions">
                   {#if !rateLimits.rateLimitIsReadOnly(item)}
                     <TableActionButton
-                      label="Edit rate limit"
+                      label={t("rateLimits.editRule")}
                       class="budget-action-btn"
                       onclick={() => rateLimits.openRateLimitForm(item)}
                     >
                       <Icon icon={Pencil} class="budget-action-icon" />
-                      <span class="budget-action-label">Edit</span>
+                      <span class="budget-action-label">{t("common.edit")}</span>
                     </TableActionButton>
                   {/if}
                   <TableActionButton
@@ -107,7 +108,7 @@
               {#if rateLimits.rateLimitIsConcurrent(item)}
                 <div class="budget-bar-line">
                   <div class="budget-bar-label">
-                    <span>In-flight</span>
+                    <span>{t("rateLimits.inFlight")}</span>
                     <span class="budget-bar-percent">
                       {rateLimits.rateLimitUsagePercent(
                         item.in_flight,
@@ -157,7 +158,7 @@
               {#if !rateLimits.rateLimitIsConcurrent(item) && item.max_requests}
                 <div class="budget-bar-line">
                   <div class="budget-bar-label">
-                    <span>Requests</span>
+                    <span>{t("rateLimits.requests")}</span>
                     <span class="budget-bar-percent">
                       {rateLimits.rateLimitUsagePercent(
                         item.requests_used,
@@ -212,7 +213,7 @@
               {#if !rateLimits.rateLimitIsConcurrent(item) && item.max_tokens}
                 <div class="budget-bar-line">
                   <div class="budget-bar-label">
-                    <span>Tokens</span>
+                    <span>{t("rateLimits.tokens")}</span>
                     <span class="budget-bar-percent">
                       {rateLimits.rateLimitUsagePercent(
                         item.tokens_used,

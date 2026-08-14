@@ -7,6 +7,7 @@
   // (providerStatusBadgeClass), so its palette rules must stay in this file
   // where the compiler can see the pill markup.
   import Icon from "$lib/components/atoms/Icon.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import { timezone } from "$lib/stores/timezone.svelte.js";
   import { formatNumber } from "$lib/utils/format.js";
   import { providerStatusState } from "./overviewState.svelte.js";
@@ -61,12 +62,12 @@
 
   <div class="provider-status-meta">
     <div class="provider-status-meta-item">
-      <span class="provider-status-meta-label">Models Available</span>
+      <span class="provider-status-meta-label">{t("overview.modelsAvailable")}</span>
       <span class="provider-status-meta-value mono"
       >{formatNumber(provider.runtime?.discovered_model_count)}</span>
     </div>
     <div class="provider-status-meta-item">
-      <span class="provider-status-meta-label">Last Checked</span>
+      <span class="provider-status-meta-label">{t("overview.lastChecked")}</span>
       <span
         class="provider-status-meta-value mono"
         title={providerLastCheckedTitle(provider, formatTimestamp)}

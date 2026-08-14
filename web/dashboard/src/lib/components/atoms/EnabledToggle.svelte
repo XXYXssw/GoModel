@@ -1,4 +1,5 @@
 <script>
+  import { t } from "$lib/i18n/i18n.svelte.js";
   // Enabled/Disabled slide toggle shared by editors (MCP server, provider
   // credential, failover rule, virtual model) and list rows. Renders the
   // .alias-toggle track/thumb pair from the global sheet.
@@ -30,5 +31,5 @@
   {onclick}
 >
   <span class="alias-toggle-track"><span class="alias-toggle-thumb"></span></span>
-  <span>{text ?? (enabled ? "Enabled" : "Disabled")}</span>
+  <span>{text ?? (enabled ? t("common.enabled") : t("common.disabled"))}</span>
 </button>

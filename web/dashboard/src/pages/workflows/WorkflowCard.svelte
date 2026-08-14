@@ -3,6 +3,7 @@
   // (list mode only) the deactivate/edit footer. `preview` renders the
   // footer-less live preview card used inside the editor.
   import Icon from "$lib/components/atoms/Icon.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import TableActionButton from "$lib/components/atoms/TableActionButton.svelte";
   import { timezone } from "$lib/stores/timezone.svelte.js";
   import { runtimeConfig } from "$lib/stores/runtimeConfig.svelte.js";
@@ -54,7 +55,7 @@
   {#if runtimeConfig.guardrailsVisible()}
     <div class="workflow-guardrails">
       <div class="workflow-section-head">
-        <h4>Guardrails</h4>
+        <h4>{t("workflows.guardrails")}</h4>
         <span class="provider-badge">
           {guardrails.length ? guardrails.length + " steps" : "None"}
         </span>
@@ -69,7 +70,7 @@
           {/each}
         </div>
       {:else}
-        <p class="form-hint">No guardrails configured for this workflow.</p>
+        <p class="form-hint">{t("workflows.noGuardrails")}</p>
       {/if}
     </div>
   {/if}

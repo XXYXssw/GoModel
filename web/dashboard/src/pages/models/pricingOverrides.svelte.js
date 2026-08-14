@@ -2,6 +2,7 @@
 
 import { errorMessage, getJSON, sendJSON } from "$lib/api/client.js";
 import { flash } from "$lib/stores/flash.svelte.js";
+import { t } from "$lib/i18n/i18n.svelte.js";
 import {
   GLOBAL_PRICING_SELECTOR,
   PRICE_FIELDS,
@@ -70,7 +71,7 @@ class PricingOverridesStore {
     } catch (e) {
       console.error("Failed to fetch model pricing overrides:", e);
       this.modelPricingOverrideViews = [];
-      this.modelPricingOverrideError = "Unable to load model pricing overrides.";
+      this.modelPricingOverrideError = t("pricing.loadError");
     }
   }
 
@@ -97,7 +98,7 @@ class PricingOverridesStore {
   }
 
   modelPricingButtonLabel(subject, hasOverride) {
-    const base = "Edit " + String(subject || "model pricing");
+    const base = t("pricing.editSubject", { subject: String(subject || t("pricing.modelPricing")) });
     return hasOverride ? base + " (override exists)" : base;
   }
 
@@ -109,7 +110,7 @@ class PricingOverridesStore {
 
   openGlobalPricingOverrideEdit() {
     this.openModelPricingOverrideForm({
-      displayName: "All providers and models",
+      displayName: t("vm.allProvidersModels"),
       selector: GLOBAL_PRICING_SELECTOR,
       scope: "global",
       scopeOptions: [
@@ -125,7 +126,7 @@ class PricingOverridesStore {
       return;
     }
     this.openModelPricingOverrideForm({
-      displayName: "All models in " + (group.display_name || group.provider_name || selector),
+      displayName: t("vm.allModelsIn", { name: group.display_name || group.provider_name || selector }),
       selector,
       scope: "provider",
       scopeOptions: [{ value: "provider", label: "Provider", selector }],
@@ -156,7 +157,7 @@ class PricingOverridesStore {
     const opts = options || {};
     this.modelPricingOverrideFormOpen = true;
     this.modelPricingOverrideError = "";
-    this.modelPricingOverrideFormDisplayName = opts.displayName || opts.selector || "Pricing";
+    this.modelPricingOverrideFormDisplayName = opts.displayName || opts.selector || t("pricing.title");
     this.modelPricingOverrideFormScope = opts.scope || "";
     this.modelPricingOverrideFormScopeOptions = Array.isArray(opts.scopeOptions)
       ? opts.scopeOptions
@@ -274,7 +275,7 @@ class PricingOverridesStore {
   async submitModelPricingOverrideForm() {
     const selector = String(this.modelPricingOverrideForm.selector || "").trim();
     if (!selector) {
-      this.modelPricingOverrideError = "Model pricing selector is required.";
+      this.modelPricingOverrideError = t("pricing.selectorRequired");
       return;
     }
     const payload = this.modelPricingOverridePayload();
@@ -292,7 +293,7 @@ class PricingOverridesStore {
       });
       if (result.status === 503) {
         this.modelPricingOverridesAvailable = false;
-        this.modelPricingOverrideError = "Model pricing overrides feature is unavailable.";
+        this.modelPricingOverrideError = t("pricing.unavailable");
         return;
       }
       if (result.stale) {
@@ -301,17 +302,17 @@ class PricingOverridesStore {
       if (!result.ok) {
         this.modelPricingOverrideError =
           result.status === 401
-            ? "Authentication required."
+            ? t("auth.required")
             : errorMessage(result, "Failed to save model pricing.");
         return;
       }
       this.modelPricingOverridesAvailable = true;
       this.closeModelPricingOverrideForm();
-      flash.success("Model pricing saved.");
+      flash.success(t("pricing.saved"));
       void this.fetchModelPricingOverrides();
     } catch (e) {
       console.error("Failed to save model pricing override:", e);
-      this.modelPricingOverrideError = "Failed to save model pricing.";
+      this.modelPricingOverrideError = t("pricing.saveError");
     } finally {
       this.modelPricingOverrideSubmitting = false;
     }
@@ -322,7 +323,7 @@ class PricingOverridesStore {
     if (!selector || !this.modelPricingOverrideFormHasExistingOverride) {
       return;
     }
-    if (!window.confirm('Remove the model pricing override for "' + selector + '"?')) {
+    if (!window.confirm(t('pricing.removeConfirm', { selector }))) {
       return;
     }
 
@@ -334,7 +335,7 @@ class PricingOverridesStore {
       });
       if (result.status === 503) {
         this.modelPricingOverridesAvailable = false;
-        this.modelPricingOverrideError = "Model pricing overrides feature is unavailable.";
+        this.modelPricingOverrideError = t("pricing.unavailable");
         return;
       }
       if (result.status !== 404) {
@@ -344,18 +345,18 @@ class PricingOverridesStore {
         if (!result.ok) {
           this.modelPricingOverrideError =
             result.status === 401
-              ? "Authentication required."
+              ? t("auth.required")
               : errorMessage(result, "Failed to remove model pricing override.");
           return;
         }
       }
       this.modelPricingOverridesAvailable = true;
       this.closeModelPricingOverrideForm();
-      flash.success("Model pricing override removed.");
+      flash.success(t("pricing.removed"));
       void this.fetchModelPricingOverrides();
     } catch (e) {
       console.error("Failed to delete model pricing override:", e);
-      this.modelPricingOverrideError = "Failed to remove model pricing override.";
+      this.modelPricingOverrideError = t("pricing.removeError");
     } finally {
       this.modelPricingOverrideSubmitting = false;
     }

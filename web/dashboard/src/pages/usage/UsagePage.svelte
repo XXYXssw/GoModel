@@ -1,7 +1,8 @@
 <script>
-  // Usage Analytics page. Route sub "costs" selects the costs mode
+  // {t("usage.title")} page. Route sub "costs" selects the costs mode
   // (deep link /admin/dashboard/usage/costs).
   import DatePicker from "$lib/components/molecules/DatePicker.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import SegmentedControl from "$lib/components/atoms/SegmentedControl.svelte";
   import { auth } from "$lib/stores/auth.svelte.js";
   import { router } from "$lib/stores/router.svelte.js";
@@ -35,16 +36,16 @@
 
 <div class="page-with-sticky-date">
   <div class="page-header date-range-page-header">
-    <h2>Usage Analytics</h2>
+    <h2>{t("usage.title")}</h2>
   </div>
   <!-- The mode toggle lives in the sticky bar so it stays reachable while
        scrolling, like the date range it changes the meaning of. -->
   <div class="sticky-date-range usage-sticky-controls">
     <SegmentedControl
-      ariaLabel="Usage mode"
+      ariaLabel={t("usage.modeAria")}
       options={[
-        { value: "tokens", label: "Tokens" },
-        { value: "costs", label: "Costs" },
+        { value: "tokens", label: t("overview.tokens") },
+        { value: "costs", label: t("overview.costs") },
       ]}
       value={usagePage.usageMode}
       onchange={(mode) => usagePage.toggleUsageMode(mode)}

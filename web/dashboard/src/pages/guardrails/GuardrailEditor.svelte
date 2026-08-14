@@ -7,6 +7,7 @@
   import FormField from "$lib/components/molecules/FormField.svelte";
   import InlineHelpSection from "$lib/components/molecules/InlineHelpSection.svelte";
   import { guardrailsStore as store } from "./guardrails.svelte.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   const isEdit = $derived(store.formMode === "edit");
 </script>
@@ -30,7 +31,7 @@
   {/snippet}
 
   <div class="form-grid">
-    <FormField id="guardrail-name" label="Name">
+    <FormField id="guardrail-name" label={t("common.name")}>
       <input
         id="guardrail-name"
         type="text"
@@ -41,7 +42,7 @@
       />
     </FormField>
 
-    <FormField id="guardrail-type" label="Type">
+    <FormField id="guardrail-type" label={t("guardrails.type")}>
       <select
         id="guardrail-type"
         class="form-select settings-select"
@@ -55,11 +56,11 @@
       </select>
     </FormField>
 
-    <FormField id="guardrail-description" label="Description">
+    <FormField id="guardrail-description" label={t("common.description")}>
       <input
         id="guardrail-description"
         type="text"
-        placeholder="What this guardrail is meant to do"
+        placeholder={t("guardrails.descriptionPlaceholder")}
         bind:value={store.form.description}
         data-modal-autofocus={isEdit ? true : undefined}
       />
@@ -68,12 +69,12 @@
     <div class="form-field">
       <InlineHelpSection
         copyId="guardrail-user-path-help-copy"
-        label="guardrail user path help"
+        label={t("guardrails.userPathHelp")}
         text="Only used for auxiliary rewrite (llm_based_altering) guardrails; ignored for other guardrail types."
       >
         {#snippet title()}
           <label class="form-field-label" for="guardrail-user-path"
-            >User Path</label
+            >{t("guardrails.userPath")}</label
           >
         {/snippet}
       </InlineHelpSection>
@@ -82,7 +83,7 @@
         type="text"
         placeholder="/team/alpha"
         bind:value={store.form.user_path}
-        aria-label="Guardrail user path"
+        aria-label={t("guardrails.userPathTitle")}
         aria-describedby="guardrail-user-path-help-copy"
       />
     </div>

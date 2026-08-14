@@ -2,6 +2,7 @@
   // Overview summary cards: token totals, requests, cache hits, cost, the
   // prompt-cache gauge, and the provider/MCP status flags.
   import ChartCanvas from "$lib/components/molecules/ChartCanvas.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import { router } from "$lib/stores/router.svelte.js";
   import { usageData } from "$lib/stores/usageData.svelte.js";
   import {
@@ -105,7 +106,7 @@
     summaryTotalTokens(summary),
   )}
   <div class="card">
-    <div class="card-label">Total Requests</div>
+    <div class="card-label">{t("overview.totalRequests")}</div>
     <div
       class="card-value"
       title={summaryTotalRequestsTitle(summary, cacheOverview, cacheEnabled)}
@@ -113,12 +114,12 @@
   </div>
   {#if cacheEnabled}
     <div class="card">
-      <div class="card-label">Cache Hits</div>
+      <div class="card-label">{t("overview.cacheHits")}</div>
       <div class="card-value">{formatNumber(cacheOverview.summary.total_hits)}</div>
     </div>
   {/if}
   <div class="card">
-    <div class="card-label">Estimated Cost</div>
+    <div class="card-label">{t("overview.estimatedCost")}</div>
     <div class="card-value">{formatCost(summary.total_cost)}</div>
   </div>
   {#if cacheEnabled}
@@ -133,7 +134,7 @@
     class="card prompt-cache-card"
     title="Share of input tokens served from the provider prompt cache, over the selected period"
   >
-    <div class="card-label">Prompt Cache Rate</div>
+    <div class="card-label">{t("overview.promptCacheRate")}</div>
     <div
       class="prompt-cache-gauge"
       role="img"

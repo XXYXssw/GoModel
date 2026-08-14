@@ -6,6 +6,7 @@
   import DatePickerCalendar from "./DatePickerCalendar.svelte";
   import { shiftMonth } from "./datePickerLogic.js";
   import { dismissOnOutside } from "$lib/utils/attachments.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   let { onchange } = $props();
 
@@ -96,7 +97,7 @@
           <button
             class="preset-btn"
             class:active={dateRange.selectedPreset === preset}
-            onclick={() => selectPreset(preset)}>Last {preset} days</button
+            onclick={() => selectPreset(preset)}>{t("dateRange.lastDays", { days: preset })}</button
           >
         {/each}
       </div>

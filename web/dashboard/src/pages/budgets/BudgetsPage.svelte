@@ -11,6 +11,7 @@
   import BudgetEditor from "./BudgetEditor.svelte";
   import { budgetsStore as store } from "./budgets.svelte.js";
   import { Plus } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   const PAGE = "budgets";
 
@@ -26,8 +27,8 @@
 <div>
   <div class="page-header">
     <div>
-      <InlineHelpSection copyId="budgets-help-copy" label="budgets help">
-        {#snippet title()}<h2>Budgets</h2>{/snippet}
+      <InlineHelpSection copyId="budgets-help-copy" label={t("budgets.helpLabel")}>
+        {#snippet title()}<h2>{t("budgets.title")}</h2>{/snippet}
         {#snippet help()}
           Budgets are evaluated from tracked usage cost records for each user
           path subtree. Enforcement runs only when Budget is enabled for the
@@ -44,7 +45,7 @@
           onclick={() => store.openForm()}
         >
           <Icon icon={Plus} class="form-action-icon" />
-          <span>Create Budget</span>
+          <span>{t("budgets.create")}</span>
         </button>
       {/if}
     </div>
@@ -53,13 +54,13 @@
   <AuthBanner />
 
   {#if (!store.managementEnabled() || !store.budgetsAvailable) && !auth.authError}
-    <div class="alert alert-warning">Budget management is unavailable.</div>
+    <div class="alert alert-warning">{t("budgets.unavailable")}</div>
   {/if}
   {#if store.error && !auth.authError}
     <p class="form-error" role="alert" aria-live="assertive">{store.error}</p>
   {/if}
   {#if store.loading && !auth.authError}
-    <LoadingState label="Loading budgets..." />
+    <LoadingState label={t("budgets.loading")} />
   {/if}
 
   {#if (store.budgets.length > 0 || store.filter) && store.budgetsAvailable && !auth.authError && !store.formOpen}
@@ -67,21 +68,21 @@
       <div class="table-toolbar-main">
         <FilterInput
           id="budget-filter"
-          placeholder="Filter by user path, label, or period..."
-          label="Filter budgets by user path or period"
+          placeholder={t("budgets.filterPlaceholder")}
+          label={t("budgets.filterLabel")}
           bind:value={store.filter}
         />
       </div>
       <div class="table-toolbar-actions budget-sort-control">
-        <label for="budget-sort-by">Sort by</label>
+        <label for="budget-sort-by">{t("budgets.sortBy")}</label>
         <select
           id="budget-sort-by"
           class="usage-log-select budget-sort-select"
-          aria-label="Sort budgets by"
+          aria-label={t("budgets.sortByLabel")}
           bind:value={store.sortBy}
         >
-          <option value="subject">Scope &amp; Subject</option>
-          <option value="period">Period</option>
+          <option value="subject">{t("budgets.scopeSubject")}</option>
+          <option value="period">{t("budgets.period")}</option>
         </select>
       </div>
     </div>
@@ -94,10 +95,10 @@
   {/if}
 
   {#if store.budgets.length === 0 && !store.filter && !store.loading && !auth.authError && !store.error && store.budgetsAvailable && store.managementEnabled()}
-    <p class="empty-state">No budgets configured yet.</p>
+    <p class="empty-state">{t("budgets.empty")}</p>
   {/if}
   {#if store.budgets.length > 0 && filtered.length === 0 && store.filter && !store.loading && !auth.authError && !store.error && store.budgetsAvailable && store.managementEnabled()}
-    <p class="empty-state">No budgets match your filter.</p>
+    <p class="empty-state">{t("budgets.emptyFilter")}</p>
   {/if}
 </div>
 

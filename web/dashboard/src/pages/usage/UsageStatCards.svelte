@@ -4,6 +4,7 @@
   // cost comes from the uncached summary so cached rows' avoided cost never
   // inflates it.
   import Spinner from "$lib/components/atoms/Spinner.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import { formatCost, formatNumber } from "$lib/utils/format.js";
   import { usagePage } from "./usage.svelte.js";
   import {
@@ -29,7 +30,7 @@
 
 <div class="cards">
   <div class="card">
-    <div class="card-label">Total Requests</div>
+    <div class="card-label">{t("usage.totalRequests")}</div>
     <div
       class="card-value"
       title={usagePageRequestsTitle(
@@ -39,7 +40,7 @@
       )}
     >
       {#if usagePage.summaryLoading}
-        <Spinner size={18} label="Loading usage summary" />
+        <Spinner size={18} label={t("usage.loadingSummary")} />
       {:else}
         {formatNumber(
           usagePageTotalRequests(
@@ -52,10 +53,10 @@
     </div>
   </div>
   <div class="card">
-    <div class="card-label">Estimated Cost</div>
+    <div class="card-label">{t("usage.estimatedCost")}</div>
     <div class="card-value" title={usagePageCostTitle(usagePage.usageSummary)}>
       {#if usagePage.summaryLoading}
-        <Spinner size={18} label="Loading usage summary" />
+        <Spinner size={18} label={t("usage.loadingSummary")} />
       {:else}
         {formatCost(usagePage.usageSummary.total_cost)}
       {/if}
@@ -63,7 +64,7 @@
   </div>
   {#if savingsVisible}
     <div class="card">
-      <div class="card-label">Pro Saved</div>
+      <div class="card-label">{t("usage.proSaved")}</div>
       <div
         class="card-value pro-saved-value"
         title={proSavedTitle(usagePage.usageSummary, usagePage.usageMode)}

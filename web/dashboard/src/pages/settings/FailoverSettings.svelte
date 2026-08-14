@@ -6,6 +6,7 @@
   import { failover } from "$pages/models/failover.svelte.js";
   import FailoverDrafts from "$pages/models/FailoverDrafts.svelte";
   import { Trash2, WandSparkles } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   const busy = $derived(
     failover.failoverSaving ||
@@ -18,7 +19,7 @@
 
 <div class="settings-refresh-section">
   <div>
-    <h3>Failover</h3>
+    <h3>{t("settings.failover")}</h3>
   </div>
   <div class="settings-refresh-actions">
     <button
@@ -41,7 +42,7 @@
       onclick={() => failover.openFailoverResetDialog()}
     >
       <Icon icon={Trash2} class="form-action-icon" />
-      <span>Remove all the failover models</span>
+      <span>{t("settings.removeAllFailover")}</span>
     </button>
   </div>
 </div>

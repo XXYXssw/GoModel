@@ -3,6 +3,7 @@
 // is responsible for closing the dialog when its action succeeds.
 
 import { TriangleAlert } from "lucide";
+import { t } from "$lib/i18n/i18n.svelte.js";
 
 function emptyState() {
   return {
@@ -13,7 +14,7 @@ function emptyState() {
     message: "",
     requiredText: "",
     value: "",
-    confirmLabel: "Confirm",
+    confirmLabel: t("common.confirm"),
     icon: TriangleAlert,
     dialogClass: "",
     loading: false,

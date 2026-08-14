@@ -1,6 +1,7 @@
 <script>
-  // Providers Overview section: master details toggle + provider card grid.
+  // {t("overview.providersOverview")} section: master details toggle + provider card grid.
   import Spinner from "$lib/components/atoms/Spinner.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import ProviderStatusCard from "./ProviderStatusCard.svelte";
   import { providerStatusState } from "./overviewState.svelte.js";
 
@@ -15,7 +16,7 @@
   >
     <div class="provider-status-section-header">
       <div>
-        <h3>Providers Overview</h3>
+        <h3>{t("overview.providersOverview")}</h3>
       </div>
       <button
         type="button"
@@ -43,7 +44,7 @@
   </div>
 {:else if providerStatusState.loading && !providerStatusState.loadedOnce}
   <div class="provider-status-section provider-status-section-loading">
-    <Spinner size={18} label="Loading provider status" />
+    <Spinner size={18} label={t("overview.loadingProviderStatus")} />
   </div>
 {/if}
 

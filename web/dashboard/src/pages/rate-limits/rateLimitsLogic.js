@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n/core.js";
 // Pure rate-limit logic shared by the rateLimits store, the Rate Limits page,
 // and the Models-page gauge/inspector. These functions are also exercised by
 // tests/rate-limits.test.js under plain node.
@@ -19,19 +20,19 @@ export function defaultRateLimitForm() {
 export function rateLimitScopeMeta(scope) {
   const meta = {
     user_path: {
-      label: "User path",
+      label: t("rateLimits.scopeUserPath"),
       chip: "user path",
       fieldLabel: "User Path",
       placeholder: "/team/alpha",
     },
     provider: {
-      label: "Provider",
+      label: t("rateLimits.scopeProvider"),
       chip: "provider",
       fieldLabel: "Provider Name",
       placeholder: "openai",
     },
     model: {
-      label: "Model",
+      label: t("rateLimits.scopeModel"),
       chip: "model",
       fieldLabel: "Model",
       placeholder: "openai/gpt-4o",
@@ -78,11 +79,11 @@ export function syncRateLimitScope(form) {
 
 export function rateLimitPeriodOptions() {
   return [
-    { value: "minute", label: "Per minute" },
-    { value: "hour", label: "Per hour" },
-    { value: "day", label: "Per day" },
-    { value: "concurrent", label: "Concurrent (in-flight)" },
-    { value: "custom", label: "Custom seconds" },
+    { value: "minute", label: t("rateLimits.perMinute") },
+    { value: "hour", label: t("rateLimits.perHour") },
+    { value: "day", label: t("rateLimits.perDay") },
+    { value: "concurrent", label: t("rateLimits.concurrent") },
+    { value: "custom", label: t("rateLimits.customSeconds") },
   ];
 }
 
@@ -261,7 +262,7 @@ export function rateLimitFormPayload(formInput) {
   const scope = String(form.scope || "user_path");
   const subject = String(form.subject || "").trim();
   if (scope !== "user_path" && !subject) {
-    return { error: rateLimitSubjectFieldLabel(form) + " is required." };
+    return { error: t("rateLimits.subjectRequired", { field: rateLimitSubjectFieldLabel(form) }) };
   }
   const isConcurrent = String(form.period || "") === "concurrent";
   // Reject blank custom seconds before Number(): Number('') is 0,
@@ -272,7 +273,7 @@ export function rateLimitFormPayload(formInput) {
     rawPeriodSeconds === null ||
     rawPeriodSeconds === undefined
   ) {
-    return { error: "Period seconds is required." };
+    return { error: t("rateLimits.periodRequired") };
   }
   const periodSeconds = Number(rawPeriodSeconds);
   if (
@@ -296,10 +297,10 @@ export function rateLimitFormPayload(formInput) {
       : form.max_tokens,
   ).trim();
   if (!maxRequests && !maxTokens) {
-    return { error: "Set max requests, max tokens, or both." };
+    return { error: t("rateLimits.setMax") };
   }
   if (isConcurrent && maxTokens) {
-    return { error: "Token limits are not valid for the concurrent period." };
+    return { error: t("rateLimits.tokensNotConcurrent") };
   }
   const payload = {
     scope: scope,
@@ -309,14 +310,14 @@ export function rateLimitFormPayload(formInput) {
   if (maxRequests) {
     const parsed = Number(maxRequests);
     if (!Number.isInteger(parsed) || parsed <= 0) {
-      return { error: "Max requests must be a positive integer." };
+      return { error: t("rateLimits.requestsPositive") };
     }
     payload.max_requests = parsed;
   }
   if (maxTokens) {
     const parsed = Number(maxTokens);
     if (!Number.isInteger(parsed) || parsed <= 0) {
-      return { error: "Max tokens must be a positive integer." };
+      return { error: t("rateLimits.tokensPositive") };
     }
     payload.max_tokens = parsed;
   }

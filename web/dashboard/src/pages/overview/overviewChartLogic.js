@@ -2,6 +2,7 @@
 // Pure functions so the chart math is testable with node.
 
 import { chartTickFont, chartTooltip } from "../../lib/utils/chartTheme.js";
+import { t } from "../../lib/i18n/core.js";
 import { tokenAxisTicks } from "./chartStyle.js";
 
 function dateToKey(date) {
@@ -132,14 +133,14 @@ export function overviewChartConfig(colors, series, options = {}) {
       opts || {},
     );
   const datasets = [
-    line("Input Tokens", series.inputPaid, resolve("var(--token-input)"), {
+    line(t("overview.inputTokens"), series.inputPaid, resolve("var(--token-input)"), {
       fill: "origin",
     }),
-    line("Output Tokens", series.output, resolve("var(--token-output)"), {
+    line(t("overview.outputTokens"), series.output, resolve("var(--token-output)"), {
       fill: "-1",
     }),
     line(
-      "Prompt (Input) Cached",
+      t("overview.promptInputCached"),
       series.prompt,
       resolve("var(--token-prompt)"),
       { fill: "-1", borderDash: [6, 4] },
@@ -147,7 +148,7 @@ export function overviewChartConfig(colors, series, options = {}) {
   ];
   if (cacheEnabled) {
     datasets.push(
-      line("Locally Cached", series.local, fade("var(--info)", 35), {
+      line(t("overview.locallyCached"), series.local, fade("var(--info)", 35), {
         fill: "-1",
         borderDash: [2, 3],
       }),
@@ -175,7 +176,7 @@ export function overviewChartConfig(colors, series, options = {}) {
             items.forEach((it) => {
               total += Number(it.parsed.y) || 0;
             });
-            return "Total: " + total.toLocaleString();
+            return t("overview.chartTotal", { total: total.toLocaleString() });
           },
         }),
       },

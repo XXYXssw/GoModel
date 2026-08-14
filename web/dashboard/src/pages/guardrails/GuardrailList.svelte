@@ -8,12 +8,13 @@
   import { auth } from "$lib/stores/auth.svelte.js";
   import { guardrailsStore as store } from "./guardrails.svelte.js";
   import { Pencil, Plus, X } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 </script>
 
 <section class="settings-panel settings-guardrails-list">
   <div class="editor-header">
     <div>
-      <h3>Instances</h3>
+      <h3>{t("guardrails.instances")}</h3>
       <p class="form-hint">
         Each instance has a reusable name, a type, an optional user path for
         future UI visibility scoping, and a JSON-backed config payload for
@@ -27,7 +28,7 @@
       onclick={() => store.openCreate()}
     >
       <Icon icon={Plus} class="form-action-icon" />
-      <span>Create&nbsp;Guardrail</span>
+      <span>{t("guardrails.create")}</span>
     </button>
   </div>
 
@@ -36,8 +37,8 @@
       <div class="table-toolbar-main">
         <FilterInput
           id="guardrail-filter"
-          placeholder="Filter by name, type, user path, summary..."
-          label="Guardrail filter"
+          placeholder={t("guardrails.filterPlaceholder")}
+          label={t("guardrails.filterLabel")}
           bind:value={store.filter}
         />
       </div>
@@ -46,7 +47,7 @@
 
   {#if store.loading && store.filtered.length === 0}
     <p class="empty-state">
-      <Spinner size={16} label="Loading guardrails" /> Loading guardrails...
+      <Spinner size={16} label={t("guardrails.loading")} /> {t("guardrails.loading")}...
     </p>
   {/if}
 
@@ -55,11 +56,11 @@
       <table class="data-table settings-guardrails-table">
         <thead>
           <tr>
-            <th>Name</th>
-            <th>Type</th>
-            <th>User Path</th>
-            <th>Summary</th>
-            <th class="col-actions">Actions</th>
+            <th>{t("common.name")}</th>
+            <th>{t("guardrails.type")}</th>
+            <th>{t("guardrails.userPath")}</th>
+            <th>{t("guardrails.summary")}</th>
+            <th class="col-actions">{t("common.actions")}</th>
           </tr>
         </thead>
         <tbody>
@@ -109,7 +110,7 @@
   {/if}
 
   {#if store.filtered.length === 0 && !store.loading && store.available && !store.error && !auth.authError}
-    <p class="empty-state">No guardrails defined yet.</p>
+    <p class="empty-state">{t("guardrails.empty")}</p>
   {/if}
 </section>
 

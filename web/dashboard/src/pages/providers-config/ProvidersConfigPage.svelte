@@ -11,6 +11,7 @@
   import ProviderCredentialList from "./ProviderCredentialList.svelte";
   import ProviderCredentialEditor from "./ProviderCredentialEditor.svelte";
   import { Plus } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   const PAGE = "providers-config";
 
@@ -24,8 +25,8 @@
 <div>
   <div class="page-header">
     <div>
-      <InlineHelpSection copyId="providers-config-help-copy" label="model providers help">
-        {#snippet title()}<h2>Providers</h2>{/snippet}
+      <InlineHelpSection copyId="providers-config-help-copy" label={t("providers.helpLabel")}>
+        {#snippet title()}<h2>{t("providers.title")}</h2>{/snippet}
         {#snippet help()}
           Configure LLM provider credentials here instead of setting API keys as
           environment variables. Providers declared in config.yaml or env vars
@@ -43,20 +44,20 @@
           onclick={() => providersConfig.openCreate()}
         >
           <Icon icon={Plus} class="form-action-icon" />
-          <span>Add Provider</span>
+          <span>{t("providers.addProvider")}</span>
         </button>
       {/if}
     </div>
   </div>
 
   {#if !providersConfig.available && !auth.needsAuth}
-    <div class="alert alert-warning">Provider credential management is unavailable.</div>
+    <div class="alert alert-warning">{t("providers.unavailable")}</div>
   {/if}
   {#if providersConfig.error && !auth.needsAuth && !providersConfig.formOpen}
     <p class="form-error" role="alert" aria-live="assertive">{providersConfig.error}</p>
   {/if}
   {#if providersConfig.loading && !auth.needsAuth}
-    <LoadingState label="Loading providers..." />
+    <LoadingState label={t("providers.loading")} />
   {/if}
 
   {#if (providersConfig.rows.length > 0 || providersConfig.filter) && providersConfig.available && !auth.needsAuth}
@@ -64,8 +65,8 @@
       <div class="table-toolbar-main">
         <FilterInput
           id="provider-credential-filter"
-          placeholder="Filter by name, type, or base URL..."
-          label="Filter providers by name, type, or base URL"
+          placeholder={t("providers.filterPlaceholder")}
+          label={t("providers.filterLabel")}
           bind:value={providersConfig.filter}
         />
       </div>
@@ -84,6 +85,6 @@
     </p>
   {/if}
   {#if providersConfig.rows.length > 0 && providersConfig.filteredRows.length === 0 && providersConfig.filter && !providersConfig.loading && !auth.needsAuth && providersConfig.available}
-    <p class="empty-state">No providers match your filter.</p>
+    <p class="empty-state">{t("providers.emptyFilter")}</p>
   {/if}
 </div>

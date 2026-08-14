@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n/core.js";
 // Pure virtual-models logic. Every function is side-effect free (except
 // removePrimaryTarget, which mutates the form it is given) so the node:test
 // suite can exercise it without Svelte.
@@ -169,9 +170,9 @@ function strategyLabel(strategy) {
 // (VIRTUAL_MODEL_STRATEGIES); presentation stays here so copy does not ship
 // with the gateway. Unknown values fall back to the raw value.
 const STRATEGY_OPTION_LABELS = {
-  round_robin: "Round-robin (rotate across targets; honors weights)",
-  cost: "Lowest cost (cheapest target per request)",
-  adaptive: "Adaptive (target chosen by the registered routing extension)",
+  round_robin: "vm.strategyRoundRobin",
+  cost: "vm.strategyCost",
+  adaptive: "vm.strategyAdaptive",
 };
 
 // strategyOptions builds the editor dropdown from the deployment's supported
@@ -274,10 +275,10 @@ function aliasStateClass(alias) {
 }
 
 function aliasStateText(alias) {
-  if (!alias) return "Invalid";
-  if (alias.enabled === false) return "Disabled";
-  if (!alias.valid) return "Invalid";
-  return "Active";
+  if (!alias) return t("vm.invalid");
+  if (alias.enabled === false) return t("common.disabled");
+  if (!alias.valid) return t("vm.invalid");
+  return t("vm.active");
 }
 
 export function modelAccessUserPathsRestrict(paths) {
@@ -301,12 +302,12 @@ function modelAccessSummary(access) {
 
   const parts = [];
   if (access.effective_enabled === false) {
-    parts.push(access.default_enabled === false ? "Disabled by default" : "Disabled");
+    parts.push(access.default_enabled === false ? t("vm.disabledByDefault") : t("common.disabled"));
   }
 
   const userPaths = Array.isArray(access.user_paths) ? access.user_paths : [];
   if (userPaths.length > 0) {
-    parts.push("Allowed for " + userPaths.join(", "));
+    parts.push(t("vm.allowedFor", { paths: userPaths.join(", ") }));
   }
 
   return parts.join(" · ");
@@ -442,7 +443,7 @@ function providerGroupDisplayName(providerName, providerType) {
   if (normalizedProviderType) {
     return normalizedProviderType;
   }
-  return "Unassigned";
+  return t("vm.unassigned");
 }
 
 function providerGroupTypeLabel(providerName, providerType) {
@@ -609,7 +610,7 @@ export function groupDisplayModels(rows, models, modelOverrideViews) {
       is_virtual_models: true,
       provider_name: "",
       provider_type: "",
-      display_name: "Virtual models",
+      display_name: t("vm.virtualModels"),
       type_label: "",
       rows: virtualRows,
       access: { selector: "" },
@@ -717,7 +718,7 @@ export function modelOverrideEditButtonClass(hasOverride) {
 }
 
 export function modelOverrideEditButtonLabel(subject, hasOverride) {
-  const base = "Edit " + String(subject || "model access");
+  const base = t("vm.editAccessSubject", { subject: String(subject || t("vm.modelAccess")) });
   return hasOverride ? base + " (virtual model exists)" : base;
 }
 

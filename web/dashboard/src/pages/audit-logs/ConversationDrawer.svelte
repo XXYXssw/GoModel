@@ -2,6 +2,7 @@
   // Resizable Interactions side panel. It is a direct child of the app flex
   // shell, so its width is taken from .content instead of covering it.
   import DialogCloseButton from "$lib/components/atoms/DialogCloseButton.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import Icon from "$lib/components/atoms/Icon.svelte";
   import { readStored, writeStored } from "$lib/utils/storage.js";
   import { motionDuration } from "$lib/utils/motion.js";
@@ -229,7 +230,7 @@
   <div
     class="conversation-resize-handle"
     role="separator"
-    aria-label="Resize interactions panel"
+    aria-label={t("audit.resizePanel")}
     aria-orientation="vertical"
     aria-controls="dashboard-content interactions-drawer-content"
     aria-valuemin={panelMin}
@@ -245,7 +246,7 @@
   ></div>
   <div class="conversation-drawer-header">
     <div class="conversation-drawer-title">
-      <h3 id="interactions-drawer-title">Interactions</h3>
+      <h3 id="interactions-drawer-title">{t("audit.interactions")}</h3>
       <span
         class="conversation-follow-status"
         role="status"
@@ -275,7 +276,7 @@
         <Icon icon={renderedFullscreen ? Minimize2 : Maximize2} class="table-icon-svg" />
       </button>
       <DialogCloseButton
-        label="Close interactions"
+        label={t("audit.closeInteractions")}
         onclick={() => drawer.closeConversation()}
         bind:el={drawer.conversationCloseBtnEl}
       />
@@ -284,19 +285,19 @@
 
   <div id="interactions-drawer-content">
     {#if drawer.conversationMessages.length > 1}
-      <div class="conversation-message-navigation" role="group" aria-label="Navigate interaction messages">
+      <div class="conversation-message-navigation" role="group" aria-label={t("audit.navigateMessages")}>
         <button
           type="button"
-          aria-label="Previous message"
-          title="Previous message"
+          aria-label={t("audit.prevMessage")}
+          title={t("audit.prevMessage")}
           onclick={() => scrollToConversationMessage(-1)}
         >
           <Icon icon={ArrowUp} width="14" height="14" />
         </button>
         <button
           type="button"
-          aria-label="Next message"
-          title="Next message"
+          aria-label={t("audit.nextMessage")}
+          title={t("audit.nextMessage")}
           onclick={() => scrollToConversationMessage(1)}
         >
           <Icon icon={ArrowDown} width="14" height="14" />
@@ -307,10 +308,10 @@
       <div class="alert alert-warning">{drawer.conversationError}</div>
     {/if}
     {#if drawer.conversationLoading}
-      <p class="empty-state">Loading interactions...</p>
+      <p class="empty-state">{t("audit.loadingInteractions")}</p>
     {/if}
     {#if !drawer.conversationLoading && !drawer.followUpSending && !drawer.conversationError && drawer.conversationMessages.length === 0 && !drawer.conversationLiveWaiting()}
-      <p class="empty-state">No interaction data available for this entry.</p>
+      <p class="empty-state">{t("audit.noInteractions")}</p>
     {/if}
 
     {#if drawer.conversationMessages.length > 0}
@@ -328,7 +329,7 @@
           <span class="conversation-cache-switch" class:is-active={showPromptCache} aria-hidden="true">
             <span class="conversation-cache-switch-thumb"></span>
           </span>
-          <span>Blue fill shows cached prompt share <span class="conversation-cache-estimate">(estimated)</span></span>
+          <span>{t("audit.cachedPromptHint")} <span class="conversation-cache-estimate">(estimated)</span></span>
         </button>
       {/if}
       <div class="conversation-thread" bind:this={drawer.conversationThreadEl}>
@@ -339,7 +340,7 @@
     {/if}
 
     {#if drawer.conversationTruncated}
-      <p class="conversation-truncated">Showing the newest part of this session and the selected log.</p>
+      <p class="conversation-truncated">{t("audit.newestPartHint")}</p>
     {/if}
 
     {#if drawer.conversationLiveWaiting()}
@@ -362,8 +363,8 @@
         <textarea
           id="conversation-follow-up"
           rows="2"
-          aria-label="Send a message"
-          placeholder="Continue this interaction…"
+          aria-label={t("audit.sendMessage")}
+          placeholder={t("audit.continueInteraction")}
           bind:value={drawer.followUpText}
           disabled={drawer.followUpSending || drawer.conversationLiveWaiting()}
         ></textarea>

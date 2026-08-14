@@ -2,6 +2,7 @@
   // GitHub-style activity calendar over the trailing year, with a tokens /
   // costs mode toggle and a hover tooltip.
   import Spinner from "$lib/components/atoms/Spinner.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import SegmentedControl from "$lib/components/atoms/SegmentedControl.svelte";
   import { timezone } from "$lib/stores/timezone.svelte.js";
   import { calendarState } from "./overviewState.svelte.js";
@@ -38,15 +39,15 @@
 
 <div class="contribution-calendar-section">
   <div class="contribution-calendar-header">
-    <h3>Activity</h3>
+    <h3>{t("overview.activity")}</h3>
     {#if calendarState.loading && calendarState.data.length === 0}
-      <Spinner size={14} label="Loading activity" />
+      <Spinner size={14} label={t("overview.loadingActivity")} />
     {/if}
     <SegmentedControl
-      ariaLabel="Activity calendar mode"
+      ariaLabel={t("overview.calendarMode")}
       options={[
-        { value: "tokens", label: "Tokens" },
-        { value: "costs", label: "Costs" },
+        { value: "tokens", label: t("overview.tokens") },
+        { value: "costs", label: t("overview.costs") },
       ]}
       value={calendarState.mode}
       onchange={(mode) => (calendarState.mode = mode)}
@@ -55,11 +56,11 @@
   <div class="contribution-calendar-grid-wrapper">
     <div class="contribution-calendar-day-labels">
       <span></span>
-      <span>Mon</span>
+      <span>{t("overview.mon")}</span>
       <span></span>
-      <span>Wed</span>
+      <span>{t("overview.wed")}</span>
       <span></span>
-      <span>Fri</span>
+      <span>{t("overview.fri")}</span>
       <span></span>
     </div>
     <div class="contribution-calendar-scroll">
@@ -93,11 +94,11 @@
       >{calendarSummaryText(calendarState.data, calendarState.mode)}</span>
     </div>
     <div class="contribution-calendar-legend">
-      <span>Less</span>
+      <span>{t("overview.less")}</span>
       {#each calendarLegendLevels() as lvl (lvl)}
         <div class="contribution-calendar-cell level-{lvl}"></div>
       {/each}
-      <span>More</span>
+      <span>{t("overview.more")}</span>
     </div>
   </div>
 </div>

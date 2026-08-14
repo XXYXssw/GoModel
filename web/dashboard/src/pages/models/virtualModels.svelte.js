@@ -2,6 +2,7 @@
 // for the Models page.
 
 import { errorMessage, getJSON, sendJSON } from "$lib/api/client.js";
+import { t } from "$lib/i18n/i18n.svelte.js";
 import { flash } from "$lib/stores/flash.svelte.js";
 import { modelsStore } from "$lib/stores/models.svelte.js";
 import { runtimeConfig } from "$lib/stores/runtimeConfig.svelte.js";
@@ -105,11 +106,11 @@ class VirtualModelsStore {
 
   modelLoadingText() {
     if (modelsStore.loading) {
-      return this.displayModels.length > 0 ? "Refreshing models..." : "Loading models...";
+      return this.displayModels.length > 0 ? t("models.refreshing") : t("models.loading");
     }
     const total = this.filteredDisplayModels.length;
     const visible = Math.min(Number(this.modelRenderLimit || 0), total);
-    return "Rendering models... " + visible + " / " + total;
+    return t("models.rendering", { visible, total });
   }
 
   // ---- Incremental render batching (loader paints between batches) ----
@@ -247,12 +248,12 @@ class VirtualModelsStore {
 
   rowToggleLabel(row) {
     if (this.rowTogglingKey && this.rowTogglingKey === row.key) {
-      return "Updating...";
+      return t("vm.updating");
     }
     if (this.rowToggleRestricted(row)) {
-      return "Restricted";
+      return t("vm.restricted");
     }
-    return this.rowToggleEnabled(row) ? "Enabled" : "Disabled";
+    return this.rowToggleEnabled(row) ? t("common.enabled") : t("common.disabled");
   }
 
   rowToggleRestricted(row) {
@@ -267,12 +268,12 @@ class VirtualModelsStore {
     if (!row) {
       return "";
     }
-    const action = this.rowToggleEnabled(row) ? "Disable " : "Enable ";
+    const action = this.rowToggleEnabled(row) ? t("common.disable") + " " : t("common.enable") + " ";
     let subject;
     if (row.is_alias) {
-      subject = "alias " + String((row.alias && row.alias.name) || "");
+      subject = t("vm.alias") + " " + String((row.alias && row.alias.name) || "");
     } else {
-      subject = String(row.display_name || (row.access && row.access.selector) || "model");
+      subject = String(row.display_name || (row.access && row.access.selector) || t("common.model"));
     }
     return action + subject.trim();
   }
@@ -285,7 +286,7 @@ class VirtualModelsStore {
       return;
     }
     if (rowIsManaged(row)) {
-      flash.success("This virtual model is managed by configuration and is read-only.");
+      flash.success(t("vm.managedReadonly"));
       return;
     }
     if (row.is_alias) {
@@ -310,7 +311,7 @@ class VirtualModelsStore {
       });
       if (result.status === 503) {
         this.virtualModelsAvailable = false;
-        flash.error("Virtual models feature is unavailable.");
+        flash.error(t("models.virtualModelsUnavailable"));
         return;
       }
       if (result.stale) {
@@ -319,17 +320,17 @@ class VirtualModelsStore {
       if (!result.ok) {
         flash.error(
           result.status === 401
-            ? "Authentication required."
-            : errorMessage(result, "Failed to update alias state."),
+            ? t("auth.required")
+            : errorMessage(result, t("vm.updateAliasFailed")),
         );
         return;
       }
 
-      flash.success(payload.enabled ? "Alias enabled." : "Alias disabled.");
+      flash.success(payload.enabled ? t("vm.aliasEnabled") : t("vm.aliasDisabled"));
       void this.fetchVirtualModels();
     } catch (e) {
       console.error("Failed to toggle alias state:", e);
-      flash.error("Failed to update alias state.");
+      flash.error(t("vm.updateAliasFailed"));
     } finally {
       this.rowTogglingKey = "";
     }
@@ -355,7 +356,7 @@ class VirtualModelsStore {
       });
       if (result.status === 503) {
         this.virtualModelsAvailable = false;
-        flash.error("Virtual models feature is unavailable.");
+        flash.error(t("models.virtualModelsUnavailable"));
         return;
       }
       if (!(method === "DELETE" && result.status === 404)) {
@@ -365,18 +366,18 @@ class VirtualModelsStore {
         if (!result.ok) {
           flash.error(
             result.status === 401
-              ? "Authentication required."
-              : errorMessage(result, "Failed to update model access."),
+              ? t("auth.required")
+              : errorMessage(result, t("vm.updateModelAccessFailed")),
           );
           return;
         }
       }
 
-      flash.success(desired ? "Model enabled." : "Model disabled.");
+      flash.success(desired ? t("vm.modelEnabled") : t("vm.modelDisabled"));
       void Promise.all([modelsStore.fetchModels(), this.fetchVirtualModels()]);
     } catch (e) {
       console.error("Failed to toggle model access:", e);
-      flash.error("Failed to update model access.");
+      flash.error(t("vm.updateModelAccessFailed"));
     } finally {
       this.rowTogglingKey = "";
     }
@@ -397,12 +398,12 @@ class VirtualModelsStore {
     }
     await this.mutateVirtualModelRow({
       rowKey: row.key,
-      confirmMessage: 'Remove the virtual model alias "' + source + '"?',
+      confirmMessage: t("vm.removeAliasConfirm", { source }),
       method: "DELETE",
       payload: { source },
-      operation: "virtual model",
-      failureMessage: "Failed to remove virtual model.",
-      notice: "Virtual model removed.",
+      operation: t("vm.operation"),
+      failureMessage: t("vm.removeFailed"),
+      notice: t("vm.removed"),
       ignoreNotFound: true,
     });
   }
@@ -421,8 +422,7 @@ class VirtualModelsStore {
     }
     await this.mutateVirtualModelRow({
       rowKey: row.key,
-      confirmMessage:
-        'Remove the redirect for "' + source + '"? Other virtual model settings will be preserved.',
+      confirmMessage: t("vm.removeRedirectConfirm", { source }),
       method: "PUT",
       payload: {
         source,
@@ -431,9 +431,9 @@ class VirtualModelsStore {
         enabled: alias.enabled !== false,
         ...(alias.slowdown != null ? { slowdown: Number(alias.slowdown) } : {}),
       },
-      operation: "virtual model redirect",
-      failureMessage: "Failed to remove redirect.",
-      notice: "Redirect removed. Other virtual model settings were preserved.",
+      operation: t("vm.operationRedirect"),
+      failureMessage: t("vm.removeRedirectFailed"),
+      notice: t("vm.removedRedirect"),
     });
   }
 
@@ -453,7 +453,7 @@ class VirtualModelsStore {
       });
       if (result.status === 503) {
         this.virtualModelsAvailable = false;
-        flash.error("Virtual models feature is unavailable.");
+        flash.error(t("models.virtualModelsUnavailable"));
         return;
       }
       if (!(options.ignoreNotFound && result.status === 404)) {
@@ -536,9 +536,9 @@ class VirtualModelsStore {
 
   vmFormToggleLabel() {
     if (!this.vmForm || !this.vmForm.enabled) {
-      return "Disabled";
+      return t("common.disabled");
     }
-    return this.vmFormToggleRestricted() ? "Restricted" : "Enabled";
+    return this.vmFormToggleRestricted() ? t("vm.restricted") : t("common.enabled");
   }
 
   resetVirtualModelForm() {
@@ -569,7 +569,7 @@ class VirtualModelsStore {
     this.vmFormOpen = true;
     this.vmFormMode = "create";
     this.vmFormSourceLocked = false;
-    this.vmFormDisplayName = "New virtual model";
+    this.vmFormDisplayName = t("models.newVirtualModel");
     if (model && model.model && model.model.id) {
       this.vmForm.target_model = qualifiedModelName(model);
     }
@@ -670,7 +670,7 @@ class VirtualModelsStore {
     this.vmFormDefaultEnabled = defaultEnabled;
     this.vmFormEffectiveEnabled = override ? override.enabled !== false : defaultEnabled;
     this.vmFormManaged = Boolean(override && override.managed);
-    this.vmFormDisplayName = "All providers and models";
+    this.vmFormDisplayName = t("vm.allProvidersModels");
     this.vmForm = {
       source: selector,
       target_model: "",
@@ -690,7 +690,7 @@ class VirtualModelsStore {
     }
     this.openVirtualModelEditModel({
       display_name: group.display_name,
-      access_display_name: "All models in " + group.display_name,
+      access_display_name: t("vm.allModelsIn", { name: group.display_name }),
       provider_name: group.provider_name,
       provider_type: group.provider_type,
       access: group.access,
@@ -704,7 +704,7 @@ class VirtualModelsStore {
   // makes an access policy.
   async submitVirtualModelForm() {
     if (this.vmFormManaged) {
-      this.vmFormError = "This virtual model is managed by configuration and cannot be edited here.";
+      this.vmFormError = t("vm.managedCannotEdit");
       return;
     }
 
@@ -712,7 +712,7 @@ class VirtualModelsStore {
     const { payload, source, isRedirect, isRename } = built;
 
     if (!source) {
-      this.vmFormError = "Source is required.";
+      this.vmFormError = t("vm.sourceRequired");
       return;
     }
 

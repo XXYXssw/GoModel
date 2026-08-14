@@ -1,3 +1,4 @@
+import { t } from "../../lib/i18n/core.js";
 // Pure model-pricing-override logic.
 
 export const PRICE_FIELDS = [
@@ -52,9 +53,9 @@ function modelPricingSourceLabel(source) {
     case "config_yaml":
       return "config.yaml";
     case "model_registry":
-      return "Model registry";
+      return t("pricing.modelRegistry");
     default:
-      return source ? String(source) : "Unknown";
+      return source ? String(source) : t("common.unknown");
   }
 }
 
@@ -75,7 +76,7 @@ function pricingSourcesFromMetadata(metadata) {
 
 function modelPricingOverrideSourceLabel(override) {
   const selector = String((override && override.selector) || "").trim();
-  return selector ? "Dashboard/API override (" + selector + ")" : "Dashboard/API override";
+  return selector ? t("pricing.dashboardOverride", { selector }) : t("pricing.dashboardOverridePlain");
 }
 
 // ---- Selectors ----
@@ -211,19 +212,19 @@ export function buildPricingOverridePayload(rows, preservedTiers) {
   for (const row of Array.isArray(rows) ? rows : []) {
     const field = String(row.field || "").trim();
     if (!field) {
-      return { error: "Choose a price type for every row." };
+      return { error: t("pricing.chooseType") };
     }
     if (seen.has(field)) {
-      return { error: "Each price type can only be used once." };
+      return { error: t("pricing.duplicateType") };
     }
     seen.add(field);
     const raw = String(row.value || "").trim();
     if (raw === "") {
-      return { error: "Enter a value for " + pricingFieldLabel(field) + "." };
+      return { error: t("pricing.enterValue", { field: pricingFieldLabel(field) }) };
     }
     const value = Number(raw);
     if (!Number.isFinite(value) || value < 0) {
-      return { error: "Pricing values must be numbers greater than or equal to 0." };
+      return { error: t("pricing.nonNegative") };
     }
     pricing[field] = value;
   }
@@ -232,7 +233,7 @@ export function buildPricingOverridePayload(rows, preservedTiers) {
     pricing.tiers = clonePricing(tiers);
   }
   if (Object.keys(pricing).length === 0) {
-    return { error: "Add at least one pricing field before saving." };
+    return { error: t("pricing.oneFieldRequired") };
   }
   return { pricing };
 }
@@ -254,8 +255,8 @@ export function effectivePreviewRows(basePricing, baseSources, draftPricing) {
       source: hasDraft
         ? "Form/API value"
         : hasBase
-          ? sources[option.value] || "Model registry"
-          : "Unset",
+          ? sources[option.value] || t("pricing.modelRegistry")
+          : t("pricing.unset"),
     };
   }).filter((row) => row.source !== "Unset" || row.value !== undefined);
 }

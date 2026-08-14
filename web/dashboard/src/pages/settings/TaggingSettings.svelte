@@ -4,6 +4,7 @@
   // managed=true and stay read-only; credential-header rejection happens
   // server-side and its message is surfaced from the PUT response.
   import { auth } from "$lib/stores/auth.svelte.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import { flash } from "$lib/stores/flash.svelte.js";
   import { getJSON, sendJSON } from "$lib/api/client.js";
   import Icon from "$lib/components/atoms/Icon.svelte";
@@ -105,43 +106,43 @@
 <div class="settings-refresh-section tagging-settings-section">
   <InlineHelpSection
     copyId="tagging-settings-help-copy"
-    label="tagging help"
+    label={t("settings.taggingHelp")}
     text="Each request is labelled from the listed headers; labels land in usage tracking and audit logs. A header value can carry several labels split by the delimiter (default: comma). The prefix is trimmed from each label only — the header itself is forwarded unchanged unless 'Do not pass' is checked. Rows marked CONFIG come from config.yaml or TAGGING_HEADER_* env vars and are read-only here."
   >
-    {#snippet title()}<h3>Tagging based on headers</h3>{/snippet}
+    {#snippet title()}<h3>{t("settings.tagging")}</h3>{/snippet}
   </InlineHelpSection>
   <div class="tagging-settings-grid" aria-describedby="tagging-settings-help-copy">
     {#each taggingHeaders as rule, index (index)}
       <div class="tagging-settings-row">
         <div class="form-field">
           <label class="form-field-label" for={"tagging-header-" + index}
-            >Header</label
+            >{t("settings.header")}</label
           >
           <input
             id={"tagging-header-" + index}
             class="form-input"
             type="text"
-            placeholder="X-My-Tags"
+            placeholder={t("settings.headerPlaceholder")}
             bind:value={rule.header}
             disabled={rule.managed || !editable}
           />
         </div>
         <div class="form-field">
           <label class="form-field-label" for={"tagging-prefix-" + index}
-            >Prefix to trim (optional)</label
+            >{t("settings.prefixOptional")}</label
           >
           <input
             id={"tagging-prefix-" + index}
             class="form-input"
             type="text"
-            placeholder="tag-"
+            placeholder={t("settings.prefixPlaceholder")}
             bind:value={rule.prefix}
             disabled={rule.managed || !editable}
           />
         </div>
         <div class="form-field">
           <label class="form-field-label" for={"tagging-delimiter-" + index}
-            >Delimiter</label
+            >{t("settings.delimiter")}</label
           >
           <input
             id={"tagging-delimiter-" + index}
@@ -158,14 +159,14 @@
             bind:checked={rule.do_not_pass}
             disabled={rule.managed || !editable}
           />
-          <span>Do not pass upstream</span>
+          <span>{t("settings.doNotPass")}</span>
         </label>
         <div class="tagging-row-trailer">
           {#if rule.managed}
             <span
               class="badge"
-              title="Declared in config.yaml or TAGGING_HEADER_* env vars; read-only here."
-              >config</span
+              title={t("settings.taggingReadonly")}
+              >{t("vm.config")}</span
             >
           {:else}
             <button
@@ -173,14 +174,14 @@
               class="btn btn-danger-outline"
               disabled={!editable}
               aria-label={"Remove tagging header " + (rule.header || index + 1)}
-              onclick={() => removeHeader(index)}>Remove</button
+              onclick={() => removeHeader(index)}>{t("common.remove")}</button
             >
           {/if}
         </div>
       </div>
     {/each}
     {#if loading}
-      <Spinner size={16} label="Loading tagging settings" />
+      <Spinner size={16} label={t("settings.loadingTagging")} />
     {/if}
     {#if !loading && taggingHeaders.length === 0}
       <p class="tagging-settings-empty">
@@ -196,7 +197,7 @@
       onclick={addHeader}
     >
       <Icon icon={Plus} class="form-action-icon" />
-      <span>Add Header</span>
+      <span>{t("settings.addHeader")}</span>
     </button>
     <button
       type="button"
@@ -206,7 +207,7 @@
       onclick={save}
     >
       <Icon icon={Save} class="form-action-icon" />
-      <span>Save Tagging Settings</span>
+      <span>{t("settings.saveTagging")}</span>
     </button>
   </div>
 </div>

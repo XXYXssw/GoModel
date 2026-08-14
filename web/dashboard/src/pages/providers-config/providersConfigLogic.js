@@ -9,6 +9,7 @@
 // land on the input that caused it.
 
 import { splitCommaList } from "../../lib/utils/format.js";
+import { t } from "../../lib/i18n/core.js";
 
 export { splitCommaList };
 
@@ -28,12 +29,12 @@ export const PROVIDER_CREDENTIAL_FIELDS = {
   [FIELD_API_KEYS]: {
     label: "API Keys",
     control: "keys",
-    hint: "Identified sessions stay on one key by default, improving provider prompt-cache hits. Saved values are shown as ***********; leave the asterisks unchanged to keep the stored key.",
+    hint: t("providers.stickyKeyHint"),
   },
   [FIELD_SESSION_STICKY_KEYS]: {
     label: "Session-sticky API keys",
     control: "checkbox",
-    hint: "Keep each identified conversation on one API key to preserve provider prompt-cache affinity. Turn off to rotate keys round-robin on every request.",
+    hint: t("providers.stickyKeyHint2"),
   },
   [FIELD_BASE_URL]: {
     label: "Base URL",
@@ -43,22 +44,22 @@ export const PROVIDER_CREDENTIAL_FIELDS = {
     label: "API Version",
     control: "text",
     placeholder: "e.g. 2024-10-01-preview",
-    hint: "Leave empty for the provider default. Realtime endpoints may need a newer version.",
+    hint: t("providers.apiVersionHint"),
   },
   backend: {
     label: "Backend",
     control: "select",
-    hint: "Which Google surface to call. Vertex authenticates with Google credentials instead of an API key.",
+    hint: t("providers.googleSurfaceHint"),
   },
   auth_type: {
     label: "Auth Type",
     control: "select",
-    hint: "How to obtain Google credentials. Leave on the default to use Application Default Credentials.",
+    hint: t("providers.googleCredsHint"),
   },
   api_mode: {
     label: "API Mode",
     control: "select",
-    hint: "Which request shape to send upstream.",
+    hint: t("providers.requestShapeHint"),
   },
   vertex_project: {
     label: "Vertex Project",
@@ -74,18 +75,18 @@ export const PROVIDER_CREDENTIAL_FIELDS = {
     label: "Service Account File",
     control: "text",
     placeholder: "/path/to/service-account.json",
-    hint: "Path readable by the gateway process.",
+    hint: t("providers.pathHint"),
   },
   [FIELD_SERVICE_ACCOUNT_JSON]: {
     label: "Service Account JSON",
     control: "textarea",
-    placeholder: "Paste service account JSON",
-    hint: "Saved values are shown as ***********; leave the asterisks unchanged to keep the stored value, or clear it to remove.",
+    placeholder: t("providers.pasteJson"),
+    hint: t("providers.savedValueHint"),
   },
   service_account_json_base64: {
     label: "Service Account JSON (base64)",
     control: "text",
-    hint: "Saved values are shown as ***********; leave the asterisks unchanged to keep the stored value.",
+    hint: t("providers.savedValueHint2"),
   },
   gcp_scope: {
     label: "GCP Scope",
@@ -96,7 +97,7 @@ export const PROVIDER_CREDENTIAL_FIELDS = {
     label: "Models (comma-separated)",
     control: "text",
     placeholder: "gpt-4o, gpt-4o-mini",
-    hint: "Leave empty to auto-discover models from the provider's /models endpoint where supported.",
+    hint: t("providers.modelsHint"),
   },
 };
 
@@ -220,7 +221,7 @@ export function providerCredentialFormFields(schema, defaultBaseURL) {
     };
     if (name === FIELD_BASE_URL && fallbackBaseURL) {
       field.placeholder = fallbackBaseURL;
-      field.hint = "Defaults to " + fallbackBaseURL;
+      field.hint = t("providers.defaultsTo", { url: fallbackBaseURL });
     }
     if (field.options.length > 0) {
       field.control = "select";
@@ -368,12 +369,12 @@ export function validateProviderCredentialForm(form, mode, existingRows, schema)
   const type = String((form && form.type) || "").trim();
 
   if (!type) {
-    errors.type = "Select a provider type.";
+    errors.type = t("providers.selectTypeError");
   }
   if (!name) {
-    errors.name = "Name is required.";
+    errors.name = t("providers.nameRequired");
   } else if (name.includes("/")) {
-    errors.name = "Name cannot contain '/' — it separates the provider from the model.";
+    errors.name = t("providers.nameNoSlash");
   } else if (
     mode === "create" &&
     (Array.isArray(existingRows) ? existingRows : []).some(
@@ -401,10 +402,10 @@ function validateProviderCredentialField(form, field) {
     // "no key at all" first: a required field left as one blank row is a
     // missing key, not a stray row to tidy up.
     if (field.required && !keys.some((value) => value.trim())) {
-      return "At least one API key is required for this provider type.";
+      return t("providers.keyRequired");
     }
     if (keys.some((value) => !value.trim())) {
-      return "Remove the empty row instead of leaving a key blank.";
+      return t("providers.removeEmptyRow");
     }
     return "";
   }
@@ -423,7 +424,7 @@ function validateProviderCredentialField(form, field) {
     try {
       JSON.parse(value);
     } catch {
-      return "Paste the service account JSON file's contents — this is not valid JSON.";
+      return t("providers.invalidJson");
     }
   }
   // Enumerated fields are not checked against their options: the schema lists

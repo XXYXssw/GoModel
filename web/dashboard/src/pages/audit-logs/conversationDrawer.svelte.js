@@ -2,6 +2,7 @@
 // conversation-helpers.js.
 
 import { apiFetch, getJSON, isAbortError } from "$lib/api/client.js";
+import { t } from "$lib/i18n/i18n.svelte.js";
 import { untrack } from "svelte";
 import { liveLogs } from "./liveLogs.svelte.js";
 import {
@@ -288,7 +289,7 @@ class ConversationDrawerStore {
       if (result.stale) return;
 
       if (!result.ok) {
-        this.conversationError = "Unable to load interactions.";
+        this.conversationError = t("audit.unableToLoadInteractions");
         return;
       }
 
@@ -313,7 +314,7 @@ class ConversationDrawerStore {
     } catch (e) {
       if (requestToken !== this.conversationRequestToken) return;
       console.error("Failed to fetch audit conversation:", e);
-      this.conversationError = "Failed to load interactions.";
+      this.conversationError = t("audit.failedToLoadInteractions");
     } finally {
       if (requestToken === this.conversationRequestToken) {
         this.conversationLoading = false;
@@ -365,7 +366,7 @@ class ConversationDrawerStore {
       const responseRequestID = String(response.headers.get("X-Request-ID") || "").trim();
       if (responseRequestID && this.followUpRequestID) this.followUpRequestID = responseRequestID;
       if (!response.ok) {
-        let message = "Unable to send message.";
+        let message = t("audit.unableToSend");
         try {
           const payload = await response.json();
           message = payload && payload.error && payload.error.message || message;
@@ -384,10 +385,10 @@ class ConversationDrawerStore {
       }
     } catch (error) {
       if (isAbortError(error) || controller.signal.aborted) {
-        if (timedOut && this.conversationOpen) this.followUpError = "The request timed out.";
+        if (timedOut && this.conversationOpen) this.followUpError = t("audit.requestTimedOut");
       } else {
         console.error("Failed to send interaction follow-up:", error);
-        this.followUpError = "Failed to send message.";
+        this.followUpError = t("audit.failedToSend");
       }
     } finally {
       clearTimeout(timeout);
@@ -430,7 +431,7 @@ class ConversationDrawerStore {
       await waitFor(FOLLOW_UP_POLL_INTERVAL_MS, signal);
     }
     if (this.conversationOpen && requestToken === this.conversationRequestToken) {
-      this.followUpError = "Message sent, but its saved interaction is not available yet.";
+      this.followUpError = t("audit.messageSentPending");
     }
   }
 

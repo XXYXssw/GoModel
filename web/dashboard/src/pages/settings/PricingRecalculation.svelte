@@ -3,6 +3,7 @@
   // gated on the USAGE_PRICING_RECALCULATION_ENABLED runtime flag and
   // guarded by the shared typed-confirmation dialog ("recalculate").
   import { flash } from "$lib/stores/flash.svelte.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import { runtimeConfig } from "$lib/stores/runtimeConfig.svelte.js";
   import { dateRange } from "$lib/stores/dateRange.svelte.js";
   import { timezone } from "$lib/stores/timezone.svelte.js";
@@ -35,11 +36,11 @@
       return;
     }
     confirmDialog.open({
-      title: "Recalculate Pricing",
+      title: t("settings.recalculatePricing"),
       titleId: "pricingRecalculateDialogTitle",
       inputId: "pricing-recalculate-confirmation",
       requiredText: "recalculate",
-      confirmLabel: "Recalculate Pricing",
+      confirmLabel: t("settings.recalculatePricing"),
       icon: Calculator,
       dialogClass: "pricing-recalculate-dialog",
       message:
@@ -98,16 +99,16 @@
   <div class="settings-refresh-section pricing-recalculate-section">
     <InlineHelpSection
       copyId="pricing-recalculate-help-copy"
-      label="pricing recalculation help"
+      label={t("settings.pricingRecalcHelp")}
       text="Recalculate stored input, output, total, and Pro Saved costs from the current model pricing metadata. This overwrites matching historical cost fields. Filters are applied to the selected date range, user path subtree, and provider/model selector or alias."
     >
-      {#snippet title()}<h3>Usage Pricing Recalculation</h3>{/snippet}
+      {#snippet title()}<h3>{t("settings.pricingRecalculation")}</h3>{/snippet}
     </InlineHelpSection>
     <div class="pricing-recalculate-grid">
       <div class="form-field pricing-recalculate-date-field">
         <!-- svelte-ignore a11y_label_has_associated_control -- the picker is labelled via aria-labelledby -->
         <label class="form-field-label" id="pricing-recalculate-date-label"
-          >Date Range</label
+          >{t("settings.dateRange")}</label
         >
         <div aria-labelledby="pricing-recalculate-date-label">
           <DatePicker />
@@ -115,7 +116,7 @@
       </div>
       <div class="form-field pricing-recalculate-filter-field">
         <label class="form-field-label" for="pricing-recalculate-user-path"
-          >User Path (optional)</label
+          >{t("settings.userPathOptional")}</label
         >
         <input
           id="pricing-recalculate-user-path"
@@ -129,13 +130,13 @@
         class="form-field pricing-recalculate-filter-field pricing-recalculate-selector-field"
       >
         <label class="form-field-label" for="pricing-recalculate-selector"
-          >Provider/Model or Alias (optional)</label
+          >{t("settings.providerModelOptional")}</label
         >
         <input
           id="pricing-recalculate-selector"
           class="form-input"
           type="text"
-          placeholder="openai/gpt-4o or smart"
+          placeholder={t("settings.pricingRecalcPlaceholder")}
           bind:value={selector}
         />
       </div>
@@ -150,7 +151,7 @@
         onclick={openDialog}
       >
         <Icon icon={Calculator} class="form-action-icon" />
-        <span>Recalculate Pricing</span>
+        <span>{t("settings.recalculatePricing")}</span>
       </button>
     </div>
   </div>

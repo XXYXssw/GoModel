@@ -7,6 +7,7 @@
 //                       tracking today and slides forward on a day change
 //   - custom            a hand-picked window that ended in the past: frozen
 
+import { t } from "../i18n/core.js";
 import {
   addDaysToDateKey,
   daysBetweenDateKeys,
@@ -105,7 +106,7 @@ export function windowEndingToday(startKey, endKey, todayKey) {
 }
 
 function formatDateKeyShort(key, todayKey) {
-  if (key === todayKey) return "Today";
+  if (key === todayKey) return t("dateRange.today");
   const [year, month, day] = key.split("-");
   return MONTH_NAMES[Number(month) - 1] + " " + Number(day) + ", " + year;
 }
@@ -121,12 +122,12 @@ export function rangeSpanLabel({
   followsToday,
   todayKey,
 }) {
-  if (selectedPreset) return "Last " + selectedPreset + " days";
+  if (selectedPreset) return t("dateRange.lastDays", { days: selectedPreset });
   if (!isDateKey(startKey) || !isDateKey(endKey)) return "";
 
   const days = daysBetweenDateKeys(startKey, endKey);
   if (followsToday || endKey === todayKey) {
-    return days === 1 ? "Today" : "Last " + days + " days";
+    return days === 1 ? t("dateRange.today") : t("dateRange.lastDays", { days });
   }
   return days === 1 ? "1 day" : days + " days";
 }
@@ -136,12 +137,12 @@ export function rangeSpanLabel({
  * today is named rather than dated.
  */
 export function rangeLabel({ selectedPreset, startKey, endKey, todayKey }) {
-  if (selectedPreset) return "Last " + selectedPreset + " days";
+  if (selectedPreset) return t("dateRange.lastDays", { days: selectedPreset });
   const short = (key) => formatDateKeyShort(key, todayKey);
   if (isDateKey(startKey) && isDateKey(endKey)) {
     if (startKey === endKey) return short(startKey);
     return short(startKey) + " – " + short(endKey);
   }
   if (isDateKey(startKey)) return short(startKey) + " – ...";
-  return "Last " + DEFAULT_PRESET_DAYS + " days";
+  return t("dateRange.lastDays", { days: DEFAULT_PRESET_DAYS });
 }

@@ -2,6 +2,7 @@
   // Metadata badge strip under an expanded audit entry.
   import { providerDisplayValue, qualifiedResolvedModelDisplay } from "$lib/utils/format.js";
   import { workflowFailoverTarget } from "./audit-logic.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   let { entry } = $props();
 
@@ -40,7 +41,7 @@
 </script>
 
 <div class="audit-entry-metadata">
-  <span class="audit-entry-metadata-label">Metadata:</span>
+  <span class="audit-entry-metadata-label">{t("audit.metadata")}:</span>
   <div class="audit-entry-context">
     {#each badges as badge (badge.key)}
       <span class={["provider-badge", badge.class, { mono: badge.mono }]}

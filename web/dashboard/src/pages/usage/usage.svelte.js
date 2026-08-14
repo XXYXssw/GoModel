@@ -5,6 +5,7 @@
 // query through fetchCacheOverview).
 
 import { getJSON, isAbortError } from "$lib/api/client.js";
+import { t } from "$lib/i18n/i18n.svelte.js";
 import { router } from "$lib/stores/router.svelte.js";
 import { dateRange } from "$lib/stores/dateRange.svelte.js";
 import { runtimeConfig } from "$lib/stores/runtimeConfig.svelte.js";
@@ -134,7 +135,7 @@ class UsagePageState {
   }
 
   usageLabelChipTitle(label) {
-    if (this.usageFilterLabel === label) return "Clear label filter";
+    if (this.usageFilterLabel === label) return t("usage.clearLabelFilter");
     return 'Filter usage by "' + label + '"';
   }
 

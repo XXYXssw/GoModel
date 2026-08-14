@@ -1,4 +1,5 @@
 <script>
+  import { t } from "$lib/i18n/i18n.svelte.js";
   // One month grid inside the DatePicker dropdown. `offset` is the month
   // shift from the picker's anchor month (-1 = left pane, 0 = right pane).
   import { dateRange } from "$lib/stores/dateRange.svelte.js";
@@ -39,7 +40,7 @@
       class="dp-nav-btn"
       class:dp-nav-prev-mobile={offset !== -1}
       onclick={onprev}
-      aria-label="Previous month"
+      aria-label={t("common.prevMonth")}
     >
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8.5 3.5L5 7l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </button>
@@ -51,14 +52,16 @@
         class="dp-nav-btn"
         onclick={onnext}
         disabled={atCurrentMonth}
-        aria-label="Next month"
+        aria-label={t("common.nextMonth")}
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5.5 3.5L9 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </button>
     {/if}
   </div>
   <div class="dp-weekdays">
-    <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+    {#each t("dateRange.weekdays").split(",") as day (day)}
+      <span>{day}</span>
+    {/each}
   </div>
   <div class="dp-days">
     {#each days as day (day.key)}

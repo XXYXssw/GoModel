@@ -3,16 +3,17 @@
 // engine lives in liveTokensState.svelte.js.
 
 import { formatTokensShort } from "../../lib/utils/format.js";
+import { t } from "../../lib/i18n/core.js";
 import { chartTickFont, chartTooltip } from "../../lib/utils/chartTheme.js";
 import { tokenAxisTicks } from "./chartStyle.js";
 
 // apiName: backend granularity; refreshMs: how often to refetch to scroll the
 // window (matched to the bucket width, capped for coarse views).
 export const GRANULARITIES = {
-  seconds: { apiName: "second", windowLabel: "Last 60 seconds", refreshMs: 2000 },
-  minutes: { apiName: "minute", windowLabel: "Last 60 minutes", refreshMs: 5000 },
-  hours: { apiName: "hour", windowLabel: "Last 24 hours", refreshMs: 20000 },
-  days: { apiName: "day", windowLabel: "Last 30 days", refreshMs: 60000 },
+  seconds: { apiName: "second", windowLabel: t("overview.last60s"), refreshMs: 2000 },
+  minutes: { apiName: "minute", windowLabel: t("overview.last60m"), refreshMs: 5000 },
+  hours: { apiName: "hour", windowLabel: t("overview.last24h"), refreshMs: 20000 },
+  days: { apiName: "day", windowLabel: t("overview.last30d"), refreshMs: 60000 },
 };
 
 export const GRANULARITY_OPTIONS = [
@@ -102,10 +103,10 @@ export function liveTokensWindowLabel(granularity) {
 // opaque to assistive tech).
 export function liveTokensChartAriaLabel(totals, granularity) {
   return (
-    "Live token throughput, " +
+    t("overview.liveTokenThroughput") + ", " +
     liveTokensWindowLabel(granularity).toLowerCase() +
     ". " +
-    "Input " +
+    t("overview.inputTokens") + " " +
     liveTokensLegendValue(totals, "input") +
     ", " +
     "output " +
@@ -191,10 +192,10 @@ export function liveTokensChartConfig(colors, seriesColors, series, granularity)
     data: {
       labels: series.labels,
       datasets: [
-        bar("Input Tokens", series.cols.input, seriesColors.input),
-        bar("Output Tokens", series.cols.output, seriesColors.output),
-        bar("Prompt (Input) Cached", series.cols.prompt, seriesColors.prompt),
-        bar("Locally Cached", series.cols.local, seriesColors.local),
+        bar(t("overview.inputTokens"), series.cols.input, seriesColors.input),
+        bar(t("overview.outputTokens"), series.cols.output, seriesColors.output),
+        bar(t("overview.promptInputCached"), series.cols.prompt, seriesColors.prompt),
+        bar(t("overview.locallyCached"), series.cols.local, seriesColors.local),
       ],
     },
     options: {
@@ -247,7 +248,7 @@ export function liveTokensChartConfig(colors, seriesColors, series, granularity)
             items.forEach((it) => {
               total += Number(it.parsed.y) || 0;
             });
-            return "Total: " + formatValue(total);
+            return t("overview.chartTotal", { total: formatValue(total) });
           },
         }),
       },

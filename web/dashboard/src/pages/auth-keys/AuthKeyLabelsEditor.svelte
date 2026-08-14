@@ -3,15 +3,16 @@
   import EditorDialog from "$lib/components/organisms/EditorDialog.svelte";
   import FormField from "$lib/components/molecules/FormField.svelte";
   import { authKeysStore as store } from "./authKeys.svelte.js";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 </script>
 
 <EditorDialog
   open={store.labelsEditor.open}
-  title="Edit Labels"
-  ariaLabel="API key labels editor"
+  title={t("authKeys.editLabels")}
+  ariaLabel={t("authKeys.labelsEditorAria")}
   error={store.labelsEditor.error}
   submitting={store.labelsEditor.submitting}
-  submitLabel="Save Labels"
+  submitLabel={t("authKeys.saveLabels")}
   cancel={false}
   dialogClass="auth-key-editor"
   onclose={() => store.closeLabelsEditor()}
@@ -21,11 +22,11 @@
     <p class="form-hint">{store.labelsEditor.name}</p>
   {/snippet}
 
-  <FormField id="auth-key-labels-edit" label="Labels (comma-separated)">
+  <FormField id="auth-key-labels-edit" label={t("authKeys.labelsField")}>
     <input
       id="auth-key-labels-edit"
       type="text"
-      placeholder="ex. team-a, batch-jobs"
+      placeholder={t("authKeys.labelsPlaceholder")}
       autocomplete="off"
       data-modal-autofocus
       bind:value={store.labelsEditor.value}

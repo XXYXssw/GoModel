@@ -2,6 +2,7 @@
   // One usage breakdown section (by model, user path, or label): diverging /
   // stacked horizontal bar chart with a table view toggle.
   import ChartCanvas from "$lib/components/molecules/ChartCanvas.svelte";
+  import { t } from "$lib/i18n/i18n.svelte.js";
   import InlineHelpSection from "$lib/components/molecules/InlineHelpSection.svelte";
   import Spinner from "$lib/components/atoms/Spinner.svelte";
   import { chartColors, resolveCssColor } from "$lib/utils/chartTheme.js";
@@ -116,7 +117,7 @@
       class="chart-view-btn"
       class:active={view === "chart"}
       aria-pressed={view === "chart"}
-      aria-label="Show {meta.noun} chart"
+      aria-label="aria-label={t("usage.showChart", { noun: meta.noun })}"
       title="Chart"
       onclick={() => usagePage.toggleUsageChartView(kind, "chart")}
     >
@@ -127,7 +128,7 @@
       class="chart-view-btn"
       class:active={view === "stacked"}
       aria-pressed={view === "stacked"}
-      aria-label="Show {meta.noun} stacked chart"
+      aria-label="aria-label={t("usage.showStacked", { noun: meta.noun })}"
       title="Stacked"
       onclick={() => usagePage.toggleUsageChartView(kind, "stacked")}
     >
@@ -138,7 +139,7 @@
       class="chart-view-btn"
       class:active={view === "table"}
       aria-pressed={view === "table"}
-      aria-label="Show {meta.noun} table"
+      aria-label="aria-label={t("usage.showTable", { noun: meta.noun })}"
       title="Table"
       onclick={() => usagePage.toggleUsageChartView(kind, "table")}
     >
@@ -151,15 +152,15 @@
   <div class="model-chart-section">
     <div class="model-chart-header">
       {#if kind === "label"}
-        <InlineHelpSection copyId={helpCopyId} label="label usage help" text={helpText}>
+        <InlineHelpSection copyId={helpCopyId} label="label={t("usage.helpLabel")}" text={helpText}>
           {#snippet title()}<h3>{heading}</h3>{/snippet}
           {#snippet extra()}
-            {#if loading}<Spinner size={14} label="Loading {meta.noun}" />{/if}
+            {#if loading}<Spinner size={14} label="label={t("usage.loadingNoun", { noun: meta.noun })}" />{/if}
           {/snippet}
         </InlineHelpSection>
       {:else}
         <h3>{heading}</h3>
-        {#if loading}<Spinner size={14} label="Loading {meta.noun}" />{/if}
+        {#if loading}<Spinner size={14} label="label={t("usage.loadingNoun", { noun: meta.noun })}" />{/if}
       {/if}
       {@render viewToggle()}
     </div>
@@ -173,22 +174,22 @@
           <thead>
             <tr>
               {#if kind === "model"}
-                <th>Model</th>
-                <th>Provider</th>
+                <th>{t("usage.model")}</th>
+                <th>{t("usage.provider")}</th>
               {:else if kind === "userPath"}
-                <th>User Path</th>
+                <th>{t("usage.userPath")}</th>
               {:else}
-                <th>Label</th>
-                <th class="col-price">Requests</th>
+                <th>{t("usage.label")}</th>
+                <th class="col-price">{t("usage.requests")}</th>
               {/if}
-              <th class="col-price">Input Tokens</th>
-              <th class="col-price">Output Tokens</th>
-              <th class="col-price" title="Provider prompt-cache reads included in the input tokens">Prompt Cached</th>
-              <th class="col-price" title="Tokens served from GoModel's local response cache (excluded from the other columns)">Local Cached</th>
-              <th class="col-price">Total Tokens</th>
-              <th class="col-price">Input Cost</th>
-              <th class="col-price">Output Cost</th>
-              <th class="col-price">Total Cost</th>
+              <th class="col-price">{t("usage.inputTokens")}</th>
+              <th class="col-price">{t("usage.outputTokens")}</th>
+              <th class="col-price" title="Provider prompt-cache reads included in the input tokens">{t("usage.promptCached")}</th>
+              <th class="col-price" title="Tokens served from GoModel's local response cache (excluded from the other columns)">{t("usage.localCached")}</th>
+              <th class="col-price">{t("usage.totalTokens")}</th>
+              <th class="col-price">{t("usage.inputCost")}</th>
+              <th class="col-price">{t("usage.outputCost")}</th>
+              <th class="col-price">{t("usage.totalCost")}</th>
             </tr>
           </thead>
           <tbody>
@@ -243,7 +244,7 @@
 {:else if loading}
   <!-- Loading affordance while the breakdown fetch is in flight. -->
   <div class="model-chart-section usage-breakdown-loading">
-    <Spinner size={20} label="Loading {meta.noun}" />
+    <Spinner size={20} label="label={t("usage.loadingNoun", { noun: meta.noun })}" />
   </div>
 {/if}
 

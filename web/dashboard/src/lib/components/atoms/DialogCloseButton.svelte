@@ -4,9 +4,10 @@
   // the auth-style dialogs pass "" to keep their larger X.
   import Icon from "./Icon.svelte";
   import { X } from "lucide";
+  import { t } from "$lib/i18n/i18n.svelte.js";
 
   let {
-    label = "Close",
+    label = t("common.close"),
     onclick,
     class: className = "",
     iconClass = "table-icon-svg",
