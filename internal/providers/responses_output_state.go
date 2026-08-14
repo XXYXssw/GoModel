@@ -8,6 +8,8 @@ import (
 	"github.com/goccy/go-json"
 
 	"github.com/google/uuid"
+
+	"github.com/enterpilot/gomodel/internal/streaming"
 )
 
 // ResponsesOutputToolCallState tracks one function_call item in a Responses stream.
@@ -135,6 +137,35 @@ func (s *ResponsesOutputEventState) CompleteAssistantOutput(outputIndex int) str
 	})
 }
 
+// AppendAssistantDelta emits a response.output_text.delta event into buf. The
+// item_id is required by Responses clients (the AI SDK schema validates every
+// chunk); without it the delta is treated as an unknown chunk and the text is
+// dropped, leaving clients with an empty reply. This is the per-token hot
+// path, so the payload is a typed struct (no map) and the event is written
+// straight into the caller's pooled buffer.
+func (s *ResponsesOutputEventState) AppendAssistantDelta(buf *streaming.StreamBuffer, outputIndex int, delta string) {
+	jsonData, err := json.Marshal(struct {
+		Type         string `json:"type"`
+		ItemID       string `json:"item_id"`
+		OutputIndex  int    `json:"output_index"`
+		ContentIndex int    `json:"content_index"`
+		Delta        string `json:"delta"`
+	}{
+		Type:         "response.output_text.delta",
+		ItemID:       s.assistantMessageID,
+		OutputIndex:  outputIndex,
+		ContentIndex: 0,
+		Delta:        delta,
+	})
+	if err != nil {
+		slog.Error("failed to marshal content delta event", "error", err, "response_id", s.responseID)
+		return
+	}
+	buf.AppendString("event: response.output_text.delta\ndata: ")
+	buf.AppendBytes(jsonData)
+	buf.AppendString("\n\n")
+}
+
 // ReserveReasoning marks that a reasoning output item occupies index 0,
 // ahead of the assistant message and any tool calls.
 func (s *ResponsesOutputEventState) ReserveReasoning() {
@@ -170,7 +201,7 @@ func (s *ResponsesOutputEventState) ReasoningItem(status string, includeContent 
 }
 
 // StartReasoningOutput emits the reasoning output_item.added event once before
-// any reasoning_text delta references the item.
+// any reasoning_summary_text delta references the item.
 func (s *ResponsesOutputEventState) StartReasoningOutput(outputIndex int) string {
 	if s.reasoningStarted {
 		return ""
@@ -179,31 +210,42 @@ func (s *ResponsesOutputEventState) StartReasoningOutput(outputIndex int) string
 	if s.reasoningItemID == "" {
 		s.reasoningItemID = "rs_" + uuid.New().String()
 	}
-	return s.WriteEvent("response.output_item.added", map[string]any{
+	var b strings.Builder
+	b.WriteString(s.WriteEvent("response.output_item.added", map[string]any{
 		"type":         "response.output_item.added",
 		"item":         s.ReasoningItem("in_progress", false),
 		"output_index": outputIndex,
-	})
+	}))
+	// Clients (Chatbox/AI SDK) only surface reasoning from the
+	// response.reasoning_summary_* events; the part lifecycle carries the
+	// summary_index that anchors each reasoning-delta to the open item.
+	b.WriteString(s.WriteEvent("response.reasoning_summary_part.added", map[string]any{
+		"type":          "response.reasoning_summary_part.added",
+		"item_id":       s.reasoningItemID,
+		"summary_index": 0,
+	}))
+	return b.String()
 }
 
-// AppendReasoningDelta starts the reasoning item if needed and emits a raw
-// reasoning-text delta.
+// AppendReasoningDelta starts the reasoning item if needed and emits a
+// reasoning-summary delta. reasoning_summary_text.delta (not the raw
+// reasoning_text.delta variant) is the event Responses clients parse for
+// streaming reasoning text; the item content type stays reasoning_text.
 func (s *ResponsesOutputEventState) AppendReasoningDelta(outputIndex int, delta string) string {
 	var b strings.Builder
 	b.WriteString(s.StartReasoningOutput(outputIndex))
 	s.reasoningText.WriteString(delta)
-	b.WriteString(s.WriteEvent("response.reasoning_text.delta", map[string]any{
-		"type":          "response.reasoning_text.delta",
+	b.WriteString(s.WriteEvent("response.reasoning_summary_text.delta", map[string]any{
+		"type":          "response.reasoning_summary_text.delta",
 		"item_id":       s.reasoningItemID,
-		"output_index":  outputIndex,
-		"content_index": 0,
+		"summary_index": 0,
 		"delta":         delta,
 	}))
 	return b.String()
 }
 
-// CompleteReasoningOutput emits the raw reasoning completion and
-// output_item.done events once.
+// CompleteReasoningOutput emits the reasoning completion and output_item.done
+// events once.
 func (s *ResponsesOutputEventState) CompleteReasoningOutput(outputIndex int) string {
 	if !s.reasoningReserved || s.reasoningDone {
 		return ""
@@ -211,12 +253,10 @@ func (s *ResponsesOutputEventState) CompleteReasoningOutput(outputIndex int) str
 	s.reasoningDone = true
 	var b strings.Builder
 	b.WriteString(s.StartReasoningOutput(outputIndex))
-	b.WriteString(s.WriteEvent("response.reasoning_text.done", map[string]any{
-		"type":          "response.reasoning_text.done",
+	b.WriteString(s.WriteEvent("response.reasoning_summary_part.done", map[string]any{
+		"type":          "response.reasoning_summary_part.done",
 		"item_id":       s.reasoningItemID,
-		"output_index":  outputIndex,
-		"content_index": 0,
-		"text":          s.reasoningText.String(),
+		"summary_index": 0,
 	}))
 	b.WriteString(s.WriteEvent("response.output_item.done", map[string]any{
 		"type":         "response.output_item.done",

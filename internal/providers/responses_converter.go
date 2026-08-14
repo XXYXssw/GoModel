@@ -369,17 +369,7 @@ func (sc *OpenAIResponsesStreamConverter) appendTextDelta(content string) {
 	sc.reserveAssistantOutput()
 	sc.buffer.AppendString(sc.output.StartAssistantOutput(sc.assistantOutputIndex))
 	sc.output.AppendAssistantText(content)
-	jsonData, err := json.Marshal(struct {
-		Type  string `json:"type"`
-		Delta string `json:"delta"`
-	}{Type: "response.output_text.delta", Delta: content})
-	if err != nil {
-		slog.Error("failed to marshal content delta event", "error", err, "response_id", sc.responseID)
-		return
-	}
-	sc.buffer.AppendString("event: response.output_text.delta\ndata: ")
-	sc.buffer.AppendBytes(jsonData)
-	sc.buffer.AppendString("\n\n")
+	sc.output.AppendAssistantDelta(&sc.buffer, sc.assistantOutputIndex, content)
 }
 
 // appendCompletedEvents flushes open output items and appends the final
@@ -404,15 +394,18 @@ func (sc *OpenAIResponsesStreamConverter) appendCompletedEvents() {
 		// though the output_item.done events already carried each item.
 		"output": sc.output.CompletedOutputItems(sc.toolCalls),
 	}
-	// Include usage data if captured from OpenAI stream, renamed from Chat
-	// Completions field names (prompt_tokens/completion_tokens) to the
-	// Responses API's (input_tokens/output_tokens) — clients like Codex
-	// require the latter and fail to parse response.completed without them.
+	// Always include usage: Responses clients validate response.completed
+	// strictly and drop the event when input_tokens/output_tokens are absent,
+	// which leaves the conversation hanging. Capture real usage when the
+	// upstream sent it (renamed from Chat Completions field names), otherwise
+	// fall back to zeros rather than omitting the object.
+	usage := responsesStreamUsage{}
 	if sc.cachedUsage != nil {
-		if usage, ok := chatUsageToResponsesUsage(sc.cachedUsage); ok {
-			responseData["usage"] = usage
+		if u, ok := chatUsageToResponsesUsage(sc.cachedUsage); ok {
+			usage = u
 		}
 	}
+	responseData["usage"] = usage
 	doneEvent := map[string]any{
 		"type":     "response.completed",
 		"response": responseData,
@@ -467,8 +460,9 @@ func (sc *OpenAIResponsesStreamConverter) appendFailedEvents(raw json.RawMessage
 		},
 	}
 	failedEvent := map[string]any{
-		"type":     "response.failed",
-		"response": responseData,
+		"type":            "response.failed",
+		"sequence_number": 0,
+		"response":        responseData,
 	}
 	jsonData, err := json.Marshal(failedEvent)
 	if err != nil {

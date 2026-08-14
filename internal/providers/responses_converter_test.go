@@ -81,10 +81,11 @@ data: [DONE]
 }
 
 // TestOpenAIResponsesStreamConverter_ReasoningContent covers DeepSeek-style
-// reasoning_content deltas. reasoning_content is raw reasoning, so it must be
-// exposed as reasoning_text rather than mislabeled as a readable summary. The
-// item must be registered before its first delta and the assistant message must
-// shift to output_index 1.
+// reasoning_content deltas. Streaming reasoning text is carried by the
+// response.reasoning_summary_* events that Responses clients (Chatbox/AI SDK)
+// actually parse, while the completed item keeps its reasoning_text content.
+// The item must be registered before its first delta and the assistant message
+// must shift to output_index 1.
 func TestOpenAIResponsesStreamConverter_ReasoningContent(t *testing.T) {
 	mockStream := `data: {"id":"chatcmpl-1","object":"chat.completion.chunk","created":1,"model":"deepseek-v4-pro","choices":[{"index":0,"delta":{"role":"assistant","reasoning_content":""},"finish_reason":null}]}
 
@@ -114,7 +115,7 @@ data: [DONE]
 	var messageOutputIndex float64 = -1
 	var reasoningDeltas strings.Builder
 	sawReasoningDone := false
-	sawSummaryEvent := false
+	sawSummaryDelta := false
 
 	for _, event := range events {
 		if event.Done {
@@ -155,25 +156,28 @@ data: [DONE]
 				}
 			}
 			delete(activeItems, id)
-		case "response.reasoning_text.delta":
+		case "response.reasoning_summary_text.delta":
 			itemID, _ := event.Payload["item_id"].(string)
 			if !activeItems[itemID] {
 				t.Fatalf("%s referenced item %q before its response.output_item.added", event.Name, itemID)
 			}
+			if event.Payload["summary_index"] != float64(0) {
+				t.Fatalf("reasoning summary_index = %#v, want 0", event.Payload["summary_index"])
+			}
 			delta, _ := event.Payload["delta"].(string)
 			reasoningDeltas.WriteString(delta)
-		case "response.reasoning_text.done":
+			sawSummaryDelta = true
+		case "response.reasoning_summary_part.done":
 			itemID, _ := event.Payload["item_id"].(string)
 			if !activeItems[itemID] {
 				t.Fatalf("%s referenced item %q after it closed", event.Name, itemID)
 			}
-			if event.Payload["text"] != "Thinking..." {
-				t.Fatalf("reasoning_text.done text = %#v", event.Payload["text"])
-			}
 			sawReasoningDone = true
-		case "response.reasoning_summary_part.added", "response.reasoning_summary_text.delta",
-			"response.reasoning_summary_text.done", "response.reasoning_summary_part.done":
-			sawSummaryEvent = true
+		case "response.reasoning_summary_part.added":
+			// Lifecycle marker; content rides on the summary_text deltas.
+		case "response.reasoning_text.delta", "response.reasoning_text.done",
+			"response.reasoning_summary_text.done":
+			t.Fatalf("unexpected legacy reasoning event %s:\n%s", event.Name, rawStr)
 		case "response.output_text.delta":
 			// Assistant text must only stream after the reasoning item closed.
 			if reasoningItemID != "" && activeItems[reasoningItemID] {
@@ -191,8 +195,8 @@ data: [DONE]
 	if reasoningDeltas.String() != "Thinking..." || !sawReasoningDone {
 		t.Fatalf("reasoning stream = %q, done=%v", reasoningDeltas.String(), sawReasoningDone)
 	}
-	if sawSummaryEvent {
-		t.Fatalf("raw reasoning_content must not emit reasoning summary events:\n%s", rawStr)
+	if !sawSummaryDelta {
+		t.Fatalf("reasoning_content must stream via response.reasoning_summary_text.delta:\n%s", rawStr)
 	}
 	if len(activeItems) != 0 {
 		t.Fatalf("expected every output item to close by end of stream, still open: %#v", activeItems)
@@ -588,7 +592,7 @@ data: [DONE]
 	}
 }
 
-func TestOpenAIResponsesStreamConverter_DropsInvalidUsage(t *testing.T) {
+func TestOpenAIResponsesStreamConverter_InvalidUsageFallsBackToZeros(t *testing.T) {
 	tests := []struct {
 		name  string
 		usage string
@@ -618,8 +622,12 @@ data: [DONE]
 				if response == nil {
 					t.Fatal("response.completed missing response object")
 				}
-				if usage, present := response["usage"]; present {
-					t.Fatalf("invalid usage leaked into response.completed: %#v", usage)
+				usage, ok := response["usage"].(map[string]any)
+				if !ok {
+					t.Fatalf("response.completed must always carry usage, got %#v", response["usage"])
+				}
+				if usage["input_tokens"] != float64(0) || usage["output_tokens"] != float64(0) || usage["total_tokens"] != float64(0) {
+					t.Fatalf("invalid upstream usage must fall back to zeros, got %#v", usage)
 				}
 				return
 			}

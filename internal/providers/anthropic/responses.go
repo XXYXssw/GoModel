@@ -179,9 +179,17 @@ func (sc *responsesStreamConverter) Read(p []byte) (n int, err error) {
 						"provider":   "anthropic",
 						"created_at": sc.createdAt,
 					}
-					// Include merged usage data captured across message_start/message_delta.
-					if sc.hasUsage {
-						responseData["usage"] = anthropicResponsesUsagePayload(&sc.usage)
+					// Always include usage: Responses clients validate
+					// response.completed strictly and drop the event when
+					// input_tokens/output_tokens are absent. Merge real usage
+					// captured across message_start/message_delta, else zeros.
+					responseData["usage"] = anthropicResponsesUsagePayload(&sc.usage)
+					if responseData["usage"] == nil {
+						responseData["usage"] = map[string]any{
+							"input_tokens":  0,
+							"output_tokens": 0,
+							"total_tokens":  0,
+						}
 					}
 					doneEvent := map[string]any{
 						"type":     "response.completed",
@@ -321,10 +329,9 @@ func (sc *responsesStreamConverter) convertEvent(event *anthropicStreamEvent) st
 				sc.reserveAssistantMessageOutput()
 				prefix := sc.output.StartAssistantOutput(0)
 				sc.output.AppendAssistantText(event.Delta.Text)
-				return prefix + sc.output.WriteEvent("response.output_text.delta", map[string]any{
-					"type":  "response.output_text.delta",
-					"delta": event.Delta.Text,
-				})
+				var delta streaming.StreamBuffer
+				sc.output.AppendAssistantDelta(&delta, 0, event.Delta.Text)
+				return prefix + string(delta.Unread())
 			}
 		case "input_json_delta":
 			if event.Delta.PartialJSON == "" {

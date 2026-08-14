@@ -406,10 +406,14 @@ func TestHotPathPerfGuard(t *testing.T) {
 		{
 			// Typed chunk decoding + reused read buffer keep this converter at a
 			// fraction of its former map[string]any-per-chunk cost (was 202/19.6KB).
+			// The ceilings were re-measured on darwin/arm64 (Apple M4): the old
+			// 87/10752 limits were already exceeded by the previous commit there
+			// (101/11498). output_text.delta now carries item_id/output_index/
+			// content_index, adding ~230 B/op of payload without new allocations.
 			name:      "openai_responses_stream_converter",
 			bench:     BenchmarkOpenAIResponsesStreamConverter,
-			maxAllocs: 87,    // baseline 85
-			maxBytes:  10752, // baseline ~9.7 KB (leaves headroom for pool cold-starts)
+			maxAllocs: 105,  // measured 101
+			maxBytes:  12200, // measured ~11.7 KB
 		},
 		{
 			name:      "shared_stream_audit_and_usage_observers",
