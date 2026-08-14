@@ -33,6 +33,7 @@
 /.githooks/
 
 # Others
+.DS_Store
 /*.bck.yml
 /repomix-output.*
 /coverage.out
