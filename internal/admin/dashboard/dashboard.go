@@ -96,7 +96,12 @@ func buildIndexHTML(basePath string, demoMode bool) ([]byte, error) {
 func (h *Handler) Index(c *echo.Context) error {
 	c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
 	// The entry point references hashed assets; it must always be fresh.
-	c.Response().Header().Set("Cache-Control", "no-cache")
+	// no-store (not just no-cache) so browsers never serve a stale index.html
+	// from the back/forward cache or a loose revalidation path: a stale entry
+	// point references old hashed asset names that still live in the browser's
+	// immutable cache, which renders the pre-upgrade dashboard until a new tab
+	// happens to re-fetch.
+	c.Response().Header().Set("Cache-Control", "no-store")
 	c.Response().WriteHeader(http.StatusOK)
 	_, err := bytes.NewReader(h.indexHTML).WriteTo(c.Response())
 	if err != nil {

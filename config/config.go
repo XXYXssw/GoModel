@@ -15,6 +15,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
+	"github.com/enterpilot/gomodel/internal/platformdir"
 	"github.com/enterpilot/gomodel/internal/storage"
 )
 
@@ -294,10 +295,17 @@ func Load() (*LoadResult, error) {
 	}, nil
 }
 
-// configFilePaths are searched in order; the first readable file wins.
-var configFilePaths = []string{
-	"config/config.yaml",
-	"config.yaml",
+// configFilePaths are searched in order; the first readable file wins. The
+// relative paths keep terminal/Docker deployments working from their checkout,
+// and the per-user path (platformdir.DataFile) gives installed runs — the
+// menu-bar app, Homebrew, install.sh — a stable place to drop a config.yaml
+// regardless of the process working directory.
+func configFilePaths() []string {
+	return []string{
+		"config/config.yaml",
+		"config.yaml",
+		platformdir.DataFile("config.yaml"),
+	}
 }
 
 const envConfigStrict = "CONFIG_STRICT"
@@ -340,7 +348,7 @@ func applyYAML(cfg *Config, strict bool) (map[string]RawProviderConfig, error) {
 		return nil, err
 	}
 	if data == nil {
-		slog.Info("no config file found; using defaults and environment", "searched", configFilePaths)
+		slog.Info("no config file found; using defaults and environment", "searched", configFilePaths())
 		return map[string]RawProviderConfig{}, nil
 	}
 
@@ -442,7 +450,7 @@ func parseUnknownFieldMessage(message string) (line int, field string, ok bool) 
 // error, not a missing file: silently falling back to defaults is how a
 // misconfigured deployment boots with no providers.
 func readConfigFile() (string, []byte, error) {
-	for _, path := range configFilePaths {
+	for _, path := range configFilePaths() {
 		data, err := os.ReadFile(path)
 		switch {
 		case err == nil:
