@@ -54,6 +54,9 @@ app: build-tray
 	  '<key>NSHighResolutionCapable</key><true/>' \
 	  '</dict></plist>' > bin/GoModel.app/Contents/Info.plist
 	codesign --force --deep -s - bin/GoModel.app
+	# Refresh the bundle's own modification time so Finder shows the rebuild
+	# (copying into Contents/ alone does not touch the .app folder itself).
+	@touch bin/GoModel.app bin/GoModel.app/Contents
 	@echo "Built bin/GoModel.app — open with: open bin/GoModel.app"
 # Run the application.
 #
