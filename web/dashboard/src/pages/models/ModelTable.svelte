@@ -52,11 +52,16 @@
   }
 
   function toggleGroup(key) {
-    if (collapsedGroups.has(key)) {
-      collapsedGroups.delete(key);
+    // Reassign a fresh Set rather than mutating the $state Set in place:
+    // $state() proxies collections, but in-place .add()/.delete() mutations
+    // are not reliably tracked, so the table would not re-render.
+    const next = new Set(collapsedGroups);
+    if (next.has(key)) {
+      next.delete(key);
     } else {
-      collapsedGroups.add(key);
+      next.add(key);
     }
+    collapsedGroups = next;
     persistCollapsed();
   }
 
@@ -66,10 +71,11 @@
 
   function toggleAll() {
     const shouldCollapse = !allCollapsed;
-    collapsedGroups = new Set();
+    const next = new Set();
     if (shouldCollapse) {
-      for (const group of groups) collapsedGroups.add(group.key);
+      for (const group of groups) next.add(group.key);
     }
+    collapsedGroups = next;
     persistCollapsed();
   }
 </script>
