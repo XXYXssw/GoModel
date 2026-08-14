@@ -32,6 +32,7 @@ func TestSQLCredentialStoreRoundTrip(t *testing.T) {
 			SessionStickyKeys: &sessionStickyKeys,
 			BaseURL:           "https://api.openai.com/v1",
 			APIVersion:        "2024-01-01",
+			ResponsesMode:     "convert",
 			Models:            []string{"gpt-4o", "gpt-4o-mini"},
 			Enabled:           true,
 		}
@@ -45,6 +46,9 @@ func TestSQLCredentialStoreRoundTrip(t *testing.T) {
 		}
 		if got.Type != "openai" || got.BaseURL != cred.BaseURL || !got.Enabled {
 			t.Fatalf("Get() = %+v, want round-tripped row", got)
+		}
+		if got.ResponsesMode != "convert" {
+			t.Fatalf("Get().ResponsesMode = %q, want convert", got.ResponsesMode)
 		}
 		if len(got.APIKeys) != 2 || got.APIKeys[0] != "sk-one" || got.APIKeys[1] != "sk-two" {
 			t.Fatalf("Get().APIKeys = %v, want [sk-one sk-two]", got.APIKeys)
@@ -72,6 +76,9 @@ func TestSQLCredentialStoreRoundTrip(t *testing.T) {
 		}
 		if updated.BaseURL != "https://api.openai.com/v2" {
 			t.Fatalf("updated.BaseURL = %q, want the new value", updated.BaseURL)
+		}
+		if updated.ResponsesMode != "convert" {
+			t.Fatalf("updated.ResponsesMode = %q, want convert preserved across update", updated.ResponsesMode)
 		}
 		if !updated.CreatedAt.Equal(got.CreatedAt) {
 			t.Fatalf("updated.CreatedAt = %v, want unchanged %v", updated.CreatedAt, got.CreatedAt)
