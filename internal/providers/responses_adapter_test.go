@@ -1510,3 +1510,53 @@ func TestStreamResponsesViaChat_DoesNotInjectUsageWhenPolicyDisabled(t *testing.
 		t.Fatalf("captured StreamOptions = %+v, want nil", provider.capturedReq.StreamOptions)
 	}
 }
+
+func TestStreamResponsesViaChat_CompletedEventCarriesOutput(t *testing.T) {
+	// A chat-only upstream stream (content + reasoning deltas); the converted
+	// Responses stream's final response.completed must carry the assembled
+	// output array so clients that render from it (Chatbox, Codex) show the
+	// message instead of an empty reply.
+	const chatStream = `data: {"id":"chatcmpl_1","object":"chat.completion.chunk","created":1,"model":"m","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
+
+data: {"id":"chatcmpl_1","object":"chat.completion.chunk","created":1,"model":"m","choices":[{"index":0,"delta":{"reasoning_content":"thinking"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl_1","object":"chat.completion.chunk","created":1,"model":"m","choices":[{"index":0,"delta":{"content":"Hello "},"finish_reason":null}]}
+
+data: {"id":"chatcmpl_1","object":"chat.completion.chunk","created":1,"model":"m","choices":[{"index":0,"delta":{"content":"world"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl_1","object":"chat.completion.chunk","created":1,"model":"m","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}
+
+data: [DONE]
+`
+	provider := &capturingChatProvider{streamData: chatStream}
+	stream, err := StreamResponsesViaChat(context.Background(), provider, &core.ResponsesRequest{Model: "m", Input: "hi", Stream: true}, "test")
+	if err != nil {
+		t.Fatalf("StreamResponsesViaChat() error = %v", err)
+	}
+	defer func() { _ = stream.Close() }()
+
+	raw, err := io.ReadAll(stream)
+	if err != nil {
+		t.Fatalf("read stream: %v", err)
+	}
+	out := string(raw)
+
+	if !strings.Contains(out, `"event: response.completed"`) && !strings.Contains(out, "response.completed") {
+		t.Fatalf("stream missing response.completed: %s", out)
+	}
+	if !strings.Contains(out, `"output"`) {
+		t.Fatalf("response.completed missing output array: %s", out)
+	}
+	// The assistant message item inside output must carry the assembled text.
+	msgIdx := strings.Index(out, `"type":"message"`)
+	if msgIdx == -1 {
+		t.Fatalf("completed output missing message item: %s", out)
+	}
+	if !strings.Contains(out[msgIdx:], `"text":"Hello world"`) {
+		t.Fatalf("completed output message missing text: %s", out)
+	}
+	// The reasoning item should also be present in output.
+	if !strings.Contains(out, `"type":"reasoning"`) {
+		t.Fatalf("completed output missing reasoning item: %s", out)
+	}
+}

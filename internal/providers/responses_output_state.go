@@ -2,6 +2,7 @@ package providers
 
 import (
 	"log/slog"
+	"slices"
 	"strings"
 
 	"github.com/goccy/go-json"
@@ -223,6 +224,35 @@ func (s *ResponsesOutputEventState) CompleteReasoningOutput(outputIndex int) str
 		"output_index": outputIndex,
 	}))
 	return b.String()
+}
+
+// CompletedOutputItems assembles the completed output array for the final
+// response.completed event, in output order: the reasoning item first (it
+// always claims the first output slot), then the assistant message, then any
+// completed tool calls. Clients like Chatbox and Codex render the final
+// message from response.completed.response.output, so omitting it leaves them
+// with an empty reply even though the delta events carried the text.
+func (s *ResponsesOutputEventState) CompletedOutputItems(toolCalls map[int]*ResponsesOutputToolCallState) []map[string]any {
+	items := make([]map[string]any, 0, 1+len(toolCalls))
+	if s.ReasoningDone() {
+		items = append(items, s.ReasoningItem("completed", true))
+	}
+	if s.AssistantDone() {
+		items = append(items, s.AssistantMessageItem("completed", true))
+	}
+	indices := make([]int, 0, len(toolCalls))
+	for index := range toolCalls {
+		indices = append(indices, index)
+	}
+	slices.Sort(indices)
+	for _, index := range indices {
+		state := toolCalls[index]
+		if state == nil || !state.Completed {
+			continue
+		}
+		items = append(items, s.RenderToolCallItem(state, "completed", true))
+	}
+	return items
 }
 
 // ToolCallArguments returns the serialized argument payload for a function_call item.

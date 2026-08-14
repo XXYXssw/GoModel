@@ -399,6 +399,10 @@ func (sc *OpenAIResponsesStreamConverter) appendCompletedEvents() {
 		"model":      sc.model,
 		"provider":   sc.provider,
 		"created_at": sc.createdAt,
+		// Clients render the final message from response.completed's output
+		// array (the deltas are a live preview), so it must be present even
+		// though the output_item.done events already carried each item.
+		"output": sc.output.CompletedOutputItems(sc.toolCalls),
 	}
 	// Include usage data if captured from OpenAI stream, renamed from Chat
 	// Completions field names (prompt_tokens/completion_tokens) to the
