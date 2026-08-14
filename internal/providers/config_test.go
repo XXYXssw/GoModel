@@ -1897,3 +1897,57 @@ func TestResolveProviders_NoProvidersNoEnvVars(t *testing.T) {
 		t.Errorf("expected empty filtered raw, got %d entries", len(filteredRaw))
 	}
 }
+
+func TestApplyProviderEnvVars_ResponsesMode(t *testing.T) {
+	tests := []struct {
+		name     string
+		env      map[string]string
+		raw      map[string]config.RawProviderConfig
+		provider string
+		want     string
+	}{
+		{
+			name:     "unsuffixed convert",
+			env:      map[string]string{"OPENAI_API_KEY": "sk-primary", "OPENAI_RESPONSES_MODE": "convert"},
+			provider: "openai",
+			want:     "convert",
+		},
+		{
+			name:     "suffixed instance native",
+			env:      map[string]string{"OPENAI_EU_API_KEY": "sk-eu", "OPENAI_EU_RESPONSES_MODE": "native"},
+			provider: "openai-eu",
+			want:     "native",
+		},
+		{
+			name:     "environment overrides yaml",
+			env:      map[string]string{"OPENAI_API_KEY": "sk-env", "OPENAI_RESPONSES_MODE": "convert"},
+			raw:      map[string]config.RawProviderConfig{"openai": {Type: "openai", APIKey: "sk-yaml", ResponsesMode: "native"}},
+			provider: "openai",
+			want:     "convert",
+		},
+		{
+			name:     "yaml value kept when env unset",
+			env:      map[string]string{"OPENAI_API_KEY": "sk-env"},
+			raw:      map[string]config.RawProviderConfig{"openai": {Type: "openai", APIKey: "sk-yaml", ResponsesMode: "convert"}},
+			provider: "openai",
+			want:     "convert",
+		},
+		{
+			name:     "unset keeps empty default",
+			env:      map[string]string{"OPENAI_API_KEY": "sk-env"},
+			provider: "openai",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for key, value := range tt.env {
+				t.Setenv(key, value)
+			}
+			got := applyProviderEnvVars(tt.raw, testDiscoveryConfigs)
+			if got := got[tt.provider].ResponsesMode; got != tt.want {
+				t.Fatalf("ResponsesMode = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

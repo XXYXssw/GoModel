@@ -324,6 +324,12 @@ providers:
     #   - "${OPENAI_API_KEY_3}"
     # Set false for strict per-request round robin (usually worse for prompt caching).
     # session_sticky_keys: false
+    # How /v1/responses requests reach this provider: "native" forwards them to
+    # the upstream /responses endpoint (providers supporting both chat and
+    # responses); "convert" translates them to /chat/completions (chat-only
+    # providers). Unset keeps the provider type default (openai forwards
+    # natively). Equivalent env var: OPENAI_RESPONSES_MODE.
+    # responses_mode: convert
     # Per-provider resilience overrides (optional).
     # Only specified fields override the global defaults above.
     # resilience:
@@ -514,10 +520,13 @@ providers:
 
   # Example: DeepSeek. GoModel translates /v1/responses requests to DeepSeek
   # chat completions because DeepSeek does not expose a native Responses API.
+  # Any OpenAI-compatible provider can opt in or out per instance with
+  # responses_mode: native|convert (env: <PROVIDER>_RESPONSES_MODE).
   # deepseek:
   #   type: "deepseek"
   #   base_url: "https://api.deepseek.com"
   #   api_key: "${DEEPSEEK_API_KEY}"
+  #   responses_mode: convert
 
   # Example: Amazon Bedrock. The provider has no API key — auth is taken from
   # the standard AWS credential chain (env vars, AWS_PROFILE, IAM Identity

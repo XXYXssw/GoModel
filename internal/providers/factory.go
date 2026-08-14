@@ -18,6 +18,11 @@ type ProviderOptions struct {
 	Hooks      llmclient.Hooks
 	Models     []string
 	Resilience config.ResilienceConfig
+	// ResponsesMode is the resolved per-provider responses_mode setting
+	// ("native" or "convert"); empty keeps the provider type's default. The
+	// factory fills it from ProviderConfig so constructors do not each need
+	// to thread cfg.ResponsesMode through.
+	ResponsesMode string
 	// Keys carries every API key configured for this provider instance. It is
 	// nil for keyless providers and for constructors invoked outside the
 	// factory; use the Keyring method rather than reading it directly.
@@ -135,10 +140,11 @@ func (f *ProviderFactory) Create(cfg ProviderConfig) (core.Provider, error) {
 	// One Keyring per provider instance: every client this provider builds
 	// shares session affinity and the sessionless round-robin sequence.
 	opts := ProviderOptions{
-		Hooks:      hooksWithProviderIdentity(hooks, cfg.Name, cfg.Type),
-		Models:     cfg.Models,
-		Resilience: cfg.Resilience,
-		Keys:       NewKeyringWithSessionStickiness(cfg.SessionStickyKeys, cfg.APIKeys...),
+		Hooks:         hooksWithProviderIdentity(hooks, cfg.Name, cfg.Type),
+		Models:        cfg.Models,
+		Resilience:    cfg.Resilience,
+		ResponsesMode: cfg.ResponsesMode,
+		Keys:          NewKeyringWithSessionStickiness(cfg.SessionStickyKeys, cfg.APIKeys...),
 	}
 
 	return builder(cfg, opts), nil

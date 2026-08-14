@@ -19,6 +19,11 @@ type RawProviderConfig struct {
 	Backend                  string `yaml:"backend"`
 	AuthType                 string `yaml:"auth_type"`
 	APIMode                  string `yaml:"api_mode"`
+	// ResponsesMode controls how /v1/responses requests reach this provider:
+	// "native" forwards them to the upstream /responses endpoint, "convert"
+	// translates them to /chat/completions. Empty means the provider type's
+	// default.
+	ResponsesMode string `yaml:"responses_mode"`
 	VertexProject            string `yaml:"vertex_project"`
 	VertexLocation           string `yaml:"vertex_location"`
 	ServiceAccountFile       string `yaml:"service_account_file"`

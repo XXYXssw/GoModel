@@ -867,4 +867,6 @@ export default {
   "pricing.addPrice": "Add Price",
   "pricing.source": "Source",
   "pricing.noFields": "No pricing fields set.",
+  "providers.responsesMode": "Responses Mode",
+  "providers.responsesModeHint": "How /v1/responses requests reach this provider. \"Native\" forwards them to the upstream /responses endpoint (for providers that support both chat and responses). \"Convert\" translates them to /chat/completions (for providers that only support chat completions). Empty keeps the provider type default.",
 };

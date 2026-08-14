@@ -12,6 +12,17 @@ import (
 	"github.com/enterpilot/gomodel/internal/core"
 )
 
+// Responses mode values for ProviderConfig.ResponsesMode and the credential
+// form's responses_mode field.
+const (
+	// ResponsesModeNative forwards /v1/responses requests to the upstream
+	// /responses endpoint unchanged.
+	ResponsesModeNative = "native"
+	// ResponsesModeConvert translates /v1/responses requests to
+	// /chat/completions before sending them upstream.
+	ResponsesModeConvert = "convert"
+)
+
 // ProviderConfig holds the fully resolved provider configuration after merging
 // global defaults with per-provider overrides.
 type ProviderConfig struct {
@@ -34,6 +45,10 @@ type ProviderConfig struct {
 	Backend                  string
 	AuthType                 string
 	APIMode                  string
+	// ResponsesMode overrides the provider type's default Responses API
+	// handling: "native" forwards /v1/responses upstream, "convert" translates
+	// to /chat/completions. Empty keeps the type default.
+	ResponsesMode            string
 	VertexProject            string
 	VertexLocation           string
 	ServiceAccountFile       string
@@ -142,6 +157,7 @@ const (
 	providerEnvFieldBackend
 	providerEnvFieldAuthType
 	providerEnvFieldAPIMode
+	providerEnvFieldResponsesMode
 	providerEnvFieldVertexProject
 	providerEnvFieldVertexLocation
 	providerEnvFieldServiceAccountFile
@@ -171,6 +187,10 @@ type providerEnvValues struct {
 	Backend                  string
 	AuthType                 string
 	APIMode                  string
+	// ResponsesMode overrides the provider type's default Responses API
+	// handling: "native" forwards /v1/responses upstream, "convert" translates
+	// to /chat/completions. Empty keeps the type default.
+	ResponsesMode            string
 	VertexProject            string
 	VertexLocation           string
 	ServiceAccountFile       string
@@ -240,6 +260,7 @@ func (v providerEnvValues) empty() bool {
 		strings.TrimSpace(v.Backend) == "" &&
 		strings.TrimSpace(v.AuthType) == "" &&
 		strings.TrimSpace(v.APIMode) == "" &&
+		strings.TrimSpace(v.ResponsesMode) == "" &&
 		strings.TrimSpace(v.VertexProject) == "" &&
 		strings.TrimSpace(v.VertexLocation) == "" &&
 		strings.TrimSpace(v.ServiceAccountFile) == "" &&
@@ -303,6 +324,8 @@ func collectProviderEnvValues(prefix string, spec DiscoveryConfig, environ []str
 			values.AuthType = value
 		case providerEnvFieldAPIMode:
 			values.APIMode = value
+		case providerEnvFieldResponsesMode:
+			values.ResponsesMode = value
 		case providerEnvFieldVertexProject:
 			values.VertexProject = value
 		case providerEnvFieldVertexLocation:
@@ -374,6 +397,7 @@ func parseProviderEnvKey(prefix, key string, spec DiscoveryConfig) (string, prov
 		{name: "API_VERSION", field: providerEnvFieldAPIVersion},
 		{name: "BASE_URL", field: providerEnvFieldBaseURL},
 		{name: "AUTH_TYPE", field: providerEnvFieldAuthType},
+		{name: "RESPONSES_MODE", field: providerEnvFieldResponsesMode},
 		{name: "API_MODE", field: providerEnvFieldAPIMode},
 		{name: "BACKEND", field: providerEnvFieldBackend},
 		{name: "API_KEY", field: providerEnvFieldAPIKey},
@@ -537,6 +561,7 @@ func (v providerEnvValues) rawConfig(providerType string, spec DiscoveryConfig) 
 		Backend:                  backend,
 		AuthType:                 v.AuthType,
 		APIMode:                  v.APIMode,
+		ResponsesMode:            v.ResponsesMode,
 		VertexProject:            v.VertexProject,
 		VertexLocation:           v.VertexLocation,
 		ServiceAccountFile:       v.ServiceAccountFile,
@@ -582,6 +607,9 @@ func overlayProviderEnvValues(existing config.RawProviderConfig, values provider
 	}
 	if values.APIMode != "" {
 		existing.APIMode = values.APIMode
+	}
+	if values.ResponsesMode != "" {
+		existing.ResponsesMode = values.ResponsesMode
 	}
 	if values.VertexProject != "" {
 		existing.VertexProject = values.VertexProject
@@ -872,6 +900,7 @@ func buildProviderConfig(raw config.RawProviderConfig, global config.ResilienceC
 		Backend:                  raw.Backend,
 		AuthType:                 raw.AuthType,
 		APIMode:                  raw.APIMode,
+		ResponsesMode:            raw.ResponsesMode,
 		VertexProject:            raw.VertexProject,
 		VertexLocation:           raw.VertexLocation,
 		ServiceAccountFile:       raw.ServiceAccountFile,

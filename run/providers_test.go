@@ -31,7 +31,7 @@ func TestDefaultProviderFactoryCredentialForms(t *testing.T) {
 			// The plain shape every API-key provider derives.
 			providerType: "openai",
 			defaultURL:   "https://api.openai.com/v1",
-			fields:       []string{"api_keys", "base_url", "session_sticky_keys", "models"},
+			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
 			required:     []string{"api_keys"},
 			absent:       []string{"api_version", "vertex_project"},
 		},
@@ -40,39 +40,39 @@ func TestDefaultProviderFactoryCredentialForms(t *testing.T) {
 			// every other type, so the dashboard can offer them immediately.
 			providerType: "chutes",
 			defaultURL:   "https://llm.chutes.ai/v1",
-			fields:       []string{"api_keys", "base_url", "session_sticky_keys", "models"},
+			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
 			required:     []string{"api_keys"},
 		},
 		{
 			// Voice-only provider (no chat); same plain API-key shape.
 			providerType: "elevenlabs",
 			defaultURL:   "https://api.elevenlabs.io",
-			fields:       []string{"api_keys", "base_url", "session_sticky_keys", "models"},
+			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
 			required:     []string{"api_keys"},
 		},
 		{
 			// A deployment URL is the provider, so it is required, and Azure
 			// is the one type that takes an API version.
 			providerType: "azure",
-			fields:       []string{"api_keys", "base_url", "api_version", "session_sticky_keys", "models"},
+			fields:       []string{"api_keys", "base_url", "api_version", "responses_mode", "session_sticky_keys", "models"},
 			required:     []string{"api_keys", "base_url"},
 		},
 		{
 			// Keyless: the endpoint is the whole configuration.
 			providerType: "ollama",
-			fields:       []string{"api_keys", "base_url", "session_sticky_keys", "models"},
+			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
 			required:     nil,
 		},
 		{
 			// llm-d can be keyless, but it has no meaningful universal endpoint.
 			providerType: "llmd",
-			fields:       []string{"api_keys", "base_url", "session_sticky_keys", "models"},
+			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
 			required:     []string{"base_url"},
 		},
 		{
 			// SGLang supports both unauthenticated and --api-key deployments.
 			providerType: "sglang",
-			fields:       []string{"api_keys", "base_url", "session_sticky_keys", "models"},
+			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
 			required:     nil,
 		},
 		{
@@ -168,7 +168,7 @@ func TestDefaultProviderFactoryCredentialForms(t *testing.T) {
 
 // credentialPayloadFields mirrors the upsert request's credential keys.
 var credentialPayloadFields = []string{
-	"api_keys", "session_sticky_keys", "base_url", "api_version", "backend", "auth_type", "api_mode",
+	"api_keys", "session_sticky_keys", "base_url", "api_version", "backend", "auth_type", "api_mode", "responses_mode",
 	"vertex_project", "vertex_location", "service_account_file", "service_account_json",
 	"service_account_json_base64", "gcp_scope", "models",
 }

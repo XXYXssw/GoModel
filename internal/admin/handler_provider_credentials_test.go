@@ -608,3 +608,27 @@ func TestUpsertProviderCredential_BubblesProviderErrorOnStoreFailure(t *testing.
 		t.Fatalf("status = %d, want 502 body=%s", rec.Code, rec.Body.String())
 	}
 }
+
+func TestUpsertProviderCredential_PersistsResponsesMode(t *testing.T) {
+	fake := newProviderCredentialsAdminFake()
+	h := newProviderCredentialsHandler(fake)
+
+	c, rec := newProviderCredentialContext(http.MethodPut, "/admin/provider-credentials", `{"name":"my-openai","type":"openai","api_keys":["sk-real"],"responses_mode":"convert"}`)
+	if err := h.UpsertProviderCredential(c); err != nil {
+		t.Fatalf("UpsertProviderCredential() error = %v", err)
+	}
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, want 200 body=%s", rec.Code, rec.Body.String())
+	}
+	stored := fake.rows["my-openai"]
+	if stored.ResponsesMode != "convert" {
+		t.Fatalf("stored.ResponsesMode = %q, want convert", stored.ResponsesMode)
+	}
+	var response providerCredentialViewResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &response); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	if response.ResponsesMode != "convert" {
+		t.Fatalf("response.ResponsesMode = %q, want convert", response.ResponsesMode)
+	}
+}

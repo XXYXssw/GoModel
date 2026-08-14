@@ -2154,3 +2154,167 @@ func TestPassthrough(t *testing.T) {
 		t.Fatalf("response body = %q", string(body))
 	}
 }
+
+func TestCompatibleProvider_ResponsesMode(t *testing.T) {
+	const chatCompletionBody = `{
+		"id": "chatcmpl_123",
+		"object": "chat.completion",
+		"created": 1677652288,
+		"model": "gpt-4o",
+		"choices": [{
+			"index": 0,
+			"message": {"role": "assistant", "content": "Hello! How can I help you today?"},
+			"finish_reason": "stop"
+		}],
+		"usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30}
+	}`
+	const responsesBody = `{
+		"id": "resp_123",
+		"object": "response",
+		"created_at": 1677652288,
+		"model": "gpt-4o",
+		"status": "completed",
+		"output": [{
+			"id": "msg_123",
+			"type": "message",
+			"role": "assistant",
+			"status": "completed",
+			"content": [{"type": "output_text", "text": "Hello! How can I help you today?"}]
+		}],
+		"usage": {"input_tokens": 10, "output_tokens": 20, "total_tokens": 30}
+	}`
+	const chatStreamBody = `data: {"id":"chatcmpl_123","object":"chat.completion.chunk","created":1677652288,"model":"gpt-4o","choices":[{"index":0,"delta":{"role":"assistant","content":"Hello"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl_123","object":"chat.completion.chunk","created":1677652288,"model":"gpt-4o","choices":[{"index":0,"delta":{},"finish_reason":"stop"}]}
+
+data: [DONE]
+`
+
+	tests := []struct {
+		name        string
+		mode        string
+		wantPath    string
+		body        string
+		contentType string
+		check       func(*testing.T, *core.ResponsesResponse)
+		checkStream func(*testing.T, io.ReadCloser)
+		stream      bool
+	}{
+		{
+			name:        "unset defaults to native /responses",
+			wantPath:    "/responses",
+			body:        responsesBody,
+			contentType: "application/json",
+			check: func(t *testing.T, resp *core.ResponsesResponse) {
+				if resp == nil || resp.ID != "resp_123" {
+					t.Fatalf("resp = %+v, want id resp_123", resp)
+				}
+			},
+		},
+		{
+			name:        "native forwards to /responses",
+			mode:        providers.ResponsesModeNative,
+			wantPath:    "/responses",
+			body:        responsesBody,
+			contentType: "application/json",
+			check: func(t *testing.T, resp *core.ResponsesResponse) {
+				if resp == nil || resp.ID != "resp_123" {
+					t.Fatalf("resp = %+v, want id resp_123", resp)
+				}
+			},
+		},
+		{
+			name:        "convert translates to /chat/completions",
+			mode:        providers.ResponsesModeConvert,
+			wantPath:    "/chat/completions",
+			body:        chatCompletionBody,
+			contentType: "application/json",
+			check: func(t *testing.T, resp *core.ResponsesResponse) {
+				if resp == nil || resp.ID == "" || resp.Object != "response" {
+					t.Fatalf("resp = %+v, want a converted response", resp)
+				}
+				if len(resp.Output) == 0 || resp.Output[0].Content[0].Text != "Hello! How can I help you today?" {
+					t.Fatalf("converted output missing text: %+v", resp.Output)
+				}
+			},
+		},
+		{
+			name:        "convert streams translated chat SSE",
+			mode:        providers.ResponsesModeConvert,
+			wantPath:    "/chat/completions",
+			body:        chatStreamBody,
+			contentType: "text/event-stream",
+			stream:      true,
+			checkStream: func(t *testing.T, body io.ReadCloser) {
+				if body == nil {
+					t.Fatal("body should not be nil")
+				}
+				defer func() { _ = body.Close() }()
+				raw, err := io.ReadAll(body)
+				if err != nil {
+					t.Fatalf("read stream: %v", err)
+				}
+				out := string(raw)
+				if !strings.Contains(out, "response.output_text.delta") || !strings.Contains(out, "Hello") {
+					t.Fatalf("streamed output missing delta/text: %q", out)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var gotPath string
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				gotPath = r.URL.Path
+				w.Header().Set("Content-Type", tt.contentType)
+				_, _ = w.Write([]byte(tt.body))
+			}))
+			defer server.Close()
+
+			provider := NewCompatibleProvider("test-api-key", providers.ProviderOptions{ResponsesMode: tt.mode}, CompatibleProviderConfig{
+				ProviderName: "openai",
+				BaseURL:      server.URL,
+			})
+			req := &core.ResponsesRequest{Model: "gpt-4o", Input: "hi"}
+			if tt.stream {
+				body, err := provider.StreamResponses(context.Background(), req)
+				if err != nil {
+					t.Fatalf("StreamResponses() error = %v", err)
+				}
+				if gotPath != tt.wantPath {
+					t.Fatalf("StreamResponses path = %q, want %q", gotPath, tt.wantPath)
+				}
+				tt.checkStream(t, body)
+				return
+			}
+			resp, err := provider.Responses(context.Background(), req)
+			if err != nil {
+				t.Fatalf("Responses() error = %v", err)
+			}
+			if gotPath != tt.wantPath {
+				t.Fatalf("Responses path = %q, want %q", gotPath, tt.wantPath)
+			}
+			tt.check(t, resp)
+		})
+	}
+}
+
+func TestCompatibleProvider_ResponsesMode_ConvertInputTokensUnsupported(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Errorf("convert mode must not hit the input-token utility endpoint, got %s %s", r.Method, r.URL.Path)
+	}))
+	defer server.Close()
+
+	provider := NewCompatibleProvider("test-api-key", providers.ProviderOptions{ResponsesMode: providers.ResponsesModeConvert}, CompatibleProviderConfig{
+		ProviderName: "openai",
+		BaseURL:      server.URL,
+	})
+	_, err := provider.CountResponseInputTokens(context.Background(), &core.ResponsesRequest{Model: "gpt-4o", Input: "hi"})
+	if err == nil {
+		t.Fatal("CountResponseInputTokens() in convert mode should error")
+	}
+	if !strings.Contains(err.Error(), "responses_mode=convert") {
+		t.Fatalf("error = %q, want a convert-mode explanation", err.Error())
+	}
+}

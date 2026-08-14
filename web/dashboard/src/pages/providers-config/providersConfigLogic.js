@@ -61,6 +61,11 @@ export const PROVIDER_CREDENTIAL_FIELDS = {
     control: "select",
     hint: t("providers.requestShapeHint"),
   },
+  responses_mode: {
+    label: t("providers.responsesMode"),
+    control: "select",
+    hint: t("providers.responsesModeHint"),
+  },
   vertex_project: {
     label: "Vertex Project",
     control: "text",
@@ -132,6 +137,7 @@ export function defaultProviderCredentialForm() {
     backend: "",
     auth_type: "",
     api_mode: "",
+    responses_mode: "",
     vertex_project: "",
     vertex_location: "",
     service_account_file: "",
@@ -338,6 +344,7 @@ export function providerCredentialRowToForm(row) {
     backend: String((row && row.backend) || ""),
     auth_type: String((row && row.auth_type) || ""),
     api_mode: String((row && row.api_mode) || ""),
+    responses_mode: String((row && row.responses_mode) || ""),
     vertex_project: String((row && row.vertex_project) || ""),
     vertex_location: String((row && row.vertex_location) || ""),
     service_account_file: String((row && row.service_account_file) || ""),

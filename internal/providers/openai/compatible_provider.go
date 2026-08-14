@@ -20,9 +20,24 @@ import (
 
 type RequestMutator func(*llmclient.Request)
 
+// responsesModeFor resolves the effective responses mode for a CompatibleProvider
+// instance: the factory-supplied ProviderOptions value wins when set (it carries
+// the resolved per-provider config), otherwise the constructor-level config.
+func responsesModeFor(opts providers.ProviderOptions, cfg CompatibleProviderConfig) string {
+	if opts.ResponsesMode != "" {
+		return opts.ResponsesMode
+	}
+	return cfg.ResponsesMode
+}
+
 type CompatibleProviderConfig struct {
 	ProviderName string
 	BaseURL      string
+	// ResponsesMode overrides the default Responses API handling for this
+	// provider instance: providers.ResponsesModeConvert translates
+	// /v1/responses requests to /chat/completions, providers.ResponsesModeNative
+	// (or empty) forwards them to the upstream /responses endpoint.
+	ResponsesMode string
 	// HTTPClient overrides the shared default client while retaining the
 	// factory-provided retry, circuit-breaker, and observability settings.
 	// Providers use this for transport-level concerns such as request signing.
@@ -68,6 +83,9 @@ type CompatibleProviderConfig struct {
 // the transport methods.
 type CompatibleProvider struct {
 	client *llmclient.Client
+	// responsesMode mirrors CompatibleProviderConfig.ResponsesMode; kept on
+	// the struct so SetResponsesMode can switch it at runtime.
+	responsesMode string
 	// keys resolves the credential for each outbound request. Providers in this
 	// package read it directly (see realtime.go) so a websocket dial picks up
 	// the same rotation as the HTTP endpoints.
@@ -82,6 +100,7 @@ func NewCompatibleProvider(apiKey string, opts providers.ProviderOptions, cfg Co
 	p := &CompatibleProvider{
 		keys:               opts.Keyring(apiKey),
 		providerName:       cfg.ProviderName,
+		responsesMode:      responsesModeFor(opts, cfg),
 		requestMutator:     cfg.RequestMutator,
 		adaptChatRequest:   cfg.AdaptChatRequest,
 		chatRequestHeaders: cfg.ChatRequestHeaders,
@@ -115,6 +134,7 @@ func NewCompatibleProviderWithHTTPClient(apiKey string, httpClient *http.Client,
 	p := &CompatibleProvider{
 		keys:               providers.NewKeyring(apiKey),
 		providerName:       cfg.ProviderName,
+		responsesMode:      responsesModeFor(providers.ProviderOptions{}, cfg),
 		requestMutator:     cfg.RequestMutator,
 		adaptChatRequest:   cfg.AdaptChatRequest,
 		chatRequestHeaders: cfg.ChatRequestHeaders,
@@ -263,6 +283,9 @@ func (p *CompatibleProvider) Responses(ctx context.Context, req *core.ResponsesR
 	if req == nil {
 		return nil, core.NewInvalidRequestError("responses request is required", nil)
 	}
+	if p.responsesMode == providers.ResponsesModeConvert {
+		return providers.ResponsesViaChat(ctx, p, req)
+	}
 	var resp core.ResponsesResponse
 	err := p.doModelRequest(ctx, llmclient.Request{
 		Method:    http.MethodPost,
@@ -280,6 +303,9 @@ func (p *CompatibleProvider) Responses(ctx context.Context, req *core.ResponsesR
 func (p *CompatibleProvider) StreamResponses(ctx context.Context, req *core.ResponsesRequest) (io.ReadCloser, error) {
 	if req == nil {
 		return nil, core.NewInvalidRequestError("responses request is required", nil)
+	}
+	if p.responsesMode == providers.ResponsesModeConvert {
+		return providers.StreamResponsesViaChat(ctx, p, req, p.providerName)
 	}
 	stream, err := p.client.DoStream(ctx, p.prepareRequest(llmclient.Request{
 		Method:    http.MethodPost,
@@ -351,6 +377,10 @@ func (p *CompatibleProvider) DeleteResponse(ctx context.Context, id string) (*co
 func (p *CompatibleProvider) CountResponseInputTokens(ctx context.Context, req *core.ResponsesRequest) (*core.ResponseInputTokensResponse, error) {
 	if req == nil {
 		return nil, core.NewInvalidRequestError("responses input token request is required", nil)
+	}
+	if p.responsesMode == providers.ResponsesModeConvert {
+		return nil, core.NewInvalidRequestError(
+			"responses_mode=convert translates requests to /chat/completions, which has no input-token utility endpoint", nil)
 	}
 	var resp core.ResponseInputTokensResponse
 	err := p.Do(ctx, llmclient.Request{

@@ -38,6 +38,10 @@ type ManagedProviderCredential struct {
 	Backend                  string
 	AuthType                 string
 	APIMode                  string
+	// ResponsesMode overrides the type default for /v1/responses handling:
+	// "native" forwards to the upstream /responses endpoint, "convert"
+	// translates to /chat/completions. Empty keeps the provider type default.
+	ResponsesMode            string
 	VertexProject            string
 	VertexLocation           string
 	ServiceAccountFile       string
@@ -70,6 +74,7 @@ func (m ManagedProviderCredential) toRawProviderConfig() config.RawProviderConfi
 		Backend:                  m.Backend,
 		AuthType:                 m.AuthType,
 		APIMode:                  m.APIMode,
+		ResponsesMode:            m.ResponsesMode,
 		VertexProject:            m.VertexProject,
 		VertexLocation:           m.VertexLocation,
 		ServiceAccountFile:       m.ServiceAccountFile,

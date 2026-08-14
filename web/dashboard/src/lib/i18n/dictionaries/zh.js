@@ -867,4 +867,6 @@ export default {
   "pricing.addPrice": "添加价格",
   "pricing.source": "来源",
   "pricing.noFields": "尚未设置定价字段。",
+  "providers.responsesMode": "Responses 模式",
+  "providers.responsesModeHint": "该供应商如何处理 /v1/responses 请求。“原生”直接转发到上游 /responses 端点（适用于同时支持 chat 与 responses 的供应商）；“转换”将其转换为 /chat/completions（适用于只支持 chat completions 的供应商）。留空沿用供应商类型默认。",
 };

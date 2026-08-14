@@ -13,6 +13,7 @@ const (
 	CredentialFieldBackend                  = "backend"
 	CredentialFieldAuthType                 = "auth_type"
 	CredentialFieldAPIMode                  = "api_mode"
+	CredentialFieldResponsesMode            = "responses_mode"
 	CredentialFieldVertexProject            = "vertex_project"
 	CredentialFieldVertexLocation           = "vertex_location"
 	CredentialFieldServiceAccountFile       = "service_account_file"
@@ -121,6 +122,13 @@ func defaultCredentialFields(spec DiscoveryConfig) []CredentialField {
 	if spec.SupportsAPIVersion {
 		fields = append(fields, CredentialField{Name: CredentialFieldAPIVersion})
 	}
+	fields = append(fields, CredentialField{
+		Name: CredentialFieldResponsesMode,
+		// Options are the canonical values; an empty value means "provider
+		// default" and is never listed. Not a whitelist: unknown spellings
+		// keep working and simply mean the provider default.
+		Options: []string{ResponsesModeNative, ResponsesModeConvert},
+	})
 	return fields
 }
 
@@ -145,6 +153,8 @@ func credentialFieldValue(cred ManagedProviderCredential, name string) string {
 		return cred.AuthType
 	case CredentialFieldAPIMode:
 		return cred.APIMode
+	case CredentialFieldResponsesMode:
+		return cred.ResponsesMode
 	case CredentialFieldVertexProject:
 		return cred.VertexProject
 	case CredentialFieldVertexLocation:
