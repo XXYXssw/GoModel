@@ -2,6 +2,7 @@ package providers
 
 import (
 	"fmt"
+	"log/slog"
 	"strings"
 
 	"github.com/goccy/go-json"
@@ -32,6 +33,52 @@ func ConvertResponsesInputToMessages(input any) ([]core.Message, error) {
 		return nil, core.NewInvalidRequestError("invalid responses input: unsupported type", nil)
 	default:
 		return nil, core.NewInvalidRequestError("invalid responses input: unsupported type", nil)
+	}
+}
+
+// responsesInputSkippedArtifactTypes are model-produced output items that have
+// no chat-completions equivalent (hosted web search, file search, code
+// interpreter, computer use, MCP/shell calls, ...). They carry no user-authored
+// content, so chat-translated providers can safely drop them from the converted
+// message list instead of failing the whole request. Agents such as Codex
+// replay these artifacts in the next turn's input, so erroring on them broke
+// every subsequent request after the model used a hosted tool.
+var responsesInputSkippedArtifactTypes = map[string]struct{}{
+	"web_search_call":         {},
+	"file_search_call":        {},
+	"computer_call":           {},
+	"code_interpreter_call":   {},
+	"image_generation_call":   {},
+	"custom_tool_call":        {},
+	"custom_tool_call_output": {},
+	"tool_search_call":        {},
+	"tool_search_output":      {},
+	"local_shell_call":        {},
+	"apply_patch_call":        {},
+	"mcp_call":                {},
+	"mcp_list_tools":          {},
+	"mcp_approval_request":    {},
+	"shell_call":              {},
+	"shell_call_output":       {},
+	// Compaction is a history-management artifact (previous context rewritten
+	// into a summary), not a user-authored message; chat providers have no
+	// equivalent and can drop it.
+	"compaction":         {},
+	"compaction_trigger": {},
+	"context_compaction": {},
+}
+
+// responsesInputItemType extracts the "type" discriminator from either
+// representation (typed element or raw map).
+func responsesInputItemType(item any) string {
+	switch typed := item.(type) {
+	case core.ResponsesInputElement:
+		return typed.Type
+	case map[string]any:
+		t, _ := typed["type"].(string)
+		return t
+	default:
+		return ""
 	}
 }
 
@@ -77,6 +124,12 @@ func convertResponsesInputItems(items []any) ([]core.Message, error) {
 			if reasoning != "" {
 				pendingReasoning = reasoning
 			}
+			continue
+		}
+
+		if _, skip := responsesInputSkippedArtifactTypes[responsesInputItemType(item)]; skip {
+			slog.Debug("dropping model-produced input item with no chat equivalent",
+				"index", i, "item_type", responsesInputItemType(item))
 			continue
 		}
 

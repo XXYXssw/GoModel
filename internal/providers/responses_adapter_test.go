@@ -867,7 +867,7 @@ func TestConvertResponsesRequestToChat_RejectsUnknownInputItemTypes(t *testing.T
 	var req core.ResponsesRequest
 	if err := json.Unmarshal([]byte(`{
 		"model":"test-model",
-		"input":[{"type":"computer_call","id":"cc_123"}]
+		"input":[{"type":"no_such_item","id":"x_123"}]
 	}`), &req); err != nil {
 		t.Fatalf("json.Unmarshal() error = %v", err)
 	}
@@ -876,8 +876,41 @@ func TestConvertResponsesRequestToChat_RejectsUnknownInputItemTypes(t *testing.T
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
-	if !strings.Contains(err.Error(), `unsupported input item type "computer_call"`) {
-		t.Fatalf("error = %v, want unsupported computer_call item", err)
+	if !strings.Contains(err.Error(), `unsupported input item type "no_such_item"`) {
+		t.Fatalf("error = %v, want unsupported no_such_item item", err)
+	}
+}
+
+// Model-produced artifacts (hosted web search, file search, code interpreter,
+// ...) have no chat-completions equivalent. Agents like Codex replay them in
+// the next turn's input, so they must be dropped — not fatal — or every
+// subsequent request after the model uses a hosted tool fails.
+func TestConvertResponsesRequestToChat_DropsModelArtifactItems(t *testing.T) {
+	var req core.ResponsesRequest
+	if err := json.Unmarshal([]byte(`{
+		"model":"test-model",
+		"input":[
+			{"type":"message","role":"user","content":"search the web for gomodel"},
+			{"type":"message","role":"assistant","content":"let me look that up"},
+			{"type":"web_search_call","id":"ws_123","status":"completed","action":{"type":"search","query":"gomodel github"}},
+			{"type":"message","role":"assistant","content":"here is what I found"},
+			{"type":"file_search_call","id":"fs_123"},
+			{"type":"code_interpreter_call","id":"ci_123","container_id":"c1","code":"print(1)","outputs":[],"status":"completed"}
+		]
+	}`), &req); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
+	}
+
+	chatReq, err := ConvertResponsesRequestToChat(&req)
+	if err != nil {
+		t.Fatalf("ConvertResponsesRequestToChat() error = %v", err)
+	}
+	messages := chatReq.Messages
+	if len(messages) != 3 {
+		t.Fatalf("messages = %d, want 3 (user + assistant + assistant), artifacts dropped: %#v", len(messages), messages)
+	}
+	if messages[0].Role != "user" || messages[1].Content != "let me look that up" || messages[2].Content != "here is what I found" {
+		t.Fatalf("messages = %#v, want the text messages preserved in order", messages)
 	}
 }
 
