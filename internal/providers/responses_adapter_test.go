@@ -1593,3 +1593,158 @@ data: [DONE]
 		t.Fatalf("completed output missing reasoning item: %s", out)
 	}
 }
+
+func TestConvertResponsesRequestToChat_MergesMidConversationSystemMessages(t *testing.T) {
+	// Mirrors a real Codex request that tripped RunInfra's
+	// "System message must be at the beginning.": the second developer item
+	// sits after a user message, which chat translation normalized to a
+	// system message in the middle of the list.
+	req := &core.ResponsesRequest{
+		Model:        "test-model",
+		Instructions: "You are Codex, a coding agent.",
+		Input: []any{
+			map[string]any{"type": "message", "role": "developer", "content": "<skills>one</skills>"},
+			map[string]any{"type": "message", "role": "user", "content": "AGENTS.md instructions"},
+			map[string]any{"type": "message", "role": "developer", "content": "<skills>two</skills>"},
+			map[string]any{"type": "message", "role": "user", "content": "AGENTS.md again"},
+			map[string]any{"type": "message", "role": "user", "content": "build a 3d gomoku board"},
+		},
+	}
+	chatReq, err := ConvertResponsesRequestToChat(req)
+	if err != nil {
+		t.Fatalf("ConvertResponsesRequestToChat() error = %v", err)
+	}
+
+	var roles []string
+	for _, m := range chatReq.Messages {
+		roles = append(roles, m.Role)
+	}
+	wantRoles := []string{"system", "user", "user", "user"}
+	if !reflect.DeepEqual(roles, wantRoles) {
+		t.Fatalf("roles = %v, want %v", roles, wantRoles)
+	}
+
+	system := chatReq.Messages[0]
+	text := core.ExtractTextContent(system.Content)
+	for _, wantPart := range []string{
+		"You are Codex, a coding agent.",
+		"<skills>one</skills>",
+		"<skills>two</skills>",
+	} {
+		if !strings.Contains(text, wantPart) {
+			t.Fatalf("merged system content %q missing %q", text, wantPart)
+		}
+	}
+	if got := strings.Count(text, "AGENTS.md"); got != 0 {
+		t.Fatalf("merged system content %q must not include user text", text)
+	}
+	for i, m := range chatReq.Messages[1:] {
+		if got := core.ExtractTextContent(m.Content); got == "" {
+			t.Fatalf("message %d has empty content", i+1)
+		}
+	}
+}
+
+func TestConvertResponsesRequestToChat_MidConversationSystemWithoutInstructions(t *testing.T) {
+	req := &core.ResponsesRequest{
+		Model: "test-model",
+		Input: []any{
+			map[string]any{"type": "message", "role": "user", "content": "hello"},
+			map[string]any{"type": "message", "role": "developer", "content": "remember to be concise"},
+			map[string]any{"type": "message", "role": "user", "content": "continue"},
+		},
+	}
+	chatReq, err := ConvertResponsesRequestToChat(req)
+	if err != nil {
+		t.Fatalf("ConvertResponsesRequestToChat() error = %v", err)
+	}
+	if len(chatReq.Messages) != 3 {
+		t.Fatalf("len(Messages) = %d, want 3", len(chatReq.Messages))
+	}
+	if chatReq.Messages[0].Role != "system" {
+		t.Fatalf("Messages[0].Role = %q, want system", chatReq.Messages[0].Role)
+	}
+	if got := core.ExtractTextContent(chatReq.Messages[0].Content); got != "remember to be concise" {
+		t.Fatalf("Messages[0].Content = %q, want the developer text", got)
+	}
+	if chatReq.Messages[1].Role != "user" || chatReq.Messages[2].Role != "user" {
+		t.Fatalf("roles after system = %v, want user,user", []string{chatReq.Messages[1].Role, chatReq.Messages[2].Role})
+	}
+}
+
+func TestConvertResponsesRequestToChat_LeavesValidMessageOrderUntouched(t *testing.T) {
+	req := &core.ResponsesRequest{
+		Model:        "test-model",
+		Instructions: "You are a helpful assistant.",
+		Input: []any{
+			map[string]any{"type": "message", "role": "user", "content": "hello"},
+			map[string]any{"type": "message", "role": "assistant", "content": "hi"},
+			map[string]any{"type": "message", "role": "user", "content": "again"},
+		},
+	}
+	chatReq, err := ConvertResponsesRequestToChat(req)
+	if err != nil {
+		t.Fatalf("ConvertResponsesRequestToChat() error = %v", err)
+	}
+	wantRoles := []string{"system", "user", "assistant", "user"}
+	var roles []string
+	for _, m := range chatReq.Messages {
+		roles = append(roles, m.Role)
+	}
+	if !reflect.DeepEqual(roles, wantRoles) {
+		t.Fatalf("roles = %v, want %v", roles, wantRoles)
+	}
+	if got := core.ExtractTextContent(chatReq.Messages[0].Content); got != "You are a helpful assistant." {
+		t.Fatalf("Messages[0].Content = %q, want instructions unchanged", got)
+	}
+}
+
+func TestConvertResponsesRequestToChat_DropsEmptyMidConversationSystemMessages(t *testing.T) {
+	// An empty system message in the middle still violates the
+	// "system at the beginning" rule, so it is removed entirely.
+	req := &core.ResponsesRequest{
+		Model: "test-model",
+		Input: []any{
+			map[string]any{"type": "message", "role": "user", "content": "hello"},
+			map[string]any{"type": "message", "role": "system", "content": ""},
+			map[string]any{"type": "message", "role": "user", "content": "again"},
+		},
+	}
+	chatReq, err := ConvertResponsesRequestToChat(req)
+	if err != nil {
+		t.Fatalf("ConvertResponsesRequestToChat() error = %v", err)
+	}
+	if len(chatReq.Messages) != 2 {
+		t.Fatalf("len(Messages) = %d, want 2", len(chatReq.Messages))
+	}
+	for i, m := range chatReq.Messages {
+		if m.Role != "user" {
+			t.Fatalf("Messages[%d].Role = %q, want user", i, m.Role)
+		}
+	}
+}
+
+func TestConvertResponsesRequestToChat_KeepsLoneLeadingSystemUntouched(t *testing.T) {
+	// A lone leading system message is already valid; it must not be
+	// re-encoded even when its content is empty.
+	req := &core.ResponsesRequest{
+		Model: "test-model",
+		Input: []any{
+			map[string]any{"type": "message", "role": "system", "content": ""},
+			map[string]any{"type": "message", "role": "user", "content": "hello"},
+		},
+	}
+	chatReq, err := ConvertResponsesRequestToChat(req)
+	if err != nil {
+		t.Fatalf("ConvertResponsesRequestToChat() error = %v", err)
+	}
+	if len(chatReq.Messages) != 2 {
+		t.Fatalf("len(Messages) = %d, want 2", len(chatReq.Messages))
+	}
+	if chatReq.Messages[0].Role != "system" {
+		t.Fatalf("Messages[0].Role = %q, want system", chatReq.Messages[0].Role)
+	}
+	if chatReq.Messages[1].Role != "user" {
+		t.Fatalf("Messages[1].Role = %q, want user", chatReq.Messages[1].Role)
+	}
+}

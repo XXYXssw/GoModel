@@ -84,7 +84,67 @@ func ConvertResponsesRequestToChat(req *core.ResponsesRequest) (*core.ChatReques
 	}
 	chatReq.Messages = append(chatReq.Messages, messages...)
 
+	// The Responses API lets agents such as Codex place developer/system
+	// items anywhere in the input, but chat-completions upstreams commonly
+	// reject system messages that are not at the very start of the list
+	// (e.g. RunInfra: "System message must be at the beginning."). Fold every
+	// system message into a single leading one so converted requests stay
+	// acceptable to those providers without losing instruction content.
+	chatReq.Messages = mergeSystemMessagesToFront(chatReq.Messages)
+
 	return chatReq, nil
+}
+
+// mergeSystemMessagesToFront returns messages with every system message folded
+// into a single leading system message. All system text is concatenated in
+// order of appearance so no instruction content is dropped; non-system
+// messages keep their relative order. Requests that already carry a lone
+// leading system message pass through untouched (their content is not
+// re-encoded).
+func mergeSystemMessagesToFront(messages []core.Message) []core.Message {
+	firstSystemIndex := -1
+	systemCount := 0
+	for i, msg := range messages {
+		if msg.Role == "system" {
+			if firstSystemIndex == -1 {
+				firstSystemIndex = i
+			}
+			systemCount++
+		}
+	}
+	if systemCount == 0 || (systemCount == 1 && firstSystemIndex == 0) {
+		return messages
+	}
+
+	systemTexts := make([]string, 0, systemCount)
+	rest := make([]core.Message, 0, len(messages)-systemCount)
+	var firstExtra core.UnknownJSONFields
+	extraSet := false
+	for _, msg := range messages {
+		if msg.Role == "system" {
+			if text := strings.TrimSpace(core.ExtractTextContent(msg.Content)); text != "" {
+				systemTexts = append(systemTexts, text)
+				if !extraSet {
+					firstExtra = msg.ExtraFields
+					extraSet = true
+				}
+			}
+			continue
+		}
+		rest = append(rest, msg)
+	}
+
+	if len(systemTexts) == 0 {
+		return rest
+	}
+
+	out := make([]core.Message, 0, len(rest)+1)
+	out = append(out, core.Message{
+		Role:        "system",
+		Content:     strings.Join(systemTexts, "\n\n"),
+		ExtraFields: firstExtra,
+	})
+	return append(out, rest...)
 }
 
 func validateResponsesRequestForChatTranslation(req *core.ResponsesRequest) error {
