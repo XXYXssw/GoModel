@@ -110,24 +110,6 @@ func TestChatThinkingOverrideModes(t *testing.T) {
 	}
 }
 
-func TestChatThinkingOverrideStripsReasoningEffortExtraField(t *testing.T) {
-	o := testOrchestrator(thinkingoverrides.Override{Mode: thinkingoverrides.ModeOverride, Thinking: false}, true)
-	workflow := workflowForModel("qwen3-8-27b", "RunInfra")
-
-	req := &core.ChatRequest{
-		Model:       "qwen3-8-27b",
-		Reasoning:   &core.Reasoning{Effort: thinkingoverrides.EffortHigh},
-		ExtraFields: core.UnknownJSONFieldsFromMap(map[string]json.RawMessage{"reasoning_effort": json.RawMessage(`"high"`)}),
-	}
-	got := applyChatThinkingOverride(o, req, workflow)
-	if got.Reasoning != nil {
-		t.Fatalf("Reasoning = %#v, want nil", got.Reasoning)
-	}
-	if !got.ExtraFields.IsEmpty() {
-		t.Fatalf("ExtraFields = %#v, want reasoning_effort stripped", got.ExtraFields)
-	}
-}
-
 func TestResponsesThinkingOverrideModes(t *testing.T) {
 	workflow := workflowForModel("qwen3-8-27b", "RunInfra")
 	o := testOrchestrator(thinkingoverrides.Override{Mode: thinkingoverrides.ModeOverride, Thinking: true, Effort: thinkingoverrides.EffortMedium}, true)
@@ -144,5 +126,78 @@ func TestResponsesThinkingOverrideModes(t *testing.T) {
 	}
 	if got.Input != "hello" || !got.Stream {
 		t.Fatalf("responses request fields changed: %#v", got)
+	}
+}
+
+func TestChatThinkingOverrideStripsReasoningAndSetsQwenThinkingOff(t *testing.T) {
+	o := testOrchestrator(thinkingoverrides.Override{Mode: thinkingoverrides.ModeOverride, Thinking: false}, true)
+	workflow := workflowForModel("qwen3-8-27b", "RunInfra")
+
+	req := &core.ChatRequest{
+		Model:       "qwen3-8-27b",
+		Reasoning:   &core.Reasoning{Effort: thinkingoverrides.EffortHigh},
+		ExtraFields: core.UnknownJSONFieldsFromMap(map[string]json.RawMessage{"reasoning_effort": json.RawMessage(`"high"`)}),
+	}
+	got := applyChatThinkingOverride(o, req, workflow)
+	if got.Reasoning != nil {
+		t.Fatalf("Reasoning = %#v, want nil", got.Reasoning)
+	}
+	if raw := got.ExtraFields.Lookup("reasoning_effort"); len(raw) != 0 {
+		t.Fatalf("reasoning_effort still present: %s", raw)
+	}
+	if raw := got.ExtraFields.Lookup("enable_thinking"); string(raw) != "false" {
+		t.Fatalf("enable_thinking = %s, want false", raw)
+	}
+	if raw := got.ExtraFields.Lookup("chat_template_kwargs"); string(raw) != `{"enable_thinking":false}` {
+		t.Fatalf("chat_template_kwargs = %s, want {\"enable_thinking\":false}", raw)
+	}
+}
+
+func TestChatThinkingOverrideSetsQwenThinkingOn(t *testing.T) {
+	o := testOrchestrator(thinkingoverrides.Override{Mode: thinkingoverrides.ModeOverride, Thinking: true, Effort: thinkingoverrides.EffortXHigh}, true)
+	workflow := workflowForModel("qwen3-8-27b", "RunInfra")
+
+	req := &core.ChatRequest{Model: "qwen3-8-27b", Reasoning: &core.Reasoning{Effort: thinkingoverrides.EffortLow}}
+	got := applyChatThinkingOverride(o, req, workflow)
+	if got.Reasoning == nil || got.Reasoning.Effort != thinkingoverrides.EffortXHigh {
+		t.Fatalf("Reasoning = %#v, want xhigh", got.Reasoning)
+	}
+	if raw := got.ExtraFields.Lookup("enable_thinking"); string(raw) != "true" {
+		t.Fatalf("enable_thinking = %s, want true", raw)
+	}
+	if raw := got.ExtraFields.Lookup("chat_template_kwargs"); string(raw) != `{"enable_thinking":true}` {
+		t.Fatalf("chat_template_kwargs = %s, want {\"enable_thinking\":true}", raw)
+	}
+}
+
+func TestChatThinkingOverrideNonQwenNotTagged(t *testing.T) {
+	o := testOrchestrator(thinkingoverrides.Override{Mode: thinkingoverrides.ModeOverride, Thinking: false}, true)
+	workflow := workflowForModel("gpt-5", "openai")
+
+	req := &core.ChatRequest{Model: "gpt-5", Reasoning: &core.Reasoning{Effort: thinkingoverrides.EffortHigh}}
+	got := applyChatThinkingOverride(o, req, workflow)
+	if got.Reasoning != nil {
+		t.Fatalf("Reasoning = %#v, want nil", got.Reasoning)
+	}
+	if !got.ExtraFields.IsEmpty() {
+		t.Fatalf("ExtraFields = %#v, want empty for non-qwen model", got.ExtraFields)
+	}
+}
+
+func TestChatThinkingOverrideSupplementPreservesClientQwenField(t *testing.T) {
+	o := testOrchestrator(thinkingoverrides.Override{Mode: thinkingoverrides.ModeSupplement, Thinking: true, Effort: thinkingoverrides.EffortHigh}, true)
+	workflow := workflowForModel("qwen3-8-27b", "RunInfra")
+
+	// Client explicitly disabled thinking: supplement must not re-enable it.
+	req := &core.ChatRequest{
+		Model:       "qwen3-8-27b",
+		ExtraFields: core.UnknownJSONFieldsFromMap(map[string]json.RawMessage{"enable_thinking": json.RawMessage(`false`)}),
+	}
+	got := applyChatThinkingOverride(o, req, workflow)
+	if got.Reasoning != nil {
+		t.Fatalf("Reasoning = %#v, want nil (client set enable_thinking)", got.Reasoning)
+	}
+	if raw := got.ExtraFields.Lookup("enable_thinking"); string(raw) != "false" {
+		t.Fatalf("enable_thinking = %s, want client value false preserved", raw)
 	}
 }

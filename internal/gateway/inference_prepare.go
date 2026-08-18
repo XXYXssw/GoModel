@@ -1,7 +1,9 @@
 package gateway
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"strings"
 
 	"github.com/enterpilot/gomodel/internal/core"
@@ -277,18 +279,23 @@ func applyChatThinkingOverride(o *InferenceOrchestrator, req *core.ChatRequest, 
 	if !ok {
 		return req
 	}
+	model := resolvedModelID(workflow)
 	cloned := *req
 	switch override.Mode {
 	case thinkingoverrides.ModeSupplement:
-		if override.Thinking && cloned.Reasoning == nil {
+		// Fill only when the client left thinking entirely unset.
+		if override.Thinking && cloned.Reasoning == nil && !hasQwenThinkingField(cloned.ExtraFields) {
 			cloned.Reasoning = &core.Reasoning{Effort: override.Effort}
+			cloned.ExtraFields = setQwenEnableThinking(cloned.ExtraFields, model, true)
 		}
 	case thinkingoverrides.ModeOverride:
 		if !override.Thinking {
 			cloned.Reasoning = nil
 			cloned.ExtraFields = cloned.ExtraFields.Without("reasoning_effort")
+			cloned.ExtraFields = setQwenEnableThinking(cloned.ExtraFields, model, false)
 		} else {
 			cloned.Reasoning = &core.Reasoning{Effort: override.Effort}
+			cloned.ExtraFields = setQwenEnableThinking(cloned.ExtraFields, model, true)
 		}
 	}
 	return &cloned
@@ -302,18 +309,89 @@ func applyResponsesThinkingOverride(o *InferenceOrchestrator, req *core.Response
 	if !ok {
 		return req
 	}
+	model := resolvedModelID(workflow)
 	cloned := *req
 	switch override.Mode {
 	case thinkingoverrides.ModeSupplement:
-		if override.Thinking && cloned.Reasoning == nil {
+		// Fill only when the client left thinking entirely unset. ExtraFields
+		// are cloned into the converted chat request for convert-mode providers.
+		if override.Thinking && cloned.Reasoning == nil && !hasQwenThinkingField(cloned.ExtraFields) {
 			cloned.Reasoning = &core.Reasoning{Effort: override.Effort}
+			cloned.ExtraFields = setQwenEnableThinking(cloned.ExtraFields, model, true)
 		}
 	case thinkingoverrides.ModeOverride:
 		if !override.Thinking {
 			cloned.Reasoning = nil
+			cloned.ExtraFields = setQwenEnableThinking(cloned.ExtraFields, model, false)
 		} else {
 			cloned.Reasoning = &core.Reasoning{Effort: override.Effort}
+			cloned.ExtraFields = setQwenEnableThinking(cloned.ExtraFields, model, true)
 		}
 	}
 	return &cloned
+}
+
+// resolvedModelID returns the bare upstream model id from the workflow
+// resolution (e.g. "qwen3-8-27b" from "RunInfra/qwen3-8-27b").
+func resolvedModelID(workflow *core.Workflow) string {
+	if workflow == nil || workflow.Resolution == nil {
+		return ""
+	}
+	return workflow.Resolution.ResolvedSelector.Model
+}
+
+// isQwenModel reports whether a model id belongs to the Qwen family. Qwen3
+// models control thinking through the enable_thinking extension rather than
+// (only) the standard reasoning fields, so the override must set that field
+// to actually turn thinking off on OpenAI-compatible upstreams.
+func isQwenModel(model string) bool {
+	return strings.Contains(strings.ToLower(strings.TrimSpace(model)), "qwen")
+}
+
+// hasQwenThinkingField reports whether the request already carries an
+// enable_thinking value (top-level or inside chat_template_kwargs), used by
+// supplement mode to avoid overriding a client-set value.
+func hasQwenThinkingField(fields core.UnknownJSONFields) bool {
+	if len(fields.Lookup("enable_thinking")) > 0 {
+		return true
+	}
+	if raw := fields.Lookup("chat_template_kwargs"); len(raw) > 0 {
+		return bytes.Contains(bytes.ToLower(raw), []byte("enable_thinking"))
+	}
+	return false
+}
+
+// setQwenEnableThinking merges Qwen's enable_thinking extension into the
+// request's unknown-field payload: both a top-level "enable_thinking" member
+// (DashScope / OpenAI-compatible style) and the nested
+// "chat_template_kwargs.enable_thinking" member documented by Qwen3 model
+// cards and used by vLLM/SGLang-hosted deployments. Existing
+// chat_template_kwargs members are preserved. Non-Qwen models are untouched.
+func setQwenEnableThinking(fields core.UnknownJSONFields, model string, thinking bool) core.UnknownJSONFields {
+	if !isQwenModel(model) {
+		return fields
+	}
+	value := json.RawMessage("false")
+	if thinking {
+		value = json.RawMessage("true")
+	}
+	additions := map[string]json.RawMessage{"enable_thinking": value}
+
+	if raw := fields.Lookup("chat_template_kwargs"); len(raw) > 0 && !bytes.Equal(bytes.TrimSpace(raw), []byte("null")) {
+		var kwargs map[string]any
+		if err := json.Unmarshal(raw, &kwargs); err == nil {
+			kwargs["enable_thinking"] = thinking
+			if merged, err := json.Marshal(kwargs); err == nil {
+				additions["chat_template_kwargs"] = merged
+			}
+		}
+	} else {
+		additions["chat_template_kwargs"] = json.RawMessage(`{"enable_thinking":` + string(value) + `}`)
+	}
+
+	merged, err := core.MergeUnknownJSONFields(fields, additions)
+	if err != nil {
+		return fields
+	}
+	return merged
 }
