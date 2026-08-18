@@ -292,6 +292,7 @@ func applyChatThinkingOverride(o *InferenceOrchestrator, req *core.ChatRequest, 
 		if !override.Thinking {
 			cloned.Reasoning = nil
 			cloned.ExtraFields = cloned.ExtraFields.Without("reasoning_effort")
+			cloned.ExtraFields = setFlatReasoningEffort(cloned.ExtraFields, "none")
 			cloned.ExtraFields = setQwenEnableThinking(cloned.ExtraFields, model, false)
 		} else {
 			cloned.Reasoning = &core.Reasoning{Effort: override.Effort}
@@ -322,6 +323,8 @@ func applyResponsesThinkingOverride(o *InferenceOrchestrator, req *core.Response
 	case thinkingoverrides.ModeOverride:
 		if !override.Thinking {
 			cloned.Reasoning = nil
+			cloned.ExtraFields = cloned.ExtraFields.Without("reasoning_effort")
+			cloned.ExtraFields = setFlatReasoningEffort(cloned.ExtraFields, "none")
 			cloned.ExtraFields = setQwenEnableThinking(cloned.ExtraFields, model, false)
 		} else {
 			cloned.Reasoning = &core.Reasoning{Effort: override.Effort}
@@ -359,6 +362,27 @@ func hasQwenThinkingField(fields core.UnknownJSONFields) bool {
 		return bytes.Contains(bytes.ToLower(raw), []byte("enable_thinking"))
 	}
 	return false
+}
+
+// setFlatReasoningEffort sets the OpenAI chat-completions reasoning_effort
+// extension in the request's unknown-field payload. Effort "none" disables
+// thinking on several OpenAI-compatible upstreams (OpenCodeGo mimo, RunInfra
+// Qwen3) that ignore the nested reasoning object.
+func setFlatReasoningEffort(fields core.UnknownJSONFields, effort string) core.UnknownJSONFields {
+	if strings.TrimSpace(effort) == "" {
+		return fields
+	}
+	encoded, err := json.Marshal(effort)
+	if err != nil {
+		return fields
+	}
+	merged, err := core.MergeUnknownJSONFields(fields, map[string]json.RawMessage{
+		"reasoning_effort": encoded,
+	})
+	if err != nil {
+		return fields
+	}
+	return merged
 }
 
 // setQwenEnableThinking merges Qwen's enable_thinking extension into the

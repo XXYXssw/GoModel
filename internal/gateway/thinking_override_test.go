@@ -142,8 +142,8 @@ func TestChatThinkingOverrideStripsReasoningAndSetsQwenThinkingOff(t *testing.T)
 	if got.Reasoning != nil {
 		t.Fatalf("Reasoning = %#v, want nil", got.Reasoning)
 	}
-	if raw := got.ExtraFields.Lookup("reasoning_effort"); len(raw) != 0 {
-		t.Fatalf("reasoning_effort still present: %s", raw)
+	if raw := got.ExtraFields.Lookup("reasoning_effort"); string(raw) != `"none"` {
+		t.Fatalf("reasoning_effort = %s, want string none", raw)
 	}
 	if raw := got.ExtraFields.Lookup("enable_thinking"); string(raw) != "false" {
 		t.Fatalf("enable_thinking = %s, want false", raw)
@@ -179,8 +179,11 @@ func TestChatThinkingOverrideNonQwenNotTagged(t *testing.T) {
 	if got.Reasoning != nil {
 		t.Fatalf("Reasoning = %#v, want nil", got.Reasoning)
 	}
-	if !got.ExtraFields.IsEmpty() {
-		t.Fatalf("ExtraFields = %#v, want empty for non-qwen model", got.ExtraFields)
+	if raw := got.ExtraFields.Lookup("reasoning_effort"); string(raw) != `"none"` {
+		t.Fatalf("reasoning_effort = %s, want string none for non-qwen model", raw)
+	}
+	if raw := got.ExtraFields.Lookup("enable_thinking"); len(raw) != 0 {
+		t.Fatalf("enable_thinking = %s, want absent for non-qwen model", raw)
 	}
 }
 
