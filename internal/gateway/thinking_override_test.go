@@ -201,3 +201,37 @@ func TestChatThinkingOverrideSupplementPreservesClientQwenField(t *testing.T) {
 		t.Fatalf("enable_thinking = %s, want client value false preserved", raw)
 	}
 }
+
+func TestCanFastPathStreamingChatPassthroughWithThinkingOverride(t *testing.T) {
+	workflow := workflowForModel("qwen3-8-27b", "RunInfra")
+	workflow.ProviderType = "openai"
+	// Requested and resolved must agree so no selector rewrite is needed.
+	workflow.Resolution.Requested = core.RequestedModelSelector{Model: "qwen3-8-27b", ProviderHint: "RunInfra"}
+
+	req := &core.ChatRequest{Model: "qwen3-8-27b", Stream: true, Messages: []core.Message{{Role: "user", Content: "hi"}}}
+
+	base := NewInferenceOrchestrator(InferenceConfig{})
+	if !base.CanFastPathStreamingChatPassthrough(workflow, req) {
+		t.Fatal("fast path should be allowed without a thinking override")
+	}
+
+	// Native override must not disable the fast path.
+	native := NewInferenceOrchestrator(InferenceConfig{})
+	native.thinkingOverrides = stubThinkingResolver{
+		override: thinkingoverrides.Override{Mode: thinkingoverrides.ModeNative},
+		ok:       true,
+	}
+	if !native.CanFastPathStreamingChatPassthrough(workflow, req) {
+		t.Fatal("fast path should stay allowed for a native override")
+	}
+
+	// A non-native override must disable the fast path so the override applies.
+	overridden := NewInferenceOrchestrator(InferenceConfig{})
+	overridden.thinkingOverrides = stubThinkingResolver{
+		override: thinkingoverrides.Override{Mode: thinkingoverrides.ModeOverride, Thinking: false},
+		ok:       true,
+	}
+	if overridden.CanFastPathStreamingChatPassthrough(workflow, req) {
+		t.Fatal("fast path must be disabled when a non-native thinking override exists")
+	}
+}

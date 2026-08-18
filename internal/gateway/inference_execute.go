@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/enterpilot/gomodel/internal/core"
+	"github.com/enterpilot/gomodel/internal/thinkingoverrides"
 	"github.com/enterpilot/gomodel/internal/usage"
 )
 
@@ -211,6 +212,13 @@ func (o *InferenceOrchestrator) CanFastPathStreamingChatPassthrough(workflow *co
 	}
 	if translatedStreamingChatBodyRewriteRequired(req) {
 		return false
+	}
+	// A non-native thinking override mutates the outgoing request, so the raw
+	// passthrough fast path must yield to the translated path that applies it.
+	if o.thinkingOverrides != nil {
+		if override, ok := o.thinkingOverrides.Resolve(workflow.ResolvedQualifiedModel()); ok && override.Mode != thinkingoverrides.ModeNative {
+			return false
+		}
 	}
 
 	return true
