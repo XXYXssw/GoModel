@@ -14,6 +14,7 @@ import (
 	"github.com/enterpilot/gomodel/internal/guardrails"
 	"github.com/enterpilot/gomodel/internal/pricingoverrides"
 	"github.com/enterpilot/gomodel/internal/ratelimit"
+	"github.com/enterpilot/gomodel/internal/thinkingoverrides"
 	"github.com/enterpilot/gomodel/internal/virtualmodels"
 	"github.com/enterpilot/gomodel/internal/workflows"
 )
@@ -117,4 +118,14 @@ func normalizeModelPricingOverrideSelector(selector string) (string, error) {
 		return "", core.NewInvalidRequestError("model pricing override selector is too long", nil)
 	}
 	return selector, nil
+}
+
+func thinkingOverrideWriteError(err error) error {
+	if err == nil {
+		return nil
+	}
+	if thinkingoverrides.IsValidationError(err) {
+		return core.NewInvalidRequestError(err.Error(), err)
+	}
+	return core.NewProviderError("model_thinking_overrides", http.StatusBadGateway, err.Error(), err)
 }

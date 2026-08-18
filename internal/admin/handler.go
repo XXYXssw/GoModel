@@ -26,6 +26,7 @@ import (
 	"github.com/enterpilot/gomodel/internal/ratelimit"
 	"github.com/enterpilot/gomodel/internal/runtimesettings"
 	"github.com/enterpilot/gomodel/internal/tagging"
+	"github.com/enterpilot/gomodel/internal/thinkingoverrides"
 	"github.com/enterpilot/gomodel/internal/usage"
 	"github.com/enterpilot/gomodel/internal/virtualmodels"
 	"github.com/enterpilot/gomodel/internal/workflows"
@@ -43,6 +44,7 @@ type Handler struct {
 	mcpServers          MCPServerAdmin
 	failoverRules       *failover.Service
 	pricingOverrides    *pricingoverrides.Service
+	thinkingOverrides   *thinkingoverrides.Service
 	workflows           *workflows.Service
 	budgets             *budget.Service
 	rateLimits          *ratelimit.Service
@@ -280,6 +282,13 @@ func WithAuthKeys(service *authkeys.Service) Option {
 func WithPricingOverrides(service *pricingoverrides.Service) Option {
 	return func(h *Handler) {
 		h.pricingOverrides = service
+	}
+}
+
+// WithThinkingOverrides enables model thinking override administration endpoints.
+func WithThinkingOverrides(service *thinkingoverrides.Service) Option {
+	return func(h *Handler) {
+		h.thinkingOverrides = service
 	}
 }
 

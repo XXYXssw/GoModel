@@ -962,3 +962,27 @@ export function computeRenderStep(currentLimit, batchSize, total) {
 export function initialRenderStep(batchSize, total) {
   return computeRenderStep(0, batchSize, total);
 }
+
+// ---- Thinking override form helpers ----
+
+export function defaultThinkingForm() {
+  return {
+    mode: "native", // native | supplement | override
+    thinking: true,
+    effort: "medium",
+  };
+}
+
+// thinkingFormVisibleForSource reports whether the thinking override section
+// applies to an editor source: concrete model selectors only (not the global
+// "/" selector or provider-wide "provider/" selectors).
+export function thinkingFormVisibleForSource(source) {
+  if (!source) {
+    return false;
+  }
+  const trimmed = String(source).trim();
+  if (!trimmed || trimmed === GLOBAL_OVERRIDE_SELECTOR || trimmed.endsWith("/")) {
+    return false;
+  }
+  return true;
+}

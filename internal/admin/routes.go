@@ -85,6 +85,10 @@ func (h *Handler) RegisterRoutes(g RouteRegistrar) {
 	g.PUT("/model-pricing-overrides", h.UpsertModelPricingOverride)
 	g.DELETE("/model-pricing-overrides", h.DeleteModelPricingOverride)
 
+	g.GET("/model-thinking-overrides", h.ListModelThinkingOverrides)
+	g.PUT("/model-thinking-overrides", h.UpsertModelThinkingOverride)
+	g.DELETE("/model-thinking-overrides", h.DeleteModelThinkingOverride)
+
 	g.GET("/auth-keys", h.ListAuthKeys)
 	g.POST("/auth-keys", h.CreateAuthKey)
 	g.PUT("/auth-keys/:id/labels", h.UpdateAuthKeyLabels)

@@ -43,6 +43,7 @@ type translatedInferenceService struct {
 	pricingResolver          usage.PricingResolver
 	responseCache            *responsecache.ResponseCacheMiddleware
 	guardrailsHash           string
+	thinkingOverrides        gateway.ThinkingOverrideResolver
 	responseStore            responsestore.Store
 	responseStoreMu          sync.RWMutex
 	conversationStore        conversationstore.Store
@@ -75,6 +76,7 @@ func (s *translatedInferenceService) newInferenceOrchestrator() *gateway.Inferen
 		UsageLogger:              s.usageLogger,
 		PricingResolver:          s.pricingResolver,
 		GuardrailsHash:           s.guardrailsHash,
+		ThinkingOverrides:        s.thinkingOverrides,
 	}
 	// Guarded assignment keeps the gate nil when rate limits are off (a nil
 	// RateLimiter assigned unconditionally would arrive as a typed non-nil

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/enterpilot/gomodel/internal/core"
+	"github.com/enterpilot/gomodel/internal/thinkingoverrides"
 )
 
 // PrepareChatRequest resolves workflow/model policy and applies translated request patching.
@@ -36,6 +37,7 @@ type translatedPrepareSpec[Req any, Prepared any] struct {
 	patchNilMessage string
 	selector        func(Req) (*string, *string)
 	patch           func(*InferenceOrchestrator) func(context.Context, Req) (Req, error)
+	thinking        func(*InferenceOrchestrator) func(context.Context, Req, *core.Workflow) (Req, error)
 	valid           func(Req) bool
 	build           func(context.Context, Req, *core.Workflow) Prepared
 }
@@ -45,6 +47,7 @@ var chatPrepareSpec = translatedPrepareSpec[*core.ChatRequest, *PreparedChatRequ
 	patchNilMessage: "patched chat request is required",
 	selector:        chatRequestSelector,
 	patch:           chatRequestPatch,
+	thinking:        chatThinkingOverride,
 	valid:           validChatRequest,
 	build: func(ctx context.Context, req *core.ChatRequest, workflow *core.Workflow) *PreparedChatRequest {
 		return &PreparedChatRequest{Context: ctx, Request: req, Workflow: workflow}
@@ -56,6 +59,7 @@ var responsesPrepareSpec = translatedPrepareSpec[*core.ResponsesRequest, *Prepar
 	patchNilMessage: "patched responses request is required",
 	selector:        responsesRequestSelector,
 	patch:           responsesRequestPatch,
+	thinking:        responsesThinkingOverride,
 	valid:           validResponsesRequest,
 	build: func(ctx context.Context, req *core.ResponsesRequest, workflow *core.Workflow) *PreparedResponsesRequest {
 		return &PreparedResponsesRequest{Context: ctx, Request: req, Workflow: workflow}
@@ -78,6 +82,12 @@ func prepareTranslated[Req any, Prepared any](
 	ctx, req, workflow, err := prepareTranslatedRequest(o, ctx, req, meta, model, provider, spec.patch(o), spec.valid, spec.patchNilMessage)
 	if err != nil {
 		return zero, err
+	}
+	if spec.thinking != nil {
+		req, err = spec.thinking(o)(ctx, req, workflow)
+		if err != nil {
+			return zero, err
+		}
 	}
 	return spec.build(ctx, req, workflow), nil
 }
@@ -240,4 +250,70 @@ func (o *InferenceOrchestrator) WithCacheRequestContext(ctx context.Context, wor
 		return core.WithGuardrailsHash(ctx, o.guardrailsHash)
 	}
 	return ctx
+}
+
+// chatThinkingOverride returns a prepare hook that applies the resolved model
+// thinking override to a chat request (used by /v1/chat/completions and the
+// Responses-via-chat translation).
+func chatThinkingOverride(o *InferenceOrchestrator) func(context.Context, *core.ChatRequest, *core.Workflow) (*core.ChatRequest, error) {
+	return func(ctx context.Context, req *core.ChatRequest, workflow *core.Workflow) (*core.ChatRequest, error) {
+		return applyChatThinkingOverride(o, req, workflow), nil
+	}
+}
+
+// responsesThinkingOverride returns a prepare hook that applies the resolved
+// model thinking override to a Responses API request.
+func responsesThinkingOverride(o *InferenceOrchestrator) func(context.Context, *core.ResponsesRequest, *core.Workflow) (*core.ResponsesRequest, error) {
+	return func(ctx context.Context, req *core.ResponsesRequest, workflow *core.Workflow) (*core.ResponsesRequest, error) {
+		return applyResponsesThinkingOverride(o, req, workflow), nil
+	}
+}
+
+func applyChatThinkingOverride(o *InferenceOrchestrator, req *core.ChatRequest, workflow *core.Workflow) *core.ChatRequest {
+	if req == nil || o.thinkingOverrides == nil || workflow == nil || workflow.Resolution == nil {
+		return req
+	}
+	override, ok := o.thinkingOverrides.Resolve(workflow.ResolvedQualifiedModel())
+	if !ok {
+		return req
+	}
+	cloned := *req
+	switch override.Mode {
+	case thinkingoverrides.ModeSupplement:
+		if override.Thinking && cloned.Reasoning == nil {
+			cloned.Reasoning = &core.Reasoning{Effort: override.Effort}
+		}
+	case thinkingoverrides.ModeOverride:
+		if !override.Thinking {
+			cloned.Reasoning = nil
+			cloned.ExtraFields = cloned.ExtraFields.Without("reasoning_effort")
+		} else {
+			cloned.Reasoning = &core.Reasoning{Effort: override.Effort}
+		}
+	}
+	return &cloned
+}
+
+func applyResponsesThinkingOverride(o *InferenceOrchestrator, req *core.ResponsesRequest, workflow *core.Workflow) *core.ResponsesRequest {
+	if req == nil || o.thinkingOverrides == nil || workflow == nil || workflow.Resolution == nil {
+		return req
+	}
+	override, ok := o.thinkingOverrides.Resolve(workflow.ResolvedQualifiedModel())
+	if !ok {
+		return req
+	}
+	cloned := *req
+	switch override.Mode {
+	case thinkingoverrides.ModeSupplement:
+		if override.Thinking && cloned.Reasoning == nil {
+			cloned.Reasoning = &core.Reasoning{Effort: override.Effort}
+		}
+	case thinkingoverrides.ModeOverride:
+		if !override.Thinking {
+			cloned.Reasoning = nil
+		} else {
+			cloned.Reasoning = &core.Reasoning{Effort: override.Effort}
+		}
+	}
+	return &cloned
 }

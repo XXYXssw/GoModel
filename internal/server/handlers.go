@@ -14,6 +14,7 @@ import (
 	"github.com/enterpilot/gomodel/internal/conversationstore"
 	"github.com/enterpilot/gomodel/internal/core"
 	"github.com/enterpilot/gomodel/internal/filestore"
+	"github.com/enterpilot/gomodel/internal/gateway"
 	"github.com/enterpilot/gomodel/internal/httpclient"
 	"github.com/enterpilot/gomodel/internal/mcpgateway"
 	"github.com/enterpilot/gomodel/internal/realtime"
@@ -55,6 +56,7 @@ type Handler struct {
 	realtimeHTTPClient           *http.Client
 	responseCache                *responsecache.ResponseCacheMiddleware
 	guardrailsHash               string
+	thinkingOverrides            gateway.ThinkingOverrideResolver
 	storageProbe                 ReadinessProbe
 	cacheProbe                   ReadinessProbe
 
@@ -161,6 +163,7 @@ func (h *Handler) translatedInference() *translatedInferenceService {
 			pricingResolver:          h.pricingResolver,
 			responseCache:            h.responseCache,
 			guardrailsHash:           h.guardrailsHash,
+			thinkingOverrides:        h.thinkingOverrides,
 			responseStore:            h.currentResponseStore(),
 		}
 		s.initHandlers()

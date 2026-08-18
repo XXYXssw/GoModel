@@ -180,6 +180,51 @@
     </FormField>
   {/if}
 
+  {#if vm.vmFormThinkingVisible()}
+    <div class="form-field">
+      <span class="form-field-label">{t("vm.thinkingOverride")}</span>
+      <span class="form-hint">{@html t("vm.thinkingOverrideHint")}</span>
+      <select
+        id="thinking-override-mode"
+        class="form-select"
+        bind:value={vm.vmFormThinking.mode}
+        disabled={vm.vmFormManaged}
+      >
+        <option value="native">{t("vm.thinkingModeNative")}</option>
+        <option value="supplement">{t("vm.thinkingModeSupplement")}</option>
+        <option value="override">{t("vm.thinkingModeOverride")}</option>
+      </select>
+    </div>
+
+    {#if vm.vmFormThinking.mode !== "native"}
+      <div class="form-field">
+        <label class="vm-session-affinity-checkbox">
+          <input
+            type="checkbox"
+            bind:checked={vm.vmFormThinking.thinking}
+            disabled={vm.vmFormManaged}
+          />
+          <span>{t("vm.thinkingOn")}</span>
+        </label>
+      </div>
+      {#if vm.vmFormThinking.thinking}
+        <FormField id="thinking-override-effort" label={t("vm.thinkingLevel")}>
+          <select
+            id="thinking-override-effort"
+            class="form-select"
+            bind:value={vm.vmFormThinking.effort}
+            disabled={vm.vmFormManaged}
+          >
+            <option value="low">{t("vm.effortLow")}</option>
+            <option value="medium">{t("vm.effortMedium")}</option>
+            <option value="high">{t("vm.effortHigh")}</option>
+            <option value="xhigh">{t("vm.effortXHigh")}</option>
+          </select>
+        </FormField>
+      {/if}
+    {/if}
+  {/if}
+
   <div class="vm-status-row">
     {#if vm.vmFormMode === "edit"}
       <span class="form-hint vm-status-summary">

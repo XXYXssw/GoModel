@@ -18,6 +18,7 @@ import (
 	"github.com/labstack/echo/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
+	"github.com/enterpilot/gomodel/internal/gateway"
 	"github.com/enterpilot/gomodel/internal/admin"
 	"github.com/enterpilot/gomodel/internal/admin/dashboard"
 	"github.com/enterpilot/gomodel/internal/auditlog"
@@ -83,6 +84,7 @@ type Config struct {
 	WorkflowPolicyResolver          RequestWorkflowPolicyResolver          // Optional: persisted workflow resolver used during workflow resolution
 	FailoverResolver                RequestFailoverResolver                // Optional: translated-route failover resolver
 	TranslatedRequestPatcher        TranslatedRequestPatcher               // Optional: request patcher for translated routes after workflow resolution
+	ThinkingOverrides               gateway.ThinkingOverrideResolver        // Optional: per-model thinking override resolution for translated routes
 	BatchRequestPreparer            BatchRequestPreparer                   // Optional: batch request preparer before native provider submission
 	ExposedModelLister              ExposedModelLister                     // Optional: additional public models to merge into GET /v1/models
 	KeepOnlyAliasesAtModelsEndpoint bool                                   // Whether GET /v1/models should hide concrete provider models
@@ -189,6 +191,7 @@ func New(provider core.RoutableProvider, cfg *Config) *Server {
 		handler.keepOnlyAliasesAtModelsEndpoint = cfg.KeepOnlyAliasesAtModelsEndpoint
 		handler.responseCache = cfg.ResponseCacheMiddleware
 		handler.guardrailsHash = cfg.GuardrailsHash
+		handler.thinkingOverrides = cfg.ThinkingOverrides
 		handler.storageProbe = cfg.StorageProbe
 		handler.cacheProbe = cfg.CacheProbe
 	}

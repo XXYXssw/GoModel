@@ -62,6 +62,7 @@ const (
 	subsystemFailover            = "failover"
 	subsystemTagging             = "tagging"
 	subsystemPricingOverrides    = "model pricing overrides"
+	subsystemThinkingOverrides   = "model thinking overrides"
 	subsystemGuardrails          = "guardrails"
 	subsystemWorkflows           = "workflows"
 	subsystemAuthKeys            = "auth keys"
@@ -119,6 +120,7 @@ func (a *App) shutdownOrder() []registeredSubsystem {
 		{name: subsystemTagging, close: closerOf(a.tagging)},
 		{name: subsystemWorkflows, close: closerOf(a.workflows)},
 		{name: subsystemPricingOverrides, close: closerOf(a.pricingOverrides)},
+		{name: subsystemThinkingOverrides, close: closerOf(a.thinkingOverrides)},
 		{name: subsystemGuardrails, close: closerOf(a.guardrails)},
 		{name: subsystemAuthKeys, close: closerOf(a.authKeys)},
 		{name: subsystemFileStore, close: closerOf(a.fileStore)},

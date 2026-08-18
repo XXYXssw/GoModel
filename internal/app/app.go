@@ -44,6 +44,7 @@ import (
 	"github.com/enterpilot/gomodel/internal/session"
 	"github.com/enterpilot/gomodel/internal/storage"
 	"github.com/enterpilot/gomodel/internal/tagging"
+	"github.com/enterpilot/gomodel/internal/thinkingoverrides"
 	"github.com/enterpilot/gomodel/internal/usage"
 	"github.com/enterpilot/gomodel/internal/virtualmodels"
 	"github.com/enterpilot/gomodel/internal/workflows"
@@ -68,6 +69,7 @@ type App struct {
 	mcpGateway          *mcpgateway.Result
 	providerCredentials *providers.CredentialsResult
 	pricingOverrides    *pricingoverrides.Result
+	thinkingOverrides   *thinkingoverrides.Result
 	authKeys            *authkeys.Result
 	guardrails          *guardrails.Result
 	workflows           *workflows.Result
@@ -598,6 +600,14 @@ func New(ctx context.Context, cfg Config) (*App, error) {
 		pricingResolver = app.pricingOverrides.Service
 	}
 
+	var thinkingOverrideResult *thinkingoverrides.Result
+	thinkingOverrideResult, err = thinkingoverrides.New(ctx, appCfg, sharedStorage, providerResult.Registry)
+	if err != nil {
+		return fail("failed to initialize model thinking overrides", err)
+	}
+	app.thinkingOverrides = thinkingOverrideResult
+	app.register(subsystemThinkingOverrides, ownedByShutdown, app.thinkingOverrides.Close)
+
 	refreshInterval := workflowRefreshInterval(appCfg)
 	var guardrailExecutor guardrails.ChatCompletionExecutor = app.providers.Router
 	if vm != nil {
@@ -761,6 +771,10 @@ func New(ctx context.Context, cfg Config) (*App, error) {
 		SessionDetector:                 session.NewDetectorFromConfig(appCfg.Session),
 		MCPEnabled:                      appCfg.MCP.Enabled,
 	}
+	if app.thinkingOverrides != nil && app.thinkingOverrides.Service != nil {
+		serverCfg.ThinkingOverrides = app.thinkingOverrides.Service
+	}
+
 	if mcpResult != nil {
 		serverCfg.MCPGateway = mcpResult.Service
 	}
@@ -804,6 +818,7 @@ func New(ctx context.Context, cfg Config) (*App, error) {
 			vm,
 			failoverResult.Service,
 			app.pricingOverrides.Service,
+			app.thinkingOverrides.Service,
 			workflowResult.Service,
 			app.guardrails.Service,
 			budgetResult.Service,
@@ -1209,6 +1224,7 @@ func initAdmin(
 	virtualModelService *virtualmodels.Service,
 	failoverService *failover.Service,
 	pricingOverrideService *pricingoverrides.Service,
+	thinkingOverrideService *thinkingoverrides.Service,
 	workflowService *workflows.Service,
 	guardrailService *guardrails.Service,
 	budgetService *budget.Service,
@@ -1271,6 +1287,7 @@ func initAdmin(
 		admin.WithVirtualModels(virtualModelService),
 		admin.WithFailover(failoverService),
 		admin.WithPricingOverrides(pricingOverrideService),
+		admin.WithThinkingOverrides(thinkingOverrideService),
 		admin.WithWorkflows(workflowService),
 		admin.WithGuardrailService(guardrailService),
 		admin.WithBudgets(budgetService),

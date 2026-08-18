@@ -7,6 +7,7 @@ import (
 
 	"github.com/enterpilot/gomodel/internal/core"
 	"github.com/enterpilot/gomodel/internal/streaming"
+	"github.com/enterpilot/gomodel/internal/thinkingoverrides"
 	"github.com/enterpilot/gomodel/internal/usage"
 )
 
@@ -15,6 +16,13 @@ import (
 // handler layer stays the authoritative check.
 type RouteGate interface {
 	RouteAvailable(providerName, model string) bool
+}
+
+// ThinkingOverrideResolver resolves per-model thinking overrides at dispatch
+// time so translated requests can apply dashboard-configured thinking
+// settings before the request reaches a provider.
+type ThinkingOverrideResolver interface {
+	Resolve(selector string) (thinkingoverrides.Override, bool)
 }
 
 // InferenceConfig configures translated inference orchestration.
@@ -29,6 +37,7 @@ type InferenceConfig struct {
 	PricingResolver          usage.PricingResolver
 	RouteGate                RouteGate
 	GuardrailsHash           string
+	ThinkingOverrides        ThinkingOverrideResolver
 }
 
 // InferenceOrchestrator owns translated inference workflow resolution, request
@@ -44,6 +53,7 @@ type InferenceOrchestrator struct {
 	pricingResolver          usage.PricingResolver
 	routeGate                RouteGate
 	guardrailsHash           string
+	thinkingOverrides        ThinkingOverrideResolver
 }
 
 // NewInferenceOrchestrator creates a translated inference orchestrator.
@@ -59,6 +69,7 @@ func NewInferenceOrchestrator(cfg InferenceConfig) *InferenceOrchestrator {
 		pricingResolver:          cfg.PricingResolver,
 		routeGate:                cfg.RouteGate,
 		guardrailsHash:           cfg.GuardrailsHash,
+		thinkingOverrides:        cfg.ThinkingOverrides,
 	}
 }
 

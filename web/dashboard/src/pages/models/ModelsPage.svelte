@@ -33,6 +33,7 @@
     void auth.refreshTick;
     if (router.page !== PAGE) return;
     virtualModels.fetchVirtualModels();
+    virtualModels.fetchThinkingOverrides();
     pricingOverrides.fetchModelPricingOverrides();
     failover.fetchFailoverRules();
     rateLimits.fetchRateLimitsPage();

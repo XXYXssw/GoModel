@@ -15,6 +15,7 @@ import {
   buildModelTogglePayload,
   buildVirtualModelSavePayload,
   computeRenderStep,
+  defaultThinkingForm,
   defaultVirtualModelForm,
   filterDisplayModels,
   findModelOverrideView,
@@ -30,6 +31,7 @@ import {
   rowIsManaged,
   splitVirtualModelViews,
   strategyOptions,
+  thinkingFormVisibleForSource,
   vmFormHasPrimaryTarget,
   vmFormShowStrategy,
   vmFormShowWeights,
@@ -68,6 +70,9 @@ class VirtualModelsStore {
   vmFormOriginalSource = $state("");
   vmFormManaged = $state(false);
   vmForm = $state(defaultVirtualModelForm());
+  // Per-model thinking override settings (dashboard "思考覆盖" section).
+  thinkingOverrides = $state([]);
+  vmFormThinking = $state(defaultThinkingForm());
 
   // ---- Display rows (derived from the shared model inventory) ----
 
@@ -555,6 +560,57 @@ class VirtualModelsStore {
     this.vmFormOriginalSource = "";
     this.vmFormManaged = false;
     this.vmForm = defaultVirtualModelForm();
+    this.vmFormThinking = defaultThinkingForm();
+  }
+
+  // fetchThinkingOverrides loads the per-model thinking override list used by
+  // the model settings editor. A 503 means the feature is unavailable; the
+  // editor simply hides its thinking section.
+  async fetchThinkingOverrides() {
+    try {
+      const result = await getJSON("/admin/model-thinking-overrides", { label: "thinking overrides" });
+      if (result.status === 503) {
+        this.thinkingOverrides = [];
+        return;
+      }
+      if (result.stale) {
+        return;
+      }
+      this.thinkingOverrides = result.ok ? result.data || [] : [];
+    } catch (e) {
+      console.error("Failed to fetch thinking overrides:", e);
+      this.thinkingOverrides = [];
+    }
+  }
+
+  thinkingOverrideFor(selector) {
+    if (!selector || !Array.isArray(this.thinkingOverrides)) {
+      return null;
+    }
+    const trimmed = String(selector).trim();
+    return (
+      this.thinkingOverrides.find((o) => o && o.selector === trimmed) ||
+      this.thinkingOverrides.find((o) => o && o.model === trimmed) ||
+      null
+    );
+  }
+
+  vmFormThinkingVisible() {
+    return (
+      !this.vmFormManaged &&
+      thinkingFormVisibleForSource(this.vmForm.source || this.vmFormOriginalSource)
+    );
+  }
+
+  loadThinkingIntoForm(selector) {
+    const existing = this.thinkingOverrideFor(selector);
+    this.vmFormThinking = existing
+      ? {
+          mode: existing.mode || "native",
+          thinking: existing.thinking !== false,
+          effort: existing.effort || "medium",
+        }
+      : defaultThinkingForm();
   }
 
   closeVirtualModelForm() {
@@ -653,6 +709,7 @@ class VirtualModelsStore {
       slowdown: override && override.slowdown != null ? override.slowdown : "",
       enabled: overrideEnabled,
     };
+    this.loadThinkingIntoForm(selector);
   }
 
   openGlobalModelOverrideEdit() {
@@ -682,6 +739,7 @@ class VirtualModelsStore {
       slowdown: override && override.slowdown != null ? override.slowdown : "",
       enabled: override ? override.enabled !== false : defaultEnabled,
     };
+    this.loadThinkingIntoForm(selector);
   }
 
   openProviderOverrideEdit(group) {
@@ -812,6 +870,11 @@ class VirtualModelsStore {
       const policyPruned = !isRedirect && result.status === 204;
       this.virtualModelsAvailable = true;
 
+      const thinkingSelector = String(this.vmForm.source || this.vmFormOriginalSource || "").trim();
+      if (thinkingFormVisibleForSource(thinkingSelector)) {
+        await this.saveThinkingOverride(thinkingSelector);
+      }
+
       this.closeVirtualModelForm();
       flash.success(
         isRedirect
@@ -826,6 +889,36 @@ class VirtualModelsStore {
       this.vmFormError = "Failed to save virtual model.";
     } finally {
       this.vmSubmitting = false;
+    }
+  }
+
+  async saveThinkingOverride(selector) {
+    const mode = String(this.vmFormThinking.mode || "native").trim();
+    const hadOverride = Boolean(this.thinkingOverrideFor(selector));
+    try {
+      if (mode === "native") {
+        if (hadOverride) {
+          await sendJSON("/admin/model-thinking-overrides", "DELETE", { selector }, {
+            label: "thinking override",
+          });
+        }
+      } else {
+        await sendJSON(
+          "/admin/model-thinking-overrides",
+          "PUT",
+          {
+            selector,
+            mode,
+            thinking: this.vmFormThinking.thinking !== false,
+            effort: String(this.vmFormThinking.effort || "medium").trim(),
+          },
+          { label: "thinking override" },
+        );
+      }
+      void this.fetchThinkingOverrides();
+    } catch (e) {
+      console.error("Failed to save thinking override:", e);
+      flash.error("Model saved, but the thinking override could not be saved.");
     }
   }
 
@@ -875,6 +968,18 @@ class VirtualModelsStore {
 
       this.closeVirtualModelForm();
       flash.success("Virtual model removed.");
+
+      const delSelector = String(this.vmForm.source || this.vmFormOriginalSource || "").trim();
+      if (thinkingFormVisibleForSource(delSelector) && this.thinkingOverrideFor(delSelector)) {
+        try {
+          await sendJSON("/admin/model-thinking-overrides", "DELETE", { selector: delSelector }, {
+            label: "thinking override",
+          });
+          void this.fetchThinkingOverrides();
+        } catch (e) {
+          console.error("Failed to delete thinking override:", e);
+        }
+      }
       void Promise.all([modelsStore.fetchModels(), this.fetchVirtualModels()]);
     } catch (e) {
       console.error("Failed to delete virtual model:", e);
