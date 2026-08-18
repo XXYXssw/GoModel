@@ -2,6 +2,7 @@ package providers
 
 import (
 	"fmt"
+	"net/url"
 	"slices"
 	"strings"
 )
@@ -27,6 +28,9 @@ func credentialFieldError(field, format string, args ...any) *CredentialFieldErr
 // silently unroutable.
 func validateCredential(cred ManagedProviderCredential, schema CredentialSchema) error {
 	if err := validateCredentialAPIKeys(cred, schema); err != nil {
+		return err
+	}
+	if err := validateCredentialProxy(cred, schema); err != nil {
 		return err
 	}
 	// Google's project/service-account auth replaces the "one required field
@@ -94,6 +98,31 @@ func validateCredentialAPIKeys(cred ManagedProviderCredential, schema Credential
 		return credentialFieldError(CredentialFieldAPIKeys, "at least one API key is required for provider type %q", cred.Type)
 	}
 	return nil
+}
+
+// validateCredentialProxy rejects a proxy field that cannot be a proxy: it
+// must parse as an absolute http(s)/socks5 URL when set. Empty (the default)
+// means no proxy and is always fine.
+func validateCredentialProxy(cred ManagedProviderCredential, schema CredentialSchema) error {
+	if _, accepted := schema.Field(CredentialFieldProxy); !accepted {
+		return nil
+	}
+	proxy := strings.TrimSpace(cred.Proxy)
+	if proxy == "" {
+		return nil
+	}
+	u, err := url.Parse(proxy)
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return credentialFieldError(CredentialFieldProxy,
+			"proxy must be an absolute URL such as http://127.0.0.1:7890 (got %q)", proxy)
+	}
+	switch strings.ToLower(u.Scheme) {
+	case "http", "https", "socks5", "socks5h":
+		return nil
+	default:
+		return credentialFieldError(CredentialFieldProxy,
+			"proxy scheme %q is not supported (use http, https, socks5)", u.Scheme)
+	}
 }
 
 // backendVertex is the backend value that routes an adapter at Vertex.

@@ -57,6 +57,7 @@ func New(providerCfg providers.ProviderConfig, opts providers.ProviderOptions) c
 		Retry:          opts.Resilience.Retry,
 		Hooks:          opts.Hooks,
 		CircuitBreaker: opts.Resilience.CircuitBreaker,
+		ProxyURL:       opts.Proxy,
 	}
 	p.nativeClient = llmclient.New(nativeCfg, p.setNativeHeaders)
 	p.SetBaseURL(providers.ResolveBaseURL(providerCfg.BaseURL, defaultBaseURL))

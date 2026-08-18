@@ -52,6 +52,9 @@ type ManagedProviderCredential struct {
 	// "native" forwards to the upstream /responses endpoint, "convert"
 	// translates to /chat/completions. Empty keeps the provider type default.
 	ResponsesMode            string
+	// Proxy optionally routes this provider's upstream requests through an
+	// HTTP(S) proxy (e.g. "http://127.0.0.1:7890"). Empty means no proxy.
+	Proxy                    string
 	VertexProject            string
 	VertexLocation           string
 	ServiceAccountFile       string
@@ -85,6 +88,7 @@ func (m ManagedProviderCredential) toRawProviderConfig() config.RawProviderConfi
 		AuthType:                 m.AuthType,
 		APIMode:                  m.APIMode,
 		ResponsesMode:            m.ResponsesMode,
+		Proxy:                    m.Proxy,
 		VertexProject:            m.VertexProject,
 		VertexLocation:           m.VertexLocation,
 		ServiceAccountFile:       m.ServiceAccountFile,

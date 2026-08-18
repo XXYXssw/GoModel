@@ -14,6 +14,7 @@ const (
 	CredentialFieldAuthType                 = "auth_type"
 	CredentialFieldAPIMode                  = "api_mode"
 	CredentialFieldResponsesMode            = "responses_mode"
+	CredentialFieldProxy                    = "proxy"
 	CredentialFieldVertexProject            = "vertex_project"
 	CredentialFieldVertexLocation           = "vertex_location"
 	CredentialFieldServiceAccountFile       = "service_account_file"
@@ -129,6 +130,10 @@ func defaultCredentialFields(spec DiscoveryConfig) []CredentialField {
 		// keep working and simply mean the provider default.
 		Options: []string{ResponsesModeNative, ResponsesModeConvert},
 	})
+	fields = append(fields, CredentialField{
+		Name: CredentialFieldProxy,
+		// Free-form upstream HTTP(S) proxy URL; empty means "no proxy".
+	})
 	return fields
 }
 
@@ -155,6 +160,8 @@ func credentialFieldValue(cred ManagedProviderCredential, name string) string {
 		return cred.APIMode
 	case CredentialFieldResponsesMode:
 		return cred.ResponsesMode
+	case CredentialFieldProxy:
+		return cred.Proxy
 	case CredentialFieldVertexProject:
 		return cred.VertexProject
 	case CredentialFieldVertexLocation:

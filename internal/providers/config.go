@@ -49,6 +49,9 @@ type ProviderConfig struct {
 	// handling: "native" forwards /v1/responses upstream, "convert" translates
 	// to /chat/completions. Empty keeps the type default.
 	ResponsesMode            string
+	// Proxy optionally routes this provider's upstream requests through an
+	// HTTP(S) proxy (e.g. "http://127.0.0.1:7890"). Empty means no proxy.
+	Proxy                    string
 	VertexProject            string
 	VertexLocation           string
 	ServiceAccountFile       string
@@ -158,6 +161,7 @@ const (
 	providerEnvFieldAuthType
 	providerEnvFieldAPIMode
 	providerEnvFieldResponsesMode
+	providerEnvFieldProxy
 	providerEnvFieldVertexProject
 	providerEnvFieldVertexLocation
 	providerEnvFieldServiceAccountFile
@@ -191,6 +195,9 @@ type providerEnvValues struct {
 	// handling: "native" forwards /v1/responses upstream, "convert" translates
 	// to /chat/completions. Empty keeps the type default.
 	ResponsesMode            string
+	// Proxy optionally routes this provider's upstream requests through an
+	// HTTP(S) proxy (e.g. "http://127.0.0.1:7890"). Empty means no proxy.
+	Proxy                    string
 	VertexProject            string
 	VertexLocation           string
 	ServiceAccountFile       string
@@ -261,6 +268,7 @@ func (v providerEnvValues) empty() bool {
 		strings.TrimSpace(v.AuthType) == "" &&
 		strings.TrimSpace(v.APIMode) == "" &&
 		strings.TrimSpace(v.ResponsesMode) == "" &&
+		strings.TrimSpace(v.Proxy) == "" &&
 		strings.TrimSpace(v.VertexProject) == "" &&
 		strings.TrimSpace(v.VertexLocation) == "" &&
 		strings.TrimSpace(v.ServiceAccountFile) == "" &&
@@ -326,6 +334,8 @@ func collectProviderEnvValues(prefix string, spec DiscoveryConfig, environ []str
 			values.APIMode = value
 		case providerEnvFieldResponsesMode:
 			values.ResponsesMode = value
+		case providerEnvFieldProxy:
+			values.Proxy = value
 		case providerEnvFieldVertexProject:
 			values.VertexProject = value
 		case providerEnvFieldVertexLocation:
@@ -398,6 +408,7 @@ func parseProviderEnvKey(prefix, key string, spec DiscoveryConfig) (string, prov
 		{name: "BASE_URL", field: providerEnvFieldBaseURL},
 		{name: "AUTH_TYPE", field: providerEnvFieldAuthType},
 		{name: "RESPONSES_MODE", field: providerEnvFieldResponsesMode},
+		{name: "PROXY", field: providerEnvFieldProxy},
 		{name: "API_MODE", field: providerEnvFieldAPIMode},
 		{name: "BACKEND", field: providerEnvFieldBackend},
 		{name: "API_KEY", field: providerEnvFieldAPIKey},
@@ -562,6 +573,7 @@ func (v providerEnvValues) rawConfig(providerType string, spec DiscoveryConfig) 
 		AuthType:                 v.AuthType,
 		APIMode:                  v.APIMode,
 		ResponsesMode:            v.ResponsesMode,
+		Proxy:                    v.Proxy,
 		VertexProject:            v.VertexProject,
 		VertexLocation:           v.VertexLocation,
 		ServiceAccountFile:       v.ServiceAccountFile,
@@ -901,6 +913,7 @@ func buildProviderConfig(raw config.RawProviderConfig, global config.ResilienceC
 		AuthType:                 raw.AuthType,
 		APIMode:                  raw.APIMode,
 		ResponsesMode:            raw.ResponsesMode,
+		Proxy:                    raw.Proxy,
 		VertexProject:            raw.VertexProject,
 		VertexLocation:           raw.VertexLocation,
 		ServiceAccountFile:       raw.ServiceAccountFile,

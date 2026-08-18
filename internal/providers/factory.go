@@ -23,6 +23,9 @@ type ProviderOptions struct {
 	// factory fills it from ProviderConfig so constructors do not each need
 	// to thread cfg.ResponsesMode through.
 	ResponsesMode string
+	// Proxy is the resolved per-provider proxy URL; empty means no proxy.
+	// Constructors copy it into their llmclient.Config.ProxyURL.
+	Proxy string
 	// Keys carries every API key configured for this provider instance. It is
 	// nil for keyless providers and for constructors invoked outside the
 	// factory; use the Keyring method rather than reading it directly.
@@ -144,6 +147,7 @@ func (f *ProviderFactory) Create(cfg ProviderConfig) (core.Provider, error) {
 		Models:        cfg.Models,
 		Resilience:    cfg.Resilience,
 		ResponsesMode: cfg.ResponsesMode,
+		Proxy:         cfg.Proxy,
 		Keys:          NewKeyringWithSessionStickiness(cfg.SessionStickyKeys, cfg.APIKeys...),
 	}
 

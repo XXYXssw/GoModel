@@ -27,6 +27,7 @@ var credentialSQLSchema = []string{
 		auth_type TEXT NOT NULL DEFAULT '',
 		api_mode TEXT NOT NULL DEFAULT '',
 		responses_mode TEXT NOT NULL DEFAULT '',
+		proxy TEXT NOT NULL DEFAULT '',
 		vertex_project TEXT NOT NULL DEFAULT '',
 		vertex_location TEXT NOT NULL DEFAULT '',
 		service_account_file TEXT NOT NULL DEFAULT '',
@@ -41,7 +42,7 @@ var credentialSQLSchema = []string{
 	`CREATE INDEX IF NOT EXISTS idx_provider_credentials_enabled ON provider_credentials(enabled)`,
 }
 
-const selectCredentialColumns = `name, type, api_keys, base_url, api_version, backend, auth_type, api_mode, responses_mode, ` +
+const selectCredentialColumns = `name, type, api_keys, base_url, api_version, backend, auth_type, api_mode, responses_mode, proxy, ` +
 	`vertex_project, vertex_location, service_account_file, service_account_json, ` +
 	`service_account_json_base64, gcp_scope, models, session_sticky_keys, enabled, created_at, updated_at`
 
@@ -57,6 +58,7 @@ func NewSQLCredentialStore(ctx context.Context, db sqlx.DB) (*SQLCredentialStore
 	if err := sqlx.AddColumns(ctx, db,
 		`ALTER TABLE provider_credentials ADD COLUMN session_sticky_keys `+sqlx.TypeBool+` NOT NULL DEFAULT TRUE`,
 		`ALTER TABLE provider_credentials ADD COLUMN responses_mode TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE provider_credentials ADD COLUMN proxy TEXT NOT NULL DEFAULT ''`,
 	); err != nil {
 		return nil, fmt.Errorf("migrate provider_credentials: %w", err)
 	}
@@ -105,11 +107,11 @@ func (s *SQLCredentialStore) Upsert(ctx context.Context, cred ManagedProviderCre
 	}
 	_, err = s.db.Exec(ctx, `
 		INSERT INTO provider_credentials (
-			name, type, api_keys, base_url, api_version, backend, auth_type, api_mode, responses_mode,
+			name, type, api_keys, base_url, api_version, backend, auth_type, api_mode, responses_mode, proxy,
 			vertex_project, vertex_location, service_account_file, service_account_json,
 			service_account_json_base64, gcp_scope, models, session_sticky_keys, enabled, created_at, updated_at
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(name) DO UPDATE SET
 			type = excluded.type,
 			api_keys = excluded.api_keys,
@@ -119,6 +121,7 @@ func (s *SQLCredentialStore) Upsert(ctx context.Context, cred ManagedProviderCre
 			auth_type = excluded.auth_type,
 			api_mode = excluded.api_mode,
 			responses_mode = excluded.responses_mode,
+			proxy = excluded.proxy,
 			vertex_project = excluded.vertex_project,
 			vertex_location = excluded.vertex_location,
 			service_account_file = excluded.service_account_file,
@@ -139,6 +142,7 @@ func (s *SQLCredentialStore) Upsert(ctx context.Context, cred ManagedProviderCre
 		cred.AuthType,
 		cred.APIMode,
 		cred.ResponsesMode,
+		cred.Proxy,
 		cred.VertexProject,
 		cred.VertexLocation,
 		cred.ServiceAccountFile,
@@ -188,6 +192,7 @@ func scanSQLCredential(scanner sqlx.Row) (ManagedProviderCredential, error) {
 		&cred.AuthType,
 		&cred.APIMode,
 		&cred.ResponsesMode,
+		&cred.Proxy,
 		&cred.VertexProject,
 		&cred.VertexLocation,
 		&cred.ServiceAccountFile,

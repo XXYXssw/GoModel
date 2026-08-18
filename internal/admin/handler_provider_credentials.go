@@ -48,6 +48,7 @@ type upsertProviderCredentialRequest struct {
 	AuthType                 string   `json:"auth_type,omitempty"`
 	APIMode                  string   `json:"api_mode,omitempty"`
 	ResponsesMode            string   `json:"responses_mode,omitempty"`
+	Proxy                    string   `json:"proxy,omitempty"`
 	VertexProject            string   `json:"vertex_project,omitempty"`
 	VertexLocation           string   `json:"vertex_location,omitempty"`
 	ServiceAccountFile       string   `json:"service_account_file,omitempty"`
@@ -96,6 +97,7 @@ type providerCredentialViewResponse struct {
 	AuthType                 string     `json:"auth_type,omitempty"`
 	APIMode                  string     `json:"api_mode,omitempty"`
 	ResponsesMode            string     `json:"responses_mode,omitempty"`
+	Proxy                    string     `json:"proxy,omitempty"`
 	VertexProject            string     `json:"vertex_project,omitempty"`
 	VertexLocation           string     `json:"vertex_location,omitempty"`
 	ServiceAccountFile       string     `json:"service_account_file,omitempty"`
@@ -324,6 +326,7 @@ func (h *Handler) buildProviderCredentialUpsert(ctx context.Context, name string
 		AuthType:                 strings.TrimSpace(req.AuthType),
 		APIMode:                  strings.TrimSpace(req.APIMode),
 		ResponsesMode:            strings.TrimSpace(req.ResponsesMode),
+		Proxy:                    strings.TrimSpace(req.Proxy),
 		VertexProject:            strings.TrimSpace(req.VertexProject),
 		VertexLocation:           strings.TrimSpace(req.VertexLocation),
 		ServiceAccountFile:       strings.TrimSpace(req.ServiceAccountFile),
@@ -414,6 +417,7 @@ func (h *Handler) providerCredentialView(cred providers.ManagedProviderCredentia
 		AuthType:           cred.AuthType,
 		APIMode:            cred.APIMode,
 		ResponsesMode:      cred.ResponsesMode,
+		Proxy:              cred.Proxy,
 		VertexProject:      cred.VertexProject,
 		VertexLocation:     cred.VertexLocation,
 		ServiceAccountFile: cred.ServiceAccountFile,

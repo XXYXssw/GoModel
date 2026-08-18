@@ -65,6 +65,7 @@ func New(providerCfg providers.ProviderConfig, opts providers.ProviderOptions) c
 		Retry:          opts.Resilience.Retry,
 		Hooks:          opts.Hooks,
 		CircuitBreaker: opts.Resilience.CircuitBreaker,
+		ProxyURL:       opts.Proxy,
 	}
 	p.client = llmclient.New(clientCfg, p.setHeaders)
 	return p

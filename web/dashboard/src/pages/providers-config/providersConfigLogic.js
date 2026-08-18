@@ -66,6 +66,12 @@ export const PROVIDER_CREDENTIAL_FIELDS = {
     control: "select",
     hint: t("providers.responsesModeHint"),
   },
+  proxy: {
+    label: t("providers.proxy"),
+    control: "text",
+    placeholder: "http://127.0.0.1:7890",
+    hint: t("providers.proxyHint"),
+  },
   vertex_project: {
     label: "Vertex Project",
     control: "text",
@@ -138,6 +144,7 @@ export function defaultProviderCredentialForm() {
     auth_type: "",
     api_mode: "",
     responses_mode: "",
+    proxy: "",
     vertex_project: "",
     vertex_location: "",
     service_account_file: "",
@@ -345,6 +352,7 @@ export function providerCredentialRowToForm(row) {
     auth_type: String((row && row.auth_type) || ""),
     api_mode: String((row && row.api_mode) || ""),
     responses_mode: String((row && row.responses_mode) || ""),
+    proxy: String((row && row.proxy) || ""),
     vertex_project: String((row && row.vertex_project) || ""),
     vertex_location: String((row && row.vertex_location) || ""),
     service_account_file: String((row && row.service_account_file) || ""),

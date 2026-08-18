@@ -868,5 +868,7 @@ export default {
   "pricing.source": "Source",
   "pricing.noFields": "No pricing fields set.",
   "providers.responsesMode": "Responses Mode",
+  "providers.proxy": "Proxy",
+  "providers.proxyHint": "Whether this provider's outbound requests go through a proxy. Empty = no proxy (default). Set an address such as http://127.0.0.1:7890 to route all of this provider's requests through it.",
   "providers.responsesModeHint": "How /v1/responses requests reach this provider. \"Native\" forwards them to the upstream /responses endpoint (for providers that support both chat and responses). \"Convert\" translates them to /chat/completions (for providers that only support chat completions). Empty keeps the provider type default.",
 };

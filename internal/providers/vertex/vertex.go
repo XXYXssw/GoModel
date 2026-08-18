@@ -87,6 +87,7 @@ func newProvider(providerCfg providers.ProviderConfig, opts providers.ProviderOp
 		Retry:          opts.Resilience.Retry,
 		Hooks:          opts.Hooks,
 		CircuitBreaker: opts.Resilience.CircuitBreaker,
+		ProxyURL:       opts.Proxy,
 	}
 	if authClient != nil {
 		p.nativeClient = llmclient.NewWithHTTPClient(authClient, nativeCfg, p.setHeaders)

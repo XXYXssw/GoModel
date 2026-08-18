@@ -4,6 +4,7 @@ package httpclient
 import (
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"sync/atomic"
@@ -35,6 +36,12 @@ type ClientConfig struct {
 
 	// ResponseHeaderTimeout specifies the amount of time to wait for a server's response headers
 	ResponseHeaderTimeout time.Duration
+
+	// ProxyURL optionally routes requests through an upstream HTTP(S) proxy
+	// (e.g. "http://127.0.0.1:7890"). Empty means "no proxy" for a non-nil
+	// config; NewDefaultHTTPClient (nil config) keeps Go's standard
+	// HTTP_PROXY/HTTPS_PROXY environment handling.
+	ProxyURL string
 }
 
 // getEnvDuration reads a duration from an environment variable, returning the default if not set or invalid.
@@ -109,8 +116,15 @@ func NewHTTPClient(config *ClientConfig) *http.Client {
 		config = &cfg
 	}
 
+	proxyFunc := http.ProxyFromEnvironment
+	if config.ProxyURL != "" {
+		if u, err := url.Parse(config.ProxyURL); err == nil {
+			proxyFunc = http.ProxyURL(u)
+		}
+	}
+
 	transport := &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
+		Proxy: proxyFunc,
 		DialContext: (&net.Dialer{
 			Timeout:   config.DialTimeout,
 			KeepAlive: config.KeepAlive,

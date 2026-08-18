@@ -868,5 +868,7 @@ export default {
   "pricing.source": "来源",
   "pricing.noFields": "尚未设置定价字段。",
   "providers.responsesMode": "Responses 模式",
+  "providers.proxy": "代理",
+  "providers.proxyHint": "该供应商的出站请求是否走代理。留空 = 不走代理（默认）。填写代理地址（如 http://127.0.0.1:7890）后，该供应商的所有请求都通过该代理转发。",
   "providers.responsesModeHint": "该供应商如何处理 /v1/responses 请求。“原生”直接转发到上游 /responses 端点（适用于同时支持 chat 与 responses 的供应商）；“转换”将其转换为 /chat/completions（适用于只支持 chat completions 的供应商）。留空沿用供应商类型默认。",
 };

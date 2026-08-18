@@ -111,6 +111,7 @@ func NewCompatibleProvider(apiKey string, opts providers.ProviderOptions, cfg Co
 		Retry:          opts.Resilience.Retry,
 		Hooks:          opts.Hooks,
 		CircuitBreaker: opts.Resilience.CircuitBreaker,
+		ProxyURL:       opts.Proxy,
 	}
 	// Resolved per request, not captured: with several keys configured this is
 	// what spreads successive calls across them.

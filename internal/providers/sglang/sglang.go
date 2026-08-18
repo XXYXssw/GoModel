@@ -53,6 +53,7 @@ func New(cfg providers.ProviderConfig, opts providers.ProviderOptions) core.Prov
 			Retry:          opts.Resilience.Retry,
 			Hooks:          opts.Hooks,
 			CircuitBreaker: opts.Resilience.CircuitBreaker,
+			ProxyURL:       opts.Proxy,
 		}, func(req *http.Request) {
 			setHeaders(req, keys.NextForContext(req.Context()))
 		}),

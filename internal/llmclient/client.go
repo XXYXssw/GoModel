@@ -87,6 +87,10 @@ type Config struct {
 	// CircuitBreaker configures the circuit breaker that prevents cascading failures by
 	// stopping requests to an unhealthy provider until it recovers.
 	CircuitBreaker config.CircuitBreakerConfig
+	// ProxyURL optionally routes this provider's upstream requests through an
+	// HTTP(S) proxy (e.g. "http://127.0.0.1:7890"). Empty means the provider
+	// does not use a proxy (the default).
+	ProxyURL string
 	// Hooks provides optional observability callbacks invoked on request start and end.
 	Hooks Hooks
 }
@@ -115,8 +119,12 @@ type Client struct {
 
 // New creates a new LLM client with the given configuration
 func New(cfg Config, headerSetter HeaderSetter) *Client {
+	httpClient := httpclient.NewDefaultHTTPClient()
+	if cfg.ProxyURL != "" {
+		httpClient = httpclient.NewHTTPClient(&httpclient.ClientConfig{ProxyURL: cfg.ProxyURL})
+	}
 	c := &Client{
-		httpClient:   httpclient.NewDefaultHTTPClient(),
+		httpClient:   httpClient,
 		config:       cfg,
 		headerSetter: headerSetter,
 	}

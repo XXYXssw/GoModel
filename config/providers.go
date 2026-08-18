@@ -24,6 +24,9 @@ type RawProviderConfig struct {
 	// translates them to /chat/completions. Empty means the provider type's
 	// default.
 	ResponsesMode string `yaml:"responses_mode"`
+	// Proxy optionally routes this provider's upstream requests through an
+	// HTTP(S) proxy (e.g. "http://127.0.0.1:7890"). Empty means no proxy.
+	Proxy string `yaml:"proxy"`
 	VertexProject            string `yaml:"vertex_project"`
 	VertexLocation           string `yaml:"vertex_location"`
 	ServiceAccountFile       string `yaml:"service_account_file"`

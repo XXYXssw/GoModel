@@ -86,6 +86,7 @@ func newProvider(apiKey, baseURL string, controls ControlConfig, opts providers.
 		Retry:          opts.Resilience.Retry,
 		Hooks:          opts.Hooks,
 		CircuitBreaker: opts.Resilience.CircuitBreaker,
+		ProxyURL:       opts.Proxy,
 	}
 	p.compatible = openai.NewCompatibleProvider(apiKey, opts, compatibleCfg)
 	setRootHeaders := func(req *http.Request) {
