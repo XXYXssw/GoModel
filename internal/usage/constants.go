@@ -4,7 +4,8 @@ package usage
 const (
 	// BatchFlushThreshold is the number of entries that triggers an immediate flush.
 	// When the batch reaches this size, it's written to storage without waiting for the timer.
-	BatchFlushThreshold = 100
+	// Reduced from 100 to flush more aggressively, keeping in-flight memory low.
+	BatchFlushThreshold = 50
 )
 
 // Context keys for storing usage data in request context.

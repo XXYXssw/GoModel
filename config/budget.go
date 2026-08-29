@@ -15,8 +15,8 @@ import (
 // BudgetsConfig holds per-user-path spend limits.
 type BudgetsConfig struct {
 	// Enabled controls whether budget checks are active.
-	// Default: true. Requires usage tracking because spend limits are evaluated
-	// from usage cost records.
+	// Default: false. Disabled by default to reduce baseline memory usage.
+	// Requires usage tracking because spend limits are evaluated from usage cost records.
 	Enabled bool `yaml:"enabled" env:"BUDGETS_ENABLED"`
 
 	// UserPaths declares budget limits by tracked user path.

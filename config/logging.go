@@ -37,11 +37,11 @@ type LogConfig struct {
 	LogHeaders bool `yaml:"log_headers" env:"LOGGING_LOG_HEADERS"`
 
 	// BufferSize is the number of log entries to buffer before flushing
-	// Default: 1000
+	// Default: 100
 	BufferSize int `yaml:"buffer_size" env:"LOGGING_BUFFER_SIZE"`
 
 	// FlushInterval is how often to flush buffered logs (in seconds)
-	// Default: 5
+	// Default: 3
 	FlushInterval int `yaml:"flush_interval" env:"LOGGING_FLUSH_INTERVAL"`
 
 	// RetentionDays is how long to keep logs (0 = forever)

@@ -17,11 +17,11 @@ type UsageConfig struct {
 	PricingRecalculationEnabled bool `yaml:"pricing_recalculation_enabled" env:"USAGE_PRICING_RECALCULATION_ENABLED"`
 
 	// BufferSize is the number of usage entries to buffer before flushing
-	// Default: 1000
+	// Default: 100
 	BufferSize int `yaml:"buffer_size" env:"USAGE_BUFFER_SIZE"`
 
 	// FlushInterval is how often to flush buffered usage entries (in seconds)
-	// Default: 5
+	// Default: 3
 	FlushInterval int `yaml:"flush_interval" env:"USAGE_FLUSH_INTERVAL"`
 
 	// RetentionDays is how long to keep usage data (0 = forever)

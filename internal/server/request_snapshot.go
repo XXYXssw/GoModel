@@ -13,7 +13,7 @@ import (
 	"github.com/enterpilot/gomodel/internal/core"
 )
 
-const requestSnapshotInlineBodyLimit int64 = 64 * 1024
+const requestSnapshotInlineBodyLimit int64 = 32 * 1024
 
 // RequestSnapshotCapture captures immutable transport-level request data for
 // model-facing endpoints. Known-small JSON bodies are captured once for the
