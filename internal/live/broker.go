@@ -29,7 +29,7 @@ const (
 )
 
 const (
-	defaultBufferSize       = 10000
+	defaultBufferSize       = 1001
 	defaultReplayLimit      = 1000
 	defaultSubscriberBuffer = 256
 
@@ -37,7 +37,7 @@ const (
 	// ring and active snapshots. Retained copies already exclude request and
 	// response bodies; this bounds the leftovers (headers, error messages) so
 	// the ring's worst case stays capacity × this cap regardless of traffic.
-	maxRetainedEventBytes = 64 * 1024
+	maxRetainedEventBytes = 16 * 1024
 )
 
 // Config controls the in-process live event broker.
