@@ -110,9 +110,9 @@ func (r *ModelRegistry) LoadFromCache(ctx context.Context) (int, error) {
 	}
 	newModels = rebuildGlobalModelMap(newModelsByProvider, providerOrderNames)
 
-	// Load model list data from cache if available
+	// Load model list data from cache if available and model data enrichment is enabled
 	var list *modeldata.ModelList
-	if len(modelCache.ModelListData) > 0 {
+	if r.modelDataEnabled && len(modelCache.ModelListData) > 0 {
 		parsed, parseErr := modeldata.Parse(modelCache.ModelListData)
 		if parseErr != nil {
 			slog.Warn("failed to parse cached model list data", "error", parseErr)

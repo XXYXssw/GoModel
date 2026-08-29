@@ -100,7 +100,7 @@ func Init(ctx context.Context, result *config.LoadResult, factory *ProviderFacto
 		return nil, fmt.Errorf("failed to initialize cache: %w", err)
 	}
 
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(result.Config.Cache.Model.ModelList.URL != "")
 	registry.SetCache(modelCache)
 	registry.SetConfiguredProviderModelsMode(result.Config.Models.ConfiguredProviderModelsMode)
 

@@ -41,8 +41,9 @@ type ModelRegistry struct {
 	initMu           sync.Mutex           // protects initialized flag
 	refreshCh        chan struct{}        // serializes provider/model-list refresh cycles
 	refreshOnce      sync.Once            // initializes refreshCh for zero-value safety
-	modelList        *modeldata.ModelList // parsed model list (nil = not loaded)
-	modelListRaw     json.RawMessage      // raw bytes for cache persistence
+	modelList        *modeldata.ModelList // parsed model list (nil = not loaded, or model data enrichment disabled)
+	modelListRaw     json.RawMessage      // raw bytes for cache persistence; nil when model data enrichment is disabled
+	modelDataEnabled bool                 // false when MODEL_LIST_URL is empty; skips load/parse/enrich entirely
 	// configMetadataOverrides holds operator-supplied metadata keyed by provider
 	// instance name -> raw model ID. Applied after remote-registry enrichment as
 	// a higher-priority layer. nil if no overrides declared.
@@ -83,7 +84,7 @@ func (s metadataEnrichmentStats) slogAttrs() []any {
 }
 
 // NewModelRegistry creates a new model registry
-func NewModelRegistry() *ModelRegistry {
+func NewModelRegistry(modelDataEnabled bool) *ModelRegistry {
 	return &ModelRegistry{
 		models:                       make(map[string]*ModelInfo),
 		modelsByProvider:             make(map[string]map[string]*ModelInfo),
@@ -92,6 +93,7 @@ func NewModelRegistry() *ModelRegistry {
 		providerRuntime:              make(map[string]providerRuntimeState),
 		refreshCh:                    make(chan struct{}, 1),
 		configuredProviderModelsMode: config.ConfiguredProviderModelsModeFallback,
+		modelDataEnabled:             modelDataEnabled,
 	}
 }
 
