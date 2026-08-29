@@ -1715,7 +1715,7 @@ func TestListModels_NilRegistry(t *testing.T) {
 }
 
 func TestListModels_WithModels(t *testing.T) {
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	mock := &handlerMockProvider{
 		models: &core.ModelsResponse{
 			Object: "list",
@@ -1761,7 +1761,7 @@ func TestListModels_WithModels(t *testing.T) {
 
 func TestListModels_EmptyRegistry(t *testing.T) {
 	// A registry with no providers initialized — ListModelsWithProvider returns nil
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 
 	h := NewHandler(nil, registry)
 	c, rec := newHandlerContext("/admin/models")
@@ -1780,7 +1780,7 @@ func TestListModels_EmptyRegistry(t *testing.T) {
 // --- ListModels with category filter tests ---
 
 func TestListModels_WithCategoryFilter(t *testing.T) {
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	mock := &handlerMockProvider{
 		models: &core.ModelsResponse{
 			Object: "list",
@@ -1866,7 +1866,7 @@ func TestListModels_WithCategoryFilter(t *testing.T) {
 }
 
 func TestListModels_InvalidCategory(t *testing.T) {
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	mock := &handlerMockProvider{
 		models: &core.ModelsResponse{
 			Object: "list",
@@ -1899,7 +1899,7 @@ func TestListModels_InvalidCategory(t *testing.T) {
 }
 
 func TestListModels_IncludesSelectorAndProviderName(t *testing.T) {
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	openAI := &handlerMockProvider{
 		models: &core.ModelsResponse{
 			Object: "list",
@@ -1972,7 +1972,7 @@ func TestListCategories_NilRegistry(t *testing.T) {
 }
 
 func TestListCategories_WithModels(t *testing.T) {
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	mock := &handlerMockProvider{
 		models: &core.ModelsResponse{
 			Object: "list",
@@ -2022,7 +2022,7 @@ func TestListCategories_WithModels(t *testing.T) {
 }
 
 func TestProviderStatus_DistinguishesProvidersWithSameTypeByName(t *testing.T) {
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	registry.RegisterProviderWithNameAndType(&handlerMockProvider{
 		models: &core.ModelsResponse{
 			Object: "list",

@@ -236,7 +236,7 @@ func TestCredentialsService_UpsertReportsAnUnresolvableRowAgainstAField(t *testi
 	})
 	store := newFakeCredentialStore()
 
-	svc, err := NewCredentialsService(ctx, factory, NewModelRegistry(), store, nil, config.ResilienceConfig{})
+	svc, err := NewCredentialsService(ctx, factory, NewModelRegistry(false), store, nil, config.ResilienceConfig{})
 	if err != nil {
 		t.Fatalf("NewCredentialsService() error = %v", err)
 	}
@@ -251,7 +251,7 @@ func TestCredentialsService_UpsertReportsAnUnresolvableRowAgainstAField(t *testi
 func TestCredentialsService_UpsertRejectsAnIncompleteRowWithoutStoringIt(t *testing.T) {
 	ctx := t.Context()
 	factory := newCredentialsTestFactory(t)
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	store := newFakeCredentialStore()
 
 	svc, err := NewCredentialsService(ctx, factory, registry, store, nil, config.ResilienceConfig{})
@@ -273,7 +273,7 @@ func TestCredentialsService_UpsertRejectsAnIncompleteRowWithoutStoringIt(t *test
 func TestCredentialsService_UpsertRejectsNameAndTypeByField(t *testing.T) {
 	ctx := t.Context()
 	factory := newCredentialsTestFactory(t)
-	svc, err := NewCredentialsService(ctx, factory, NewModelRegistry(), newFakeCredentialStore(), nil, config.ResilienceConfig{})
+	svc, err := NewCredentialsService(ctx, factory, NewModelRegistry(false), newFakeCredentialStore(), nil, config.ResilienceConfig{})
 	if err != nil {
 		t.Fatalf("NewCredentialsService() error = %v", err)
 	}
@@ -289,7 +289,7 @@ func TestCredentialsService_UpsertRejectsNameAndTypeByField(t *testing.T) {
 func TestCredentialsService_UpsertValidatesDisabledRows(t *testing.T) {
 	ctx := t.Context()
 	factory := newCredentialsTestFactory(t)
-	svc, err := NewCredentialsService(ctx, factory, NewModelRegistry(), newFakeCredentialStore(), nil, config.ResilienceConfig{})
+	svc, err := NewCredentialsService(ctx, factory, NewModelRegistry(false), newFakeCredentialStore(), nil, config.ResilienceConfig{})
 	if err != nil {
 		t.Fatalf("NewCredentialsService() error = %v", err)
 	}
@@ -307,7 +307,7 @@ func TestCredentialsService_CredentialSchemasCoverEveryRegisteredType(t *testing
 	factory.Add(Registration{Type: "a", New: func(ProviderConfig, ProviderOptions) core.Provider { return &registryMockProvider{} }})
 	factory.Add(Registration{Type: "b", New: func(ProviderConfig, ProviderOptions) core.Provider { return &registryMockProvider{} }})
 
-	svc, err := NewCredentialsService(ctx, factory, NewModelRegistry(), newFakeCredentialStore(), nil, config.ResilienceConfig{})
+	svc, err := NewCredentialsService(ctx, factory, NewModelRegistry(false), newFakeCredentialStore(), nil, config.ResilienceConfig{})
 	if err != nil {
 		t.Fatalf("NewCredentialsService() error = %v", err)
 	}

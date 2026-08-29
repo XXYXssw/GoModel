@@ -31,7 +31,7 @@ func TestDefaultProviderFactoryCredentialForms(t *testing.T) {
 			// The plain shape every API-key provider derives.
 			providerType: "openai",
 			defaultURL:   "https://api.openai.com/v1",
-			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
+			fields:       []string{"api_keys", "base_url", "responses_mode", "proxy", "session_sticky_keys", "models"},
 			required:     []string{"api_keys"},
 			absent:       []string{"api_version", "vertex_project"},
 		},
@@ -40,13 +40,13 @@ func TestDefaultProviderFactoryCredentialForms(t *testing.T) {
 			// every other type, so the dashboard can offer them immediately.
 			providerType: "openrouter",
 			defaultURL:   "https://openrouter.ai/api/v1",
-			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
+			fields:       []string{"api_keys", "base_url", "responses_mode", "proxy", "session_sticky_keys", "models"},
 			required:     []string{"api_keys"},
 		},
 		{
 			providerType: "kilo",
-			defaultURL:   "https://api.kilo.chat/v1",
-			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
+			defaultURL:   "https://api.kilo.ai/api/gateway",
+			fields:       []string{"api_keys", "base_url", "responses_mode", "proxy", "session_sticky_keys", "models"},
 			required:     []string{"api_keys"},
 		},
 	}
@@ -101,7 +101,7 @@ func TestDefaultProviderFactoryCredentialForms(t *testing.T) {
 
 // credentialPayloadFields mirrors the upsert request's credential keys.
 var credentialPayloadFields = []string{
-	"api_keys", "session_sticky_keys", "base_url", "api_version", "backend", "auth_type", "api_mode", "responses_mode",
+	"api_keys", "session_sticky_keys", "base_url", "api_version", "backend", "auth_type", "api_mode", "responses_mode", "proxy",
 	"vertex_project", "vertex_location", "service_account_file", "service_account_json",
 	"service_account_json_base64", "gcp_scope", "models",
 }

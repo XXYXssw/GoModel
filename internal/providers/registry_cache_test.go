@@ -15,7 +15,7 @@ import (
 
 func TestCacheFile(t *testing.T) {
 	t.Run("SetCache", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache("/tmp/test-cache.json")
 		registry.SetCache(localCache)
 		// Verify no panic, cache is set (private field)
@@ -25,7 +25,7 @@ func TestCacheFile(t *testing.T) {
 		tmpDir := t.TempDir()
 		cacheFile := filepath.Join(tmpDir, "models.json")
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 
@@ -102,7 +102,7 @@ func TestCacheFile(t *testing.T) {
 		}
 
 		// Create registry with providers
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 
@@ -175,7 +175,7 @@ func TestCacheFile(t *testing.T) {
 			t.Fatalf("failed to write cache file: %v", err)
 		}
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 
@@ -226,7 +226,7 @@ func TestCacheFile(t *testing.T) {
 			t.Fatalf("failed to write cache file: %v", err)
 		}
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		registry.SetCache(modelcache.NewLocalCache(cacheFile))
 		registry.SetConfiguredProviderModelsMode(config.ConfiguredProviderModelsModeAllowlist)
 		registry.SetProviderConfiguredModels("openrouter", []string{"missing-configured", "configured-model"})
@@ -273,7 +273,7 @@ func TestCacheFile(t *testing.T) {
 			t.Fatalf("failed to write cache file: %v", err)
 		}
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		registry.SetCache(modelcache.NewLocalCache(cacheFile))
 		registry.SetProviderConfiguredModels("vllm", []string{"meta-llama/Llama-3.1-8B-Instruct"})
 
@@ -312,7 +312,7 @@ func TestCacheFile(t *testing.T) {
 			t.Fatalf("failed to write cache file: %v", err)
 		}
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 
@@ -357,7 +357,7 @@ func TestCacheFile(t *testing.T) {
 			t.Fatalf("failed to write cache file: %v", err)
 		}
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 
@@ -417,7 +417,7 @@ func TestCacheFile(t *testing.T) {
 			t.Fatalf("failed to write cache file: %v", err)
 		}
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(true) // tests cached model-data metadata enrichment
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 
@@ -462,7 +462,7 @@ func TestCacheFile(t *testing.T) {
 			t.Fatalf("failed to write cache file: %v", err)
 		}
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 
@@ -523,7 +523,7 @@ func TestCacheFile(t *testing.T) {
 		_ = os.WriteFile(cacheFile, data, 0o644)
 
 		// Only register OpenAI provider
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 		openaiMock := &registryMockProvider{name: "openai"}
@@ -550,7 +550,7 @@ func TestCacheFile(t *testing.T) {
 		tmpDir := t.TempDir()
 		cacheFile := filepath.Join(tmpDir, "nonexistent.json")
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 
@@ -564,7 +564,7 @@ func TestCacheFile(t *testing.T) {
 	})
 
 	t.Run("LoadFromCacheNoCacheSet", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 
 		loaded, err := registry.LoadFromCache(context.Background())
 		if err != nil {
@@ -576,7 +576,7 @@ func TestCacheFile(t *testing.T) {
 	})
 
 	t.Run("SaveToCacheNoCacheSet", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 
 		err := registry.SaveToCache(context.Background())
 		if err != nil {
@@ -588,7 +588,7 @@ func TestCacheFile(t *testing.T) {
 		tmpDir := t.TempDir()
 		cacheFile := filepath.Join(tmpDir, "subdir", "nested", "models.json")
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 
@@ -637,7 +637,7 @@ func TestInitializeAsync(t *testing.T) {
 		_ = os.WriteFile(cacheFile, data, 0o644)
 
 		// Create registry with slow provider (delay ensures cache check happens before network fetch)
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 
@@ -669,7 +669,7 @@ func TestInitializeAsync(t *testing.T) {
 		tmpDir := t.TempDir()
 		cacheFile := filepath.Join(tmpDir, "models.json")
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 
@@ -705,7 +705,7 @@ func TestInitializeAsync(t *testing.T) {
 		tmpDir := t.TempDir()
 		cacheFile := filepath.Join(tmpDir, "models.json")
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 
@@ -751,7 +751,7 @@ func TestInitializeAsync(t *testing.T) {
 
 func TestIsInitialized(t *testing.T) {
 	t.Run("FalseBeforeInitialize", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 
 		if registry.IsInitialized() {
 			t.Error("expected IsInitialized to be false before initialization")
@@ -759,7 +759,7 @@ func TestIsInitialized(t *testing.T) {
 	})
 
 	t.Run("TrueAfterInitialize", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "test",
 			modelsResponse: &core.ModelsResponse{
@@ -798,7 +798,7 @@ func TestIsInitialized(t *testing.T) {
 		data, _ := json.Marshal(modelCache)
 		_ = os.WriteFile(cacheFile, data, 0o644)
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		localCache := modelcache.NewLocalCache(cacheFile)
 		registry.SetCache(localCache)
 		mock := &registryMockProvider{name: "test"}
@@ -814,7 +814,7 @@ func TestIsInitialized(t *testing.T) {
 }
 
 func TestRegisterProviderWithType(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	mock := &registryMockProvider{
 		name: "test",

@@ -216,7 +216,7 @@ func TestShutdownClosesLiveStreamsBeforeWaitingForServer(t *testing.T) {
 }
 
 func TestRefreshRuntime_RefreshesModelListProvidersAndRegistryCache(t *testing.T) {
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	registry.RegisterProviderWithNameAndType(&runtimeRefreshMockProvider{
 		models: &core.ModelsResponse{
 			Object: "list",
@@ -285,7 +285,7 @@ func TestRefreshRuntime_RefreshesModelListProvidersAndRegistryCache(t *testing.T
 }
 
 func TestRefreshRuntime_SkipsDisabledVirtualModels(t *testing.T) {
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	registry.RegisterProviderWithNameAndType(&runtimeRefreshMockProvider{
 		models: &core.ModelsResponse{
 			Object: "list",

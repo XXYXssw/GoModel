@@ -97,14 +97,8 @@ func buildDefaultConfig() *Config {
 			RealtimeEnabled:         true,
 			EnabledPassthroughProviders: []string{
 				"openai",
-				"anthropic",
 				"openrouter",
 				"kilo",
-				"zai",
-				"sglang",
-				"vllm",
-				"llmd",
-				"deepseek",
 			},
 		},
 		Models: ModelsConfig{

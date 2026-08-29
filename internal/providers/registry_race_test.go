@@ -52,7 +52,7 @@ func (m *slowMockProvider) Supports(model string) bool {
 }
 
 func TestRegistry_Concurrency(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	// Register a provider that takes 10ms to respond
 	registry.RegisterProvider(&slowMockProvider{delay: 10 * time.Millisecond})
 

@@ -105,7 +105,7 @@ func TestCredentialsService_BuildProviderPreservesManagedHookIdentity(t *testing
 		},
 	})
 
-	service, err := NewCredentialsService(t.Context(), factory, NewModelRegistry(), newFakeCredentialStore(), nil, config.ResilienceConfig{})
+	service, err := NewCredentialsService(t.Context(), factory, NewModelRegistry(false), newFakeCredentialStore(), nil, config.ResilienceConfig{})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +132,7 @@ func TestCredentialsService_BuildProviderPreservesManagedHookIdentity(t *testing
 func TestCredentialsService_UpsertRegistersAndRoutesImmediately(t *testing.T) {
 	ctx := t.Context()
 	factory := newCredentialsTestFactory(t)
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	store := newFakeCredentialStore()
 
 	svc, err := NewCredentialsService(ctx, factory, registry, store, nil, config.ResilienceConfig{})
@@ -178,7 +178,7 @@ func TestCredentialsService_UpsertSucceedsWhenTheProviderRejectsTheKey(t *testin
 			return &registryMockProvider{name: cfg.Type, err: errors.New("401 unauthorized")}
 		},
 	})
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	store := newFakeCredentialStore()
 
 	svc, err := NewCredentialsService(ctx, factory, registry, store, nil, config.ResilienceConfig{})
@@ -221,7 +221,7 @@ func TestCredentialsService_UpsertDoesNotHangOnUnreachableProvider(t *testing.T)
 			}
 		},
 	})
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	store := newFakeCredentialStore()
 	svc, err := NewCredentialsService(ctx, factory, registry, store, nil, config.ResilienceConfig{})
 	if err != nil {
@@ -258,7 +258,7 @@ func TestCredentialsService_UpsertDoesNotHangOnUnreachableProvider(t *testing.T)
 func TestCredentialsService_UpsertKeepsThePreviousProviderLiveWhenTheEditIsUnresolvable(t *testing.T) {
 	ctx := t.Context()
 	factory := newCredentialsTestFactory(t)
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	store := newFakeCredentialStore()
 
 	svc, err := NewCredentialsService(ctx, factory, registry, store, nil, config.ResilienceConfig{})
@@ -291,7 +291,7 @@ func TestCredentialsService_UpsertKeepsThePreviousProviderLiveWhenTheEditIsUnres
 func TestCredentialsService_UpsertRejectsNameContainingSlash(t *testing.T) {
 	ctx := t.Context()
 	factory := newCredentialsTestFactory(t)
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	store := newFakeCredentialStore()
 
 	svc, err := NewCredentialsService(ctx, factory, registry, store, nil, config.ResilienceConfig{})
@@ -311,7 +311,7 @@ func TestCredentialsService_UpsertRejectsNameContainingSlash(t *testing.T) {
 func TestCredentialsService_UpsertRejectsUnresolvableCredential(t *testing.T) {
 	ctx := t.Context()
 	factory := newCredentialsTestFactory(t)
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	store := newFakeCredentialStore()
 
 	svc, err := NewCredentialsService(ctx, factory, registry, store, nil, config.ResilienceConfig{})
@@ -337,7 +337,7 @@ func TestCredentialsService_UpsertRejectsUnresolvableCredential(t *testing.T) {
 func TestCredentialsService_DeleteUnregistersProvider(t *testing.T) {
 	ctx := t.Context()
 	factory := newCredentialsTestFactory(t)
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	store := newFakeCredentialStore()
 
 	svc, err := NewCredentialsService(ctx, factory, registry, store, nil, config.ResilienceConfig{})
@@ -365,7 +365,7 @@ func TestCredentialsService_DeleteUnregistersProvider(t *testing.T) {
 func TestCredentialsService_DisablingUnregistersWithoutDeletingTheRow(t *testing.T) {
 	ctx := t.Context()
 	factory := newCredentialsTestFactory(t)
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	store := newFakeCredentialStore()
 
 	svc, err := NewCredentialsService(ctx, factory, registry, store, nil, config.ResilienceConfig{})
@@ -397,7 +397,7 @@ func TestCredentialsService_DisablingUnregistersWithoutDeletingTheRow(t *testing
 func TestCredentialsService_DeclaredNamesAreManagedAndReadOnly(t *testing.T) {
 	ctx := t.Context()
 	factory := newCredentialsTestFactory(t)
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	store := newFakeCredentialStore()
 
 	svc, err := NewCredentialsService(ctx, factory, registry, store, []string{"openai"}, config.ResilienceConfig{})
@@ -425,7 +425,7 @@ func TestCredentialsService_DeclaredNamesAreManagedAndReadOnly(t *testing.T) {
 func TestCredentialsService_ReloadSkipsShadowedStoreRowsAndAppliesTheRest(t *testing.T) {
 	ctx := t.Context()
 	factory := newCredentialsTestFactory(t)
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	store := newFakeCredentialStore()
 
 	// A store row with the same name as a declared (config/env) provider must

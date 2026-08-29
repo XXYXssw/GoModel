@@ -95,7 +95,7 @@ func (m *registryMockProvider) Embeddings(_ context.Context, _ *core.EmbeddingRe
 
 func TestModelRegistry(t *testing.T) {
 	t.Run("RegisterProvider", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "test",
 			modelsResponse: &core.ModelsResponse{
@@ -113,7 +113,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("Initialize", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "test",
 			modelsResponse: &core.ModelsResponse{
@@ -137,7 +137,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("ConfiguredModelsFallbackModeKeepsUpstreamWhenAvailable", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "test",
 			modelsResponse: &core.ModelsResponse{
@@ -165,7 +165,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("ConfiguredModelsFallbackModeUsesConfiguredWhenUpstreamFails", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "test",
 			err:  errors.New("models unavailable"),
@@ -210,7 +210,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("SuccessfulLiveModelFetchClearsAvailabilityError", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "ollama",
 			modelsResponse: &core.ModelsResponse{
@@ -240,7 +240,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("TargetedRefreshWithEmptyInventoryClearsStaleProviderModels", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "ollama",
 			modelsResponse: &core.ModelsResponse{
@@ -273,7 +273,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("ConfiguredModelsAllowlistModeSkipsUpstreamAndUsesConfiguredModels", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		registry.SetConfiguredProviderModelsMode(config.ConfiguredProviderModelsModeAllowlist)
 		var listCount atomic.Int32
 		mock := &countingRegistryMockProvider{
@@ -339,7 +339,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("ConfiguredModelsAllowlistModeUsesUpstreamWhenNoConfiguredModels", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		registry.SetConfiguredProviderModelsMode(config.ConfiguredProviderModelsModeAllowlist)
 		var listCount atomic.Int32
 		mock := &countingRegistryMockProvider{
@@ -377,7 +377,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("GetProvider", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "test",
 			modelsResponse: &core.ModelsResponse{
@@ -402,7 +402,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("Supports", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "test",
 			modelsResponse: &core.ModelsResponse{
@@ -425,7 +425,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("ProviderOwnedRawSlashModel", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		openRouter := &registryMockProvider{
 			name: "openrouter",
 			modelsResponse: &core.ModelsResponse{
@@ -460,7 +460,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("GetModel", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		expectedModel := core.Model{
 			ID:      "test-model",
 			Object:  "model",
@@ -501,7 +501,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("EnrichModelsReplacesPublishedModelInfo", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 
 		mock := &registryMockProvider{
 			name: "test-provider",
@@ -583,7 +583,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("EnrichModelsUsesAliasesWithoutAddingSyntheticModels", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 
 		mock := &registryMockProvider{
 			name: "gemini-provider",
@@ -661,7 +661,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("RefreshModelListDownloadsAndEnrichesCurrentModels", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "openai-provider",
 			modelsResponse: &core.ModelsResponse{
@@ -725,7 +725,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("InitializeReturnsGatewayErrorWhenContextCanceledBeforeAcquire", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		ch := registry.refreshSemaphore()
 		ch <- struct{}{}
 		defer func() { <-ch }()
@@ -751,7 +751,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("RefreshModelListReturnsGatewayErrorWhenContextCanceledBeforeAcquire", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		ch := registry.refreshSemaphore()
 		ch <- struct{}{}
 		defer func() { <-ch }()
@@ -777,7 +777,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("DuplicateModels", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock1 := &registryMockProvider{
 			name: "provider1",
 			modelsResponse: &core.ModelsResponse{
@@ -815,7 +815,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("SlashModelFallsBackToRawModelWhenPrefixIsNotConfiguredProvider", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		openRouter := &registryMockProvider{
 			name:         "openrouter",
 			chatResponse: &core.ChatResponse{ID: "openrouter"},
@@ -846,7 +846,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("SlashModelDoesNotFallBackToRawModelWhenPrefixIsConfiguredProvider", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		google := &registryMockProvider{
 			name:         "google",
 			chatResponse: &core.ChatResponse{ID: "google"},
@@ -892,7 +892,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("AllProvidersFail", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock1 := &registryMockProvider{
 			name: "provider1",
 			err:  errors.New("provider1 error"),
@@ -916,7 +916,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("FailedRefreshRecordsRuntimeErrorAndKeepsInventory", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "test",
 			modelsResponse: &core.ModelsResponse{
@@ -954,7 +954,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("EmptyRefreshRecordsRuntimeErrorAndKeepsInventory", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "test",
 			modelsResponse: &core.ModelsResponse{
@@ -992,7 +992,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("ListModelsOrdering", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "test",
 			modelsResponse: &core.ModelsResponse{
@@ -1026,7 +1026,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("RefreshDoesNotBlockReads", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "test",
 			modelsResponse: &core.ModelsResponse{
@@ -1054,7 +1054,7 @@ func TestModelRegistry(t *testing.T) {
 	})
 
 	t.Run("GetProviderType", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{
 			name: "test",
 			modelsResponse: &core.ModelsResponse{
@@ -1084,7 +1084,7 @@ func TestModelRegistry(t *testing.T) {
 // false so load balancing skips them, and the next successful refresh clears
 // the flag.
 func TestInitialize_FailedRefreshKeepsPreviousInventoryAsStale(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	flaky := &registryMockProvider{
 		name: "flaky",
 		modelsResponse: &core.ModelsResponse{
@@ -1156,7 +1156,7 @@ func TestInitialize_FailedRefreshKeepsPreviousInventoryAsStale(t *testing.T) {
 // the unqualified slot to a healthy duplicate — the same routing the old
 // inventory wipe produced — while staying reachable via its qualified name.
 func TestInitialize_StaleProviderLosesBareModelIDToHealthyDuplicate(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	sharedModels := func(owner string) *core.ModelsResponse {
 		return &core.ModelsResponse{
 			Object: "list",
@@ -1195,7 +1195,7 @@ func TestInitialize_StaleProviderLosesBareModelIDToHealthyDuplicate(t *testing.T
 // so a recovered provider is picked up within the recheck interval instead of
 // waiting for the next full refresh.
 func TestStartBackgroundRefresh_RechecksFailedProviders(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	flaky := &registryMockProvider{
 		name: "flaky",
 		err:  errors.New("connection refused"),
@@ -1241,7 +1241,7 @@ func TestStartBackgroundRefresh_RechecksFailedProviders(t *testing.T) {
 // runs the initial discovery sweep.
 func registerTwoProviderRegistry(t *testing.T) (*ModelRegistry, *registryMockProvider, *registryMockProvider) {
 	t.Helper()
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	singleModel := func(owner string) *core.ModelsResponse {
 		return &core.ModelsResponse{
 			Object: "list",
@@ -1349,7 +1349,7 @@ func (p *availabilityFailingProvider) CheckAvailability(context.Context) error {
 // A failed availability check during a per-provider refresh marks the
 // provider stale just like a failed model fetch.
 func TestRefreshProviderModels_AvailabilityFailureMarksStale(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	alpha := &registryMockProvider{
 		name: "alpha",
 		modelsResponse: &core.ModelsResponse{
@@ -1421,7 +1421,7 @@ func TestRefreshProviderModels_AvailabilityFailingPeerIsNotHealthyAlternative(t 
 // budget (a starved provider is recorded as failed and its inventory goes
 // stale — or, on first fetch, is never discovered at all).
 func TestInitialize_SlowProviderDoesNotStarveOthers(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	slow := &registryMockProvider{
 		name:            "slow",
 		listModelsDelay: 5 * time.Second,
@@ -1459,7 +1459,7 @@ func TestInitialize_SlowProviderDoesNotStarveOthers(t *testing.T) {
 }
 
 func TestInitialize_LogsSingleMetadataSummaryPerCycle(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	openAIProvider := &registryMockProvider{
 		name: "openai-primary",
@@ -1545,7 +1545,7 @@ func TestInitialize_LogsSingleMetadataSummaryPerCycle(t *testing.T) {
 }
 
 func TestListModelsWithProvider_Empty(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	models := registry.ListModelsWithProvider()
 	if len(models) != 0 {
 		t.Errorf("expected empty slice, got %d models", len(models))
@@ -1553,7 +1553,7 @@ func TestListModelsWithProvider_Empty(t *testing.T) {
 }
 
 func TestListModelsWithProvider_Sorted(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	mock1 := &registryMockProvider{
 		name: "provider1",
@@ -1594,7 +1594,7 @@ func TestListModelsWithProvider_Sorted(t *testing.T) {
 }
 
 func TestListModelsWithProvider_IncludesProviderType(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	mock1 := &registryMockProvider{
 		name: "provider1",
@@ -1633,7 +1633,7 @@ func TestListModelsWithProvider_IncludesProviderType(t *testing.T) {
 }
 
 func TestInitialize_EnrichesAllProviderSpecificModels(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	openAI := &registryMockProvider{
 		name: "provider-openai",
@@ -1700,7 +1700,7 @@ func TestInitialize_EnrichesAllProviderSpecificModels(t *testing.T) {
 }
 
 func TestListPublicModels_UsesConfiguredProviderNamesAndIncludesDuplicates(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	openAI := &registryMockProvider{
 		name: "provider-openai",
@@ -1758,7 +1758,7 @@ func TestListPublicModels_UsesConfiguredProviderNamesAndIncludesDuplicates(t *te
 }
 
 func TestListModelsWithProvider_UsesConfiguredProviderNamesAndIncludesDuplicates(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	openAI := &registryMockProvider{
 		name: "provider-openai",
@@ -1835,7 +1835,7 @@ func (c *countingRegistryMockProvider) ListModels(ctx context.Context) (*core.Mo
 // future fetch path that produces a refresh result without touching SuccessAt —
 // a stale error must not survive into runtime status.
 func TestApplyProviderRuntimeUpdates_ClearsStaleErrorOnSuccessfulRefresh(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	// Seed runtime state with a prior error.
 	registry.providerRuntime["test"] = providerRuntimeState{
@@ -1877,7 +1877,7 @@ func TestStartBackgroundRefresh(t *testing.T) {
 			listCount:            &refreshCount,
 		}
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		registry.RegisterProvider(countingMock)
 		_ = registry.Initialize(context.Background())
 
@@ -1912,7 +1912,7 @@ func TestStartBackgroundRefresh(t *testing.T) {
 			listCount:            &refreshCount,
 		}
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		registry.RegisterProvider(countingMock)
 		_ = registry.Initialize(context.Background())
 
@@ -1948,7 +1948,7 @@ func TestStartBackgroundRefresh(t *testing.T) {
 				listCount:            &refreshCount,
 			}
 
-			registry := NewModelRegistry()
+			registry := NewModelRegistry(false)
 			registry.RegisterProvider(countingMock)
 			_ = registry.Initialize(context.Background())
 			refreshCount.Store(0)
@@ -2022,7 +2022,7 @@ func TestStartBackgroundRefresh(t *testing.T) {
 				listCount:            &refreshCount,
 			}
 
-			registry := NewModelRegistry()
+			registry := NewModelRegistry(false)
 			registry.RegisterProvider(countingMock)
 			_ = registry.Initialize(context.Background())
 
@@ -2055,7 +2055,7 @@ func TestStartBackgroundRefresh(t *testing.T) {
 			listCount:            &refreshCount,
 		}
 
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		workingMock := &registryMockProvider{
 			name: "working",
 			modelsResponse: &core.ModelsResponse{
@@ -2085,7 +2085,7 @@ func TestStartBackgroundRefresh(t *testing.T) {
 }
 
 func TestListModelsWithProviderByCategory(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	mock := &registryMockProvider{
 		name: "test",
 		modelsResponse: &core.ModelsResponse{
@@ -2164,7 +2164,7 @@ func TestListModelsWithProviderByCategory(t *testing.T) {
 }
 
 func TestListModelsWithProviderByCategory_UsesStoredProviderMetadata(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	registry.modelsByProvider = map[string]map[string]*ModelInfo{
 		"internal-provider-key": {
 			"gpt-4o": {
@@ -2201,7 +2201,7 @@ func TestListModelsWithProviderByCategory_UsesStoredProviderMetadata(t *testing.
 }
 
 func TestGetCategoryCounts_CountsProviderBackedModels(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	openAI := &registryMockProvider{
 		name: "provider-openai",
@@ -2261,7 +2261,7 @@ func TestGetCategoryCounts_CountsProviderBackedModels(t *testing.T) {
 }
 
 func TestGetCategoryCounts(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	mock := &registryMockProvider{
 		name: "test",
 		modelsResponse: &core.ModelsResponse{
@@ -2368,7 +2368,7 @@ func TestListPublicModels_HidesAudioOnlyModelsFromProvidersWithoutAudioSupport(t
 		}
 	}
 
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	noAudio := &registryMockProvider{modelsResponse: inventory()}
 	withAudio := &audioRegistryMockProvider{registryMockProvider{modelsResponse: inventory()}}
 	registry.RegisterProviderWithNameAndType(noAudio, "gemini", "gemini")
@@ -2403,7 +2403,7 @@ func TestListPublicModels_HidesAudioOnlyModelsFromProvidersWithoutAudioSupport(t
 // names and types are normalized at registration so lookups succeed even when the
 // configured value arrives padded with whitespace (e.g. from YAML or env vars).
 func TestProviderByTypeAndNameTrimConfiguredValues(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	mock := &registryMockProvider{name: "padded"}
 	registry.RegisterProviderWithNameAndType(mock, "  padded-name  ", "  openai  ")
 

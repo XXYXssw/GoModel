@@ -51,7 +51,7 @@ func TestMain(m *testing.M) {
 
 	// 4. Create a test provider and registry
 	testProvider := NewTestProvider(mockLLMURL, "sk-test-key-12345")
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	registry.RegisterProvider(testProvider)
 
 	// Initialize registry to discover models from test provider

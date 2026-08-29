@@ -75,7 +75,7 @@ func (o Override) ScopeKind() modelselectors.ScopeKind {
 }
 
 func cloneOverride(override Override) Override {
-	override.CreatedAt = override.CreatedAt
-	override.UpdatedAt = override.UpdatedAt
+	// Override is a value type; returning it copies all fields. The struct is
+	// cloned so callers can mutate the copy without affecting the source.
 	return override
 }

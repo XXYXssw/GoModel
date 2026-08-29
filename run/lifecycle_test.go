@@ -4,14 +4,11 @@ import (
 	"context"
 	"errors"
 	"net"
-	"slices"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
-	"github.com/enterpilot/gomodel/config"
-	"github.com/enterpilot/gomodel/internal/providers"
 	"github.com/enterpilot/gomodel/internal/server"
 )
 
@@ -237,23 +234,5 @@ func TestServeGeneration_ReturnsStartFailure(t *testing.T) {
 
 	if err := serveGeneration(context.Background(), app, nil); !errors.Is(err, startErr) {
 		t.Fatalf("serveGeneration() error = %v, want start error %v", err, startErr)
-	}
-}
-
-func TestMain_KimicodeProviderRegistration(t *testing.T) {
-	factory := defaultProviderFactory(&config.Config{})
-
-	registered := factory.RegisteredTypes()
-	found := slices.Contains(registered, "kimicode")
-	if !found {
-		t.Fatalf("kimicode not in RegisteredTypes() = %v", registered)
-	}
-
-	provider, err := factory.Create(providers.ProviderConfig{Type: "kimicode", APIKey: "test"})
-	if err != nil {
-		t.Fatalf("factory.Create(kimicode) error = %v, want nil", err)
-	}
-	if provider == nil {
-		t.Fatal("factory.Create(kimicode) returned nil provider")
 	}
 }

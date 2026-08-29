@@ -14,7 +14,7 @@ import (
 // metadata feature for local providers like Ollama whose custom model IDs do
 // not appear in the upstream registry.
 func TestInitialize_AppliesConfigMetadataOverrides(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	local := &registryMockProvider{
 		name: "provider-nippur",
@@ -87,7 +87,7 @@ func TestInitialize_AppliesConfigMetadataOverrides(t *testing.T) {
 // fields declared in config win; unmentioned fields fall back to whatever the
 // remote registry produced during enrichment.
 func TestInitialize_OverrideMergesOnRemoteEnrichment(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	provider := &registryMockProvider{
 		name: "provider-main",
@@ -135,7 +135,7 @@ func TestInitialize_OverrideMergesOnRemoteEnrichment(t *testing.T) {
 }
 
 func TestResolvePricingPrefersProviderSpecificMetadata(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	primary := &registryMockProvider{
 		name: "provider-primary",
@@ -185,7 +185,7 @@ func TestResolvePricingPrefersProviderSpecificMetadata(t *testing.T) {
 }
 
 func TestResolvePricingPrefersProviderOwnedRawSlashMetadata(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	other := &registryMockProvider{
 		name: "provider-other",
@@ -419,7 +419,7 @@ func TestApplyConfigMetadataOverrides_EmptyOverrideLeavesNilMetadataNil(t *testi
 // mutating the caller's override map/slices/pointers after handing them to
 // the registry does not leak into registry state.
 func TestSetProviderMetadataOverrides_DeepClonesExternalInput(t *testing.T) {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 
 	external := map[string]*core.ModelMetadata{
 		"m": {

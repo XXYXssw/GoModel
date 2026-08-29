@@ -126,7 +126,7 @@ func TestBuildDefaultConfig(t *testing.T) {
 	if !cfg.Server.AllowPassthroughV1Alias {
 		t.Error("expected Server.AllowPassthroughV1Alias=true")
 	}
-	if got, want := cfg.Server.EnabledPassthroughProviders, []string{"openai", "anthropic", "openrouter", "kilo", "zai", "sglang", "vllm", "llmd", "deepseek"}; !reflect.DeepEqual(got, want) {
+	if got, want := cfg.Server.EnabledPassthroughProviders, []string{"openai", "openrouter", "kilo"}; !reflect.DeepEqual(got, want) {
 		t.Errorf("expected Server.EnabledPassthroughProviders=%v, got %v", want, got)
 	}
 	if cfg.Models.ConfiguredProviderModelsMode != ConfiguredProviderModelsModeFallback {
@@ -156,11 +156,11 @@ func TestBuildDefaultConfig(t *testing.T) {
 	if !cfg.Logging.LogHeaders {
 		t.Error("expected Logging.LogHeaders=true")
 	}
-	if cfg.Logging.BufferSize != 1000 {
-		t.Errorf("expected Logging.BufferSize=1000, got %d", cfg.Logging.BufferSize)
+	if cfg.Logging.BufferSize != 100 {
+		t.Errorf("expected Logging.BufferSize=100, got %d", cfg.Logging.BufferSize)
 	}
-	if cfg.Logging.FlushInterval != 5 {
-		t.Errorf("expected Logging.FlushInterval=5, got %d", cfg.Logging.FlushInterval)
+	if cfg.Logging.FlushInterval != 3 {
+		t.Errorf("expected Logging.FlushInterval=3, got %d", cfg.Logging.FlushInterval)
 	}
 	if cfg.Logging.RetentionDays != 30 {
 		t.Errorf("expected Logging.RetentionDays=30, got %d", cfg.Logging.RetentionDays)
@@ -180,17 +180,17 @@ func TestBuildDefaultConfig(t *testing.T) {
 	if !cfg.Usage.PricingRecalculationEnabled {
 		t.Error("expected Usage.PricingRecalculationEnabled=true")
 	}
-	if cfg.Usage.BufferSize != 1000 {
-		t.Errorf("expected Usage.BufferSize=1000, got %d", cfg.Usage.BufferSize)
+	if cfg.Usage.BufferSize != 100 {
+		t.Errorf("expected Usage.BufferSize=100, got %d", cfg.Usage.BufferSize)
 	}
-	if cfg.Usage.FlushInterval != 5 {
-		t.Errorf("expected Usage.FlushInterval=5, got %d", cfg.Usage.FlushInterval)
+	if cfg.Usage.FlushInterval != 3 {
+		t.Errorf("expected Usage.FlushInterval=3, got %d", cfg.Usage.FlushInterval)
 	}
 	if cfg.Usage.RetentionDays != 90 {
 		t.Errorf("expected Usage.RetentionDays=90, got %d", cfg.Usage.RetentionDays)
 	}
-	if !cfg.Budgets.Enabled {
-		t.Error("expected Budgets.Enabled=true")
+	if cfg.Budgets.Enabled {
+		t.Error("expected Budgets.Enabled=false")
 	}
 	if cfg.Metrics.Endpoint != "/metrics" {
 		t.Errorf("expected Metrics.Endpoint=/metrics, got %s", cfg.Metrics.Endpoint)
@@ -216,8 +216,8 @@ func TestBuildDefaultConfig(t *testing.T) {
 	if !cfg.Admin.LiveLogsEnabled {
 		t.Error("expected Admin.LiveLogsEnabled=true")
 	}
-	if cfg.Admin.LiveLogsBufferSize != 10000 {
-		t.Errorf("expected Admin.LiveLogsBufferSize=10000, got %d", cfg.Admin.LiveLogsBufferSize)
+	if cfg.Admin.LiveLogsBufferSize != 1001 {
+		t.Errorf("expected Admin.LiveLogsBufferSize=1001, got %d", cfg.Admin.LiveLogsBufferSize)
 	}
 	if cfg.Admin.LiveLogsReplayLimit != 1000 {
 		t.Errorf("expected Admin.LiveLogsReplayLimit=1000, got %d", cfg.Admin.LiveLogsReplayLimit)
@@ -331,6 +331,7 @@ func TestLoadBudgetEnvUserPath(t *testing.T) {
 	clearAllConfigEnvVars(t)
 
 	withTempDir(t, func(string) {
+		t.Setenv("BUDGETS_ENABLED", "true")
 		t.Setenv("SET_BUDGET_USER__PATH__EXAMPLE", "daily=12.5,weekly=50")
 
 		result, err := Load()
@@ -388,6 +389,7 @@ func TestLoadBudgetEnvJSONLimitsAreSorted(t *testing.T) {
 	clearAllConfigEnvVars(t)
 
 	withTempDir(t, func(string) {
+		t.Setenv("BUDGETS_ENABLED", "true")
 		t.Setenv("SET_BUDGET_TEAM__ALPHA", `{"weekly":50,"daily":10,"monthly":100}`)
 
 		result, err := Load()
@@ -423,6 +425,7 @@ budgets:
 		if err := os.WriteFile(filepath.Join(dir, "config.yaml"), []byte(yamlConfig), 0644); err != nil {
 			t.Fatalf("Failed to write config.yaml: %v", err)
 		}
+		t.Setenv("BUDGETS_ENABLED", "true")
 		t.Setenv("SET_BUDGET_TEAM__ALPHA", "weekly=50")
 
 		result, err := Load()
@@ -467,6 +470,7 @@ budgets:
 		if err := os.WriteFile(filepath.Join(dir, "config.yaml"), []byte(yamlConfig), 0644); err != nil {
 			t.Fatalf("Failed to write config.yaml: %v", err)
 		}
+		t.Setenv("BUDGETS_ENABLED", "true")
 		t.Setenv("SET_BUDGET_TEAM__ALPHA", "weekly=50")
 
 		result, err := Load()
@@ -495,6 +499,7 @@ func TestLoadBudgetEnvRejectsNonFiniteAmount(t *testing.T) {
 	clearAllConfigEnvVars(t)
 
 	withTempDir(t, func(string) {
+		t.Setenv("BUDGETS_ENABLED", "true")
 		t.Setenv("SET_BUDGET_TEAM__ALPHA", "daily=NaN")
 
 		_, err := Load()
@@ -526,6 +531,7 @@ budgets:
 		if err := os.WriteFile(filepath.Join(dir, "config.yaml"), []byte(yamlConfig), 0644); err != nil {
 			t.Fatalf("Failed to write config.yaml: %v", err)
 		}
+		t.Setenv("BUDGETS_ENABLED", "true")
 
 		_, err := Load()
 		if err == nil {
@@ -705,8 +711,8 @@ logging:
 		if cfg.Logging.BufferSize != 500 {
 			t.Errorf("expected Logging.BufferSize=500, got %d", cfg.Logging.BufferSize)
 		}
-		if cfg.Logging.FlushInterval != 5 {
-			t.Errorf("expected Logging.FlushInterval=5 (default), got %d", cfg.Logging.FlushInterval)
+		if cfg.Logging.FlushInterval != 3 {
+			t.Errorf("expected Logging.FlushInterval=3 (default), got %d", cfg.Logging.FlushInterval)
 		}
 		if cfg.Storage.Type != "sqlite" {
 			t.Errorf("expected Storage.Type=sqlite (default), got %s", cfg.Storage.Type)

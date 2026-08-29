@@ -59,7 +59,7 @@ func TestRecalculateUsagePricingResolvesAliasAndFilters(t *testing.T) {
 			WithPricing:  2,
 		},
 	}
-	h := NewHandler(nil, providers.NewModelRegistry(),
+	h := NewHandler(nil, providers.NewModelRegistry(false),
 		WithVirtualModels(service),
 		WithUsagePricingRecalculator(recalculator),
 	)
@@ -120,7 +120,7 @@ func TestRecalculateUsagePricingResolvesAliasAndFilters(t *testing.T) {
 
 func TestRecalculateUsagePricingRequiresConfirmation(t *testing.T) {
 	recalculator := &mockPricingRecalculator{}
-	h := NewHandler(nil, providers.NewModelRegistry(), WithUsagePricingRecalculator(recalculator))
+	h := NewHandler(nil, providers.NewModelRegistry(false), WithUsagePricingRecalculator(recalculator))
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/admin/usage/recalculate-pricing", bytes.NewBufferString(`{"confirmation":"nope"}`))
@@ -165,7 +165,7 @@ func TestRecalculateUsagePricingAcceptsConfirmAlias(t *testing.T) {
 			recalculator := &mockPricingRecalculator{
 				result: usage.RecalculatePricingResult{Status: "ok"},
 			}
-			h := NewHandler(nil, providers.NewModelRegistry(), WithUsagePricingRecalculator(recalculator))
+			h := NewHandler(nil, providers.NewModelRegistry(false), WithUsagePricingRecalculator(recalculator))
 
 			e := echo.New()
 			req := httptest.NewRequest(http.MethodPost, "/admin/usage/recalculate-pricing", bytes.NewBufferString(test.body))
@@ -195,7 +195,7 @@ func TestRecalculateUsagePricingFeatureUnavailable(t *testing.T) {
 		{
 			name: "missing recalculator",
 			handler: func(*mockPricingRecalculator) *Handler {
-				return NewHandler(nil, providers.NewModelRegistry())
+				return NewHandler(nil, providers.NewModelRegistry(false))
 			},
 			wantError: "usage pricing recalculation is unavailable",
 		},
@@ -237,7 +237,7 @@ func TestRecalculateUsagePricingFeatureUnavailable(t *testing.T) {
 
 func TestRecalculateUsagePricingInvalidSelector(t *testing.T) {
 	recalculator := &mockPricingRecalculator{}
-	h := NewHandler(nil, providers.NewModelRegistry(), WithUsagePricingRecalculator(recalculator))
+	h := NewHandler(nil, providers.NewModelRegistry(false), WithUsagePricingRecalculator(recalculator))
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/admin/usage/recalculate-pricing", bytes.NewBufferString(`{"confirmation":"recalculate","selector":"invalid"}`))
@@ -290,7 +290,7 @@ func TestRecalculateUsagePricingRejectsInvalidDateAndUserPath(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recalculator := &mockPricingRecalculator{}
-			h := NewHandler(nil, providers.NewModelRegistry(), WithUsagePricingRecalculator(recalculator))
+			h := NewHandler(nil, providers.NewModelRegistry(false), WithUsagePricingRecalculator(recalculator))
 
 			e := echo.New()
 			req := httptest.NewRequest(http.MethodPost, "/admin/usage/recalculate-pricing", bytes.NewBufferString(test.body))
@@ -326,7 +326,7 @@ func TestRecalculateUsagePricingDefaultsDateRange(t *testing.T) {
 	recalculator := &mockPricingRecalculator{
 		result: usage.RecalculatePricingResult{Status: "ok"},
 	}
-	h := NewHandler(nil, providers.NewModelRegistry(), WithUsagePricingRecalculator(recalculator))
+	h := NewHandler(nil, providers.NewModelRegistry(false), WithUsagePricingRecalculator(recalculator))
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/admin/usage/recalculate-pricing", bytes.NewBufferString(`{"confirmation":"recalculate"}`))
@@ -364,7 +364,7 @@ func TestRecalculateUsagePricingClampsRequestedDays(t *testing.T) {
 	recalculator := &mockPricingRecalculator{
 		result: usage.RecalculatePricingResult{Status: "ok"},
 	}
-	h := NewHandler(nil, providers.NewModelRegistry(), WithUsagePricingRecalculator(recalculator))
+	h := NewHandler(nil, providers.NewModelRegistry(false), WithUsagePricingRecalculator(recalculator))
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/admin/usage/recalculate-pricing", bytes.NewBufferString(`{"confirmation":"recalculate","days":9999}`))
@@ -392,7 +392,7 @@ func TestRecalculateUsagePricingClampsRequestedDays(t *testing.T) {
 
 func TestRecalculateUsagePricingReturnsInternalErrorOnRecalculatorFailure(t *testing.T) {
 	recalculator := &mockPricingRecalculator{err: errors.New("storage write failed")}
-	h := NewHandler(nil, providers.NewModelRegistry(), WithUsagePricingRecalculator(recalculator))
+	h := NewHandler(nil, providers.NewModelRegistry(false), WithUsagePricingRecalculator(recalculator))
 
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/admin/usage/recalculate-pricing", bytes.NewBufferString(`{"confirmation":"recalculate"}`))
@@ -444,7 +444,7 @@ func TestRecalculateUsagePricingPreservesExpectedRecalculatorErrors(t *testing.T
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			recalculator := &mockPricingRecalculator{err: test.err}
-			h := NewHandler(nil, providers.NewModelRegistry(), WithUsagePricingRecalculator(recalculator))
+			h := NewHandler(nil, providers.NewModelRegistry(false), WithUsagePricingRecalculator(recalculator))
 
 			e := echo.New()
 			req := httptest.NewRequest(http.MethodPost, "/admin/usage/recalculate-pricing", bytes.NewBufferString(`{"confirmation":"recalculate"}`))

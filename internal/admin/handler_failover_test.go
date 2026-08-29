@@ -128,7 +128,7 @@ func TestFailoverEndpointsReturn503WhenRuntimeFlagDisabled(t *testing.T) {
 }
 
 func TestGenerateFailoverRulesFiltersByPrimaryModel(t *testing.T) {
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	registry.RegisterProviderWithNameAndType(&handlerMockProvider{
 		models: &core.ModelsResponse{Data: []core.Model{
 			failoverSuggestionTestModel("gpt-4o", 1287),
@@ -233,7 +233,7 @@ func TestUpsertAndDeleteFailoverRuleLifecycle(t *testing.T) {
 func TestGenerateFailoverRulesRejectsInvalidBody(t *testing.T) {
 	// The registry only needs to be non-nil: an invalid body is rejected before
 	// any model resolution runs, so no provider initialization is required.
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	service := newFailoverHandlerTestService(t, newFailoverHandlerTestStore())
 	h := NewHandler(
 		nil,

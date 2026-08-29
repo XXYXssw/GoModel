@@ -11,6 +11,7 @@ func TestLoadRateLimitEnvCompactSyntax(t *testing.T) {
 	clearAllConfigEnvVars(t)
 
 	withTempDir(t, func(string) {
+		t.Setenv("RATE_LIMITS_ENABLED", "true")
 		t.Setenv("SET_RATE_LIMIT_TEAM__ALPHA", "rpm=100,tpm=50000,rpd=1000,concurrent=10")
 
 		result, err := Load()
@@ -59,6 +60,7 @@ func TestLoadRateLimitEnvJSONSyntax(t *testing.T) {
 	clearAllConfigEnvVars(t)
 
 	withTempDir(t, func(string) {
+		t.Setenv("RATE_LIMITS_ENABLED", "true")
 		t.Setenv("SET_RATE_LIMIT_", `[{"period":"minute","max_requests":50},{"period_seconds":7200,"max_tokens":900}]`)
 
 		result, err := Load()
@@ -102,6 +104,7 @@ rate_limits:
 		if err := os.WriteFile(filepath.Join(dir, "config.yaml"), []byte(yamlConfig), 0644); err != nil {
 			t.Fatalf("Failed to write config.yaml: %v", err)
 		}
+		t.Setenv("RATE_LIMITS_ENABLED", "true")
 		t.Setenv("SET_RATE_LIMIT_TEAM__ALPHA", "rpm=50")
 
 		result, err := Load()
@@ -148,6 +151,7 @@ rate_limits:
 		}
 		// The env entry replaces the whole YAML entry with the same provider,
 		// and the distinct prefix keeps it out of the user-path suffix space.
+		t.Setenv("RATE_LIMITS_ENABLED", "true")
 		t.Setenv("SET_PROVIDER_RATE_LIMIT_OPENAI", "rpm=500,tpm=100000,concurrent=20")
 		// Underscores map to hyphens like provider-instance env vars.
 		t.Setenv("SET_PROVIDER_RATE_LIMIT_OPENAI_EAST", "rpm=100")
@@ -192,6 +196,7 @@ func TestLoadRateLimitEnvRejectsUnknownName(t *testing.T) {
 	clearAllConfigEnvVars(t)
 
 	withTempDir(t, func(string) {
+		t.Setenv("RATE_LIMITS_ENABLED", "true")
 		t.Setenv("SET_RATE_LIMIT_TEAM", "rps=10")
 
 		if _, err := Load(); err == nil || !strings.Contains(err.Error(), "rps") {
@@ -205,6 +210,9 @@ func TestRateLimitConfigValidation(t *testing.T) {
 		name    string
 		yaml    string
 		wantErr string
+		// expectDisabled marks cases that assert validation is skipped because
+		// the feature is disabled, so RATE_LIMITS_ENABLED must not be forced on.
+		expectDisabled bool
 	}{
 		{
 			name: "valid config",
@@ -349,7 +357,8 @@ rate_limits:
 			wantErr: "duplicate rate limit",
 		},
 		{
-			name: "disabled config skips validation",
+			name:           "disabled config skips validation",
+			expectDisabled: true,
 			yaml: `
 rate_limits:
   enabled: false
@@ -364,6 +373,9 @@ rate_limits:
 		t.Run(tt.name, func(t *testing.T) {
 			clearAllConfigEnvVars(t)
 			withTempDir(t, func(dir string) {
+				if !tt.expectDisabled {
+					t.Setenv("RATE_LIMITS_ENABLED", "true")
+				}
 				if err := os.WriteFile(filepath.Join(dir, "config.yaml"), []byte(tt.yaml), 0644); err != nil {
 					t.Fatalf("Failed to write config.yaml: %v", err)
 				}
@@ -382,7 +394,7 @@ rate_limits:
 	}
 }
 
-func TestRateLimitsEnabledByDefaultAndTogglable(t *testing.T) {
+func TestRateLimitsTogglableByDefault(t *testing.T) {
 	clearAllConfigEnvVars(t)
 
 	withTempDir(t, func(string) {
@@ -390,8 +402,19 @@ func TestRateLimitsEnabledByDefaultAndTogglable(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Load() failed: %v", err)
 		}
+		if result.Config.RateLimits.Enabled {
+			t.Fatal("rate limits should be disabled by default")
+		}
+	})
+
+	withTempDir(t, func(string) {
+		t.Setenv("RATE_LIMITS_ENABLED", "true")
+		result, err := Load()
+		if err != nil {
+			t.Fatalf("Load() failed: %v", err)
+		}
 		if !result.Config.RateLimits.Enabled {
-			t.Fatal("rate limits should be enabled by default")
+			t.Fatal("RATE_LIMITS_ENABLED=true was not applied")
 		}
 	})
 

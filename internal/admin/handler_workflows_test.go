@@ -169,7 +169,7 @@ func newWorkflowRegistry(t *testing.T) *guardrails.Registry {
 func newWorkflowModelRegistry(t *testing.T) *providers.ModelRegistry {
 	t.Helper()
 
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	registry.RegisterProviderWithType(&handlerMockProvider{
 		models: &core.ModelsResponse{
 			Object: "list",
@@ -711,7 +711,7 @@ func TestCreateWorkflow_LegacyProviderTypeResolvesToConfiguredProviderName(t *te
 		},
 	}
 
-	modelRegistry := providers.NewModelRegistry()
+	modelRegistry := providers.NewModelRegistry(false)
 	modelRegistry.RegisterProviderWithNameAndType(&handlerMockProvider{
 		models: &core.ModelsResponse{
 			Object: "list",

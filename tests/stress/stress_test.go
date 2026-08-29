@@ -16,6 +16,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/enterpilot/gomodel/config"
 	"github.com/enterpilot/gomodel/internal/cache/modelcache"
 	"github.com/enterpilot/gomodel/internal/core"
 	"github.com/enterpilot/gomodel/internal/llmclient"
@@ -71,7 +72,7 @@ func TestRegistryRaceCondition(t *testing.T) {
 	// - Concurrent reads via GetProvider()
 	// Note: Run with -race flag for complete data race detection
 
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 
 	// Create mock provider with many models
 	mp := &mockProvider{
@@ -217,11 +218,13 @@ func TestCircuitBreakerHalfOpenRace(t *testing.T) {
 	//
 	// We use a longer timeout (1 second) so the circuit stays in half-open during our test
 	cfg := llmclient.Config{
-		ProviderName:   "test",
-		BaseURL:        "http://localhost:9999", // Will fail immediately
-		MaxRetries:     0,
-		InitialBackoff: 1 * time.Millisecond,
-		CircuitBreaker: &llmclient.CircuitBreakerConfig{
+		ProviderName: "test",
+		BaseURL:      "http://localhost:9999", // Will fail immediately
+		Retry: config.RetryConfig{
+			MaxRetries:     0,
+			InitialBackoff: 1 * time.Millisecond,
+		},
+		CircuitBreaker: config.CircuitBreakerConfig{
 			FailureThreshold: 1,               // Open after 1 failure
 			SuccessThreshold: 1,               // Close after 1 success
 			Timeout:          1 * time.Second, // Long enough to keep half-open during test
@@ -337,7 +340,7 @@ func TestEmptyCacheStartup(t *testing.T) {
 	// On first start with empty cache, requests will fail until background init completes.
 	// This is intentional for non-blocking startup.
 
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 
 	// Create mock provider with slow response
 	mp := &mockProvider{
@@ -409,12 +412,14 @@ func TestPostRequestsAreRetried(t *testing.T) {
 	defer testServer.Close()
 
 	cfg := llmclient.Config{
-		ProviderName:   "test",
-		BaseURL:        testServer.URL,
-		MaxRetries:     3,
-		InitialBackoff: 1 * time.Millisecond,
-		MaxBackoff:     10 * time.Millisecond,
-		BackoffFactor:  2.0,
+		ProviderName: "test",
+		BaseURL:      testServer.URL,
+		Retry: config.RetryConfig{
+			MaxRetries:     3,
+			InitialBackoff: 1 * time.Millisecond,
+			MaxBackoff:     10 * time.Millisecond,
+			BackoffFactor:  2.0,
+		},
 	}
 
 	client := llmclient.New(cfg, nil)
@@ -470,7 +475,6 @@ func TestUnboundedBufferGrowth(t *testing.T) {
 	cfg := llmclient.Config{
 		ProviderName: "test",
 		BaseURL:      testServer.URL,
-		MaxRetries:   0,
 	}
 
 	client := llmclient.New(cfg, nil)
@@ -543,7 +547,6 @@ func TestStreamingGoroutineLeak(t *testing.T) {
 	cfg := llmclient.Config{
 		ProviderName: "test",
 		BaseURL:      testServer.URL,
-		MaxRetries:   0,
 	}
 
 	client := llmclient.New(cfg, nil)

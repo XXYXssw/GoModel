@@ -13,7 +13,7 @@ import (
 
 func newVMModelRegistry(t *testing.T) *providers.ModelRegistry {
 	t.Helper()
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	mock := &handlerMockProvider{
 		models: &core.ModelsResponse{
 			Object: "list",

@@ -327,7 +327,7 @@ func TestInitializeProviders_UnavailableProviderCanRefreshLater(t *testing.T) {
 		},
 	})
 
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	count, err := initializeProviders(ctx, map[string]ProviderConfig{
 		"test": {Type: "test", APIKey: "sk-test"},
 	}, factory, registry)
@@ -378,7 +378,7 @@ func TestInitializeProviders_AvailabilityCheckUsesCallerContext(t *testing.T) {
 		},
 	})
 
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	count, err := initializeProviders(ctx, map[string]ProviderConfig{
 		"test": {Type: "test", APIKey: "sk-test"},
 	}, factory, registry)

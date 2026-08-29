@@ -107,7 +107,7 @@ func setupAuditLogTestServer(t *testing.T, cfg auditlog.Config, store *mockLogSt
 
 	// Create test provider and registry
 	testProvider := NewTestProvider(mockLLMURL, "sk-test-key-12345")
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	registry.RegisterProvider(testProvider)
 
 	ctx := context.Background()

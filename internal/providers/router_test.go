@@ -40,7 +40,7 @@ type registryModelEntry struct {
 }
 
 func newTestRegistryWithModels(entries ...registryModelEntry) *ModelRegistry {
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	for _, entry := range entries {
 		registry.RegisterProviderWithNameAndType(entry.provider, entry.providerName, entry.providerType)
 	}
@@ -946,7 +946,7 @@ func TestRouterChatCompletion_RefreshesProviderModelsForQualifiedRequest(t *test
 			},
 		},
 	}
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	registry.RegisterProviderWithNameAndType(provider, "ollama", "ollama")
 
 	router, err := NewRouter(registry)
@@ -1034,7 +1034,7 @@ func TestRouterChatCompletion_RequestTimeRefreshUnavailableProvider(t *testing.T
 			},
 		},
 	}
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	registry.RegisterProviderWithNameAndType(provider, "ollama", "ollama")
 
 	router, err := NewRouter(registry)
@@ -1805,7 +1805,7 @@ func TestRouterPassthrough_ErrorCases(t *testing.T) {
 
 func TestRouterPassthrough_UsesProviderRegistryWithoutModels(t *testing.T) {
 	provider := &mockProvider{name: "openai"}
-	registry := NewModelRegistry()
+	registry := NewModelRegistry(false)
 	registry.RegisterProviderWithType(provider, "openai")
 	registry.initialized = true
 

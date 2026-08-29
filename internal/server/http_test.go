@@ -899,7 +899,7 @@ func TestAdminPricingRecalculationSkipsAuthWithoutMasterKey(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			mock := &mockProvider{}
 			recalculator := &pricingRecalculatorStub{}
-			adminHandler := admin.NewHandler(nil, providers.NewModelRegistry(), admin.WithUsagePricingRecalculator(recalculator))
+			adminHandler := admin.NewHandler(nil, providers.NewModelRegistry(false), admin.WithUsagePricingRecalculator(recalculator))
 			srv := New(mock, &Config{
 				Authenticator:         tt.authenticator,
 				AdminEndpointsEnabled: true,
@@ -924,7 +924,7 @@ func TestAdminPricingRecalculationSkipsAuthWithoutMasterKey(t *testing.T) {
 func TestAdminPricingRecalculationRequiresAuthWithMasterKey(t *testing.T) {
 	mock := &mockProvider{}
 	recalculator := &pricingRecalculatorStub{}
-	adminHandler := admin.NewHandler(nil, providers.NewModelRegistry(), admin.WithUsagePricingRecalculator(recalculator))
+	adminHandler := admin.NewHandler(nil, providers.NewModelRegistry(false), admin.WithUsagePricingRecalculator(recalculator))
 	srv := New(mock, &Config{
 		MasterKey:             "test-secret-key",
 		AdminEndpointsEnabled: true,

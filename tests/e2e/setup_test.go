@@ -129,7 +129,7 @@ func setupE2ERegistry(t *testing.T, providerType string) *providers.ModelRegistr
 	}
 
 	testProvider := NewTestProvider(mockLLMURL, "sk-test-key-12345")
-	registry := providers.NewModelRegistry()
+	registry := providers.NewModelRegistry(false)
 	registry.RegisterProviderWithType(testProvider, providerType)
 
 	require.NoError(t, registry.Initialize(context.Background()), "failed to initialize registry")

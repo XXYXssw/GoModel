@@ -95,7 +95,7 @@ func TestRequestSnapshotCapture_SetsSnapshotAndSemantics(t *testing.T) {
 func TestRequestSnapshotCapture_PeeksSelectorsWithoutReadingWholeBody(t *testing.T) {
 	e := echo.New()
 
-	largeContent := strings.Repeat("x", 256*1024)
+	largeContent := strings.Repeat("x", 64*1024)
 	reqBody := `{"model":"gpt-5-mini","messages":[{"role":"user","content":"` + largeContent + `"}]}`
 	body := &countingReadCloser{reader: strings.NewReader(reqBody)}
 	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)

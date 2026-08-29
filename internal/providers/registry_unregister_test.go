@@ -46,7 +46,7 @@ func (p *blockingRegistryProvider) Embeddings(context.Context, *core.EmbeddingRe
 
 func TestModelRegistry_UnregisterProvider(t *testing.T) {
 	t.Run("removes a registered provider and its models immediately", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		keep := &registryMockProvider{
 			name: "keep",
 			modelsResponse: &core.ModelsResponse{
@@ -90,7 +90,7 @@ func TestModelRegistry_UnregisterProvider(t *testing.T) {
 	})
 
 	t.Run("promotes another provider for an overlapping bare model", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		first := &registryMockProvider{
 			name: "first",
 			modelsResponse: &core.ModelsResponse{
@@ -125,7 +125,7 @@ func TestModelRegistry_UnregisterProvider(t *testing.T) {
 	})
 
 	t.Run("an in-flight refresh cannot restore a removed provider", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		drop := &registryMockProvider{name: "drop"}
 		registry.RegisterProviderWithNameAndType(drop, "drop", "test")
 		registry.UnregisterProvider("drop")
@@ -152,7 +152,7 @@ func TestModelRegistry_UnregisterProvider(t *testing.T) {
 	})
 
 	t.Run("an in-flight refresh cannot overwrite a same-name replacement", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		oldProvider := &blockingRegistryProvider{
 			models: &core.ModelsResponse{
 				Object: "list",
@@ -199,7 +199,7 @@ func TestModelRegistry_UnregisterProvider(t *testing.T) {
 	})
 
 	t.Run("is a no-op for a name that was never registered", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{name: "only"}
 		registry.RegisterProviderWithNameAndType(mock, "only", "test")
 
@@ -211,7 +211,7 @@ func TestModelRegistry_UnregisterProvider(t *testing.T) {
 	})
 
 	t.Run("empty name is a no-op", func(t *testing.T) {
-		registry := NewModelRegistry()
+		registry := NewModelRegistry(false)
 		mock := &registryMockProvider{name: "only"}
 		registry.RegisterProviderWithNameAndType(mock, "only", "test")
 
