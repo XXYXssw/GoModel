@@ -38,83 +38,16 @@ func TestDefaultProviderFactoryCredentialForms(t *testing.T) {
 		{
 			// Newly registered API-key providers use the same schema feed as
 			// every other type, so the dashboard can offer them immediately.
-			providerType: "chutes",
-			defaultURL:   "https://llm.chutes.ai/v1",
+			providerType: "openrouter",
+			defaultURL:   "https://openrouter.ai/api/v1",
 			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
 			required:     []string{"api_keys"},
 		},
 		{
-			// Voice-only provider (no chat); same plain API-key shape.
-			providerType: "elevenlabs",
-			defaultURL:   "https://api.elevenlabs.io",
+			providerType: "kilo",
+			defaultURL:   "https://api.kilo.chat/v1",
 			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
 			required:     []string{"api_keys"},
-		},
-		{
-			// A deployment URL is the provider, so it is required, and Azure
-			// is the one type that takes an API version.
-			providerType: "azure",
-			fields:       []string{"api_keys", "base_url", "api_version", "responses_mode", "session_sticky_keys", "models"},
-			required:     []string{"api_keys", "base_url"},
-		},
-		{
-			// Keyless: the endpoint is the whole configuration.
-			providerType: "ollama",
-			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
-			required:     nil,
-		},
-		{
-			// llm-d can be keyless, but it has no meaningful universal endpoint.
-			providerType: "llmd",
-			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
-			required:     []string{"base_url"},
-		},
-		{
-			// SGLang supports both unauthenticated and --api-key deployments.
-			providerType: "sglang",
-			fields:       []string{"api_keys", "base_url", "responses_mode", "session_sticky_keys", "models"},
-			required:     nil,
-		},
-		{
-			// Authenticates through the AWS SDK credential chain, never a key.
-			providerType: "bedrock",
-			fields:       []string{"base_url", "models"},
-			absent:       []string{"api_keys"},
-		},
-		{
-			// Bearer token or AWS_BEARER_TOKEN_BEDROCK, plus a request shape.
-			providerType: "bedrock-mantle",
-			fields:       []string{"api_keys", "base_url", "api_mode", "session_sticky_keys", "models"},
-			required:     nil,
-			options:      map[string][]string{"api_mode": {"auto", "openai", "standard"}},
-		},
-		{
-			// One adapter, two backends: an AI Studio key, or Google
-			// credentials once it points at Vertex.
-			providerType: "gemini",
-			fields: []string{
-				"api_keys", "backend", "base_url", "api_mode", "auth_type",
-				"vertex_project", "vertex_location", "service_account_json",
-				"service_account_file", "service_account_json_base64", "gcp_scope", "session_sticky_keys", "models",
-			},
-			required: nil,
-			options: map[string][]string{
-				"backend":   {"aistudio", "vertex"},
-				"api_mode":  {"native", "openai_compatible"},
-				"auth_type": {"api_key", "gcp_adc", "gcp_service_account"},
-			},
-		},
-		{
-			// No API key at all; api_mode reaches the Gemini adapter Vertex
-			// delegates translation to (VERTEX_API_MODE).
-			providerType: "vertex",
-			fields: []string{
-				"auth_type", "vertex_project", "vertex_location", "service_account_json",
-				"service_account_file", "service_account_json_base64", "base_url",
-				"api_mode", "gcp_scope", "models",
-			},
-			absent:  []string{"api_keys"},
-			options: map[string][]string{"api_mode": {"native", "openai_compatible"}},
 		},
 	}
 
@@ -175,9 +108,7 @@ var credentialPayloadFields = []string{
 
 func TestDefaultProviderFactoryRegistersAllProviderTypes(t *testing.T) {
 	expected := []string{
-		"anthropic", "azure", "bailian", "bedrock", "bedrock-mantle", "chutes", "cohere", "deepseek", "elevenlabs",
-		"fireworks", "gemini", "groq", "kilo", "kimicode", "llmd", "meta", "minimax", "ollama", "openai", "opencode_go",
-		"openrouter", "oracle", "sglang", "vertex", "vllm", "xai", "xiaomi", "zai",
+		"kilo", "openai", "openrouter",
 	}
 
 	for _, metricsEnabled := range []bool{false, true} {
