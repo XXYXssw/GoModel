@@ -2,6 +2,7 @@ package core
 
 import (
 	"maps"
+	"slices"
 	"strings"
 )
 
@@ -226,13 +227,7 @@ func cloneMultiMap(src map[string][]string) map[string][]string {
 	}
 	dst := make(map[string][]string, len(src))
 	for key, values := range src {
-		if len(values) == 0 {
-			dst[key] = nil
-			continue
-		}
-		cloned := make([]string, len(values))
-		copy(cloned, values)
-		dst[key] = cloned
+		dst[key] = slices.Clone(values)
 	}
 	return dst
 }
