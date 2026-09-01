@@ -245,9 +245,15 @@ func storeRequestBodySnapshot(c *echo.Context, bodyBytes []byte) {
 
 	bodyNotCaptured := int64(len(bodyBytes)) > auditlog.MaxBodyCapture
 	capturedBody := bodyBytes
-	if bodyNotCaptured {
+	if int64(len(bodyBytes)) > sessionBodyCaptureLimit {
+		// Never keep bodies beyond the session-detection bound in memory.
 		capturedBody = nil
 	}
+	// BodyNotCaptured keeps its AUDIT meaning (beyond auditlog.MaxBodyCapture →
+	// log "too big to handle", don't persist the body). The body itself stays
+	// available on the snapshot up to sessionBodyCaptureLimit so session
+	// detection and other body-derived features still work for large agent
+	// requests; audit entry capture checks the flag first and skips storage.
 
 	updated := snapshot.WithOwnedCapturedBody(capturedBody, bodyNotCaptured)
 	ctx := core.WithRequestSnapshot(req.Context(), updated)

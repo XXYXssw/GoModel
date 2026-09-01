@@ -15,6 +15,18 @@ import (
 
 const interactionParentHeader = "X-GoModel-Interaction-Parent"
 
+// sessionBodyCaptureLimit bounds how much of a request body is read for
+// session detection. Agent clients (DeepSeek Harness, Claude Code, Codex)
+// routinely send 200KB–2MB chat bodies; the previous cap (auditlog.MaxBodyCapture,
+// 256KB) made every large conversation lose its auto-detected session, so the
+// dashboard grouped those requests as one-off conversations. Session detection
+// only needs the conversation prefix (model + system + opening messages), which
+// sits at the start of the body, so 2MB covers real-world agent payloads.
+// Bodies beyond auditlog.MaxBodyCapture are still dropped from the snapshot
+// after detection, keeping the audit "body too big" behavior and storage cap
+// exactly as before.
+const sessionBodyCaptureLimit = 8 * auditlog.MaxBodyCapture // 2MB
+
 type interactionParentLookup interface {
 	GetInteractionParent(ctx context.Context, id string) (*auditlog.InteractionParent, error)
 }
@@ -63,11 +75,19 @@ func sessionCapture(detector *session.Detector, parentLookup interactionParentLo
 			}
 
 			var err error
-			snapshot, err = sessionDetectionSnapshot(c, snapshot)
+			var oversized bool
+			snapshot, oversized, err = sessionDetectionSnapshot(c, snapshot)
 			if err != nil {
 				return handleError(c, core.NewInvalidRequestError("failed to read request body", err))
 			}
 			detectAndStamp(snapshot)
+			// Session detection used the captured body; for bodies beyond the
+			// audit capture cap, drop the body afterwards so audit logging keeps
+			// its historical "too big to handle" behavior. The stamped session
+			// id lives in the request context, not in the captured body.
+			if oversized {
+				snapshot = markSessionBodyNotCaptured(c, snapshot)
+			}
 			return next(c)
 		}
 	}
@@ -101,25 +121,28 @@ func interactionParentSession(c *echo.Context, lookup interactionParentLookup, a
 }
 
 // sessionDetectionSnapshot returns a snapshot whose complete body is available
-// for session detection, up to MaxBodyCapture. It never reads a known-oversized
-// body and peeks only limit+1 bytes from an unknown-length body. Oversized
-// bodies are replayed intact for the handler and fall back to header signals.
-func sessionDetectionSnapshot(c *echo.Context, snapshot *core.RequestSnapshot) (*core.RequestSnapshot, error) {
+// for session detection, up to sessionBodyCaptureLimit. It never reads a
+// known-oversized body and peeks only limit+1 bytes from an unknown-length
+// body. Oversized bodies are replayed intact for the handler and fall back to
+// header signals. The returned oversized flag reports that the body exceeded
+// auditlog.MaxBodyCapture, so the caller can drop it from the snapshot after
+// detection and keep audit logging's storage behavior unchanged.
+func sessionDetectionSnapshot(c *echo.Context, snapshot *core.RequestSnapshot) (*core.RequestSnapshot, bool, error) {
 	switch core.DescribeEndpoint(snapshot.Method, snapshot.Path).BodyMode {
 	case core.BodyModeJSON, core.BodyModeOpaque:
 	default:
-		return snapshot, nil
+		return snapshot, false, nil
 	}
 	req := c.Request()
 	if req.Body == nil {
-		return snapshot, nil
+		return snapshot, false, nil
 	}
-	if req.ContentLength > auditlog.MaxBodyCapture {
-		return markSessionBodyNotCaptured(c, snapshot), nil
+	if req.ContentLength > sessionBodyCaptureLimit {
+		return markSessionBodyNotCaptured(c, snapshot), true, nil
 	}
 
 	originalBody := req.Body
-	body, err := io.ReadAll(io.LimitReader(originalBody, auditlog.MaxBodyCapture+1))
+	body, err := io.ReadAll(io.LimitReader(originalBody, sessionBodyCaptureLimit+1))
 	if err != nil {
 		// Preserve the bytes already consumed even though this request will be
 		// rejected, keeping the helper's ownership contract explicit.
@@ -127,14 +150,14 @@ func sessionDetectionSnapshot(c *echo.Context, snapshot *core.RequestSnapshot) (
 			Reader: io.MultiReader(bytes.NewReader(body), originalBody),
 			rc:     originalBody,
 		}
-		return snapshot, err
+		return snapshot, false, err
 	}
-	if int64(len(body)) > auditlog.MaxBodyCapture {
+	if int64(len(body)) > sessionBodyCaptureLimit {
 		req.Body = &combinedReadCloser{
 			Reader: io.MultiReader(bytes.NewReader(body), originalBody),
 			rc:     originalBody,
 		}
-		return markSessionBodyNotCaptured(c, snapshot), nil
+		return markSessionBodyNotCaptured(c, snapshot), true, nil
 	}
 
 	// The full body fit. Cache it on the shared snapshot and replay the same
@@ -142,9 +165,13 @@ func sessionDetectionSnapshot(c *echo.Context, snapshot *core.RequestSnapshot) (
 	req.Body = &combinedReadCloser{Reader: bytes.NewReader(body), rc: originalBody}
 	storeRequestBodySnapshot(c, body)
 	if refreshed := core.GetRequestSnapshot(c.Request().Context()); refreshed != nil {
-		return refreshed, nil
+		snapshot = refreshed
 	}
-	return snapshot, nil
+	// Bodies beyond the audit capture cap were captured only for session
+	// detection; the caller drops them from the snapshot after stamping so
+	// audit logging keeps its historical "too big to handle" behavior instead
+	// of storing multi-MB payloads.
+	return snapshot, int64(len(body)) > auditlog.MaxBodyCapture, nil
 }
 
 func markSessionBodyNotCaptured(c *echo.Context, snapshot *core.RequestSnapshot) *core.RequestSnapshot {

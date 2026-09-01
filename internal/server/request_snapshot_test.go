@@ -169,8 +169,10 @@ func TestSemanticJSONBodyRefreshesPromptFromFullBody(t *testing.T) {
 
 	updated := core.GetRequestSnapshot(c.Request().Context())
 	require.NotNil(t, updated)
+	// 审计语义不变：超过 auditlog.MaxBodyCapture 仍标记 not captured（审计不落盘）
 	assert.True(t, updated.BodyNotCaptured)
-	assert.Nil(t, updated.CapturedBodyView())
+	// 但 body 保留在 snapshot 上（≤ sessionBodyCaptureLimit）供会话检测等使用
+	assert.NotNil(t, updated.CapturedBodyView())
 }
 
 func TestStoreRequestBodySnapshot_PreservesPassthroughEnrichment(t *testing.T) {

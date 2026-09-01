@@ -53,7 +53,10 @@ func (d *Detector) Detect(snapshot *core.RequestSnapshot, userPath string) strin
 		return scopeSessionID(id, userPath)
 	}
 	body := snapshot.CapturedBodyView()
-	if snapshot.BodyNotCaptured || len(body) == 0 || !gjson.ValidBytes(body) {
+	// BodyNotCaptured now only reflects the AUDIT storage cap: bodies between
+	// the audit cap and sessionBodyCaptureLimit are still captured on the
+	// snapshot for session detection, so detection proceeds on body content.
+	if len(body) == 0 || !gjson.ValidBytes(body) {
 		return ""
 	}
 	if id := d.detectFromBody(body); id != "" {

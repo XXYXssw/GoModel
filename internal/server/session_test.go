@@ -401,7 +401,7 @@ func TestSessionCaptureMaterializesChunkedBody(t *testing.T) {
 
 func TestSessionCaptureDoesNotPreReadKnownOversizedBody(t *testing.T) {
 	detector := session.NewDetector(session.BuiltinRules(), true)
-	bodyText := strings.Repeat("x", int(auditlog.MaxBodyCapture)+1)
+	bodyText := strings.Repeat("x", int(sessionBodyCaptureLimit)+1)
 	body := &countingReadCloser{reader: strings.NewReader(bodyText)}
 
 	c, _ := sessionBodyTestContext(
@@ -432,7 +432,7 @@ func TestSessionCaptureDoesNotPreReadKnownOversizedBody(t *testing.T) {
 
 func TestSessionCaptureBoundsUnknownOversizedBodyAndReplaysIt(t *testing.T) {
 	detector := session.NewDetector(session.BuiltinRules(), true)
-	bodyText := strings.Repeat("x", int(auditlog.MaxBodyCapture)+128)
+	bodyText := strings.Repeat("x", int(sessionBodyCaptureLimit)+128)
 	body := &countingReadCloser{reader: strings.NewReader(bodyText)}
 
 	c, _ := sessionBodyTestContext(
@@ -444,8 +444,8 @@ func TestSessionCaptureBoundsUnknownOversizedBodyAndReplaysIt(t *testing.T) {
 	)
 
 	handler := sessionCapture(detector, nil, false)(func(c *echo.Context) error {
-		if body.read != auditlog.MaxBodyCapture+1 {
-			t.Fatalf("session detection read = %d, want bounded %d", body.read, auditlog.MaxBodyCapture+1)
+		if body.read != sessionBodyCaptureLimit+1 {
+			t.Fatalf("session detection read = %d, want bounded %d", body.read, sessionBodyCaptureLimit+1)
 		}
 		remaining, err := io.ReadAll(c.Request().Body)
 		if err != nil {
@@ -453,6 +453,40 @@ func TestSessionCaptureBoundsUnknownOversizedBodyAndReplaysIt(t *testing.T) {
 		}
 		if string(remaining) != bodyText {
 			t.Fatal("bounded session peek did not replay the complete body")
+		}
+		return nil
+	})
+	if err := handler(c); err != nil {
+		t.Fatalf("handler error = %v", err)
+	}
+}
+
+// Large agent bodies (DeepSeek Harness, Claude Code) exceed the audit capture
+// cap but must still get an auto-detected session; the body itself is dropped
+// from the snapshot after detection so audit logging keeps its "too big"
+// behavior.
+func TestSessionCaptureDetectsSessionFromLargeBody(t *testing.T) {
+	detector := session.NewDetector(session.BuiltinRules(), true)
+	largeContent := strings.Repeat("x", int(auditlog.MaxBodyCapture)+128) // ~256KB, well under session cap
+	reqBody := `{"model":"gpt-5-mini","messages":[{"role":"system","content":"You are a helpful assistant."},{"role":"user","content":"` + largeContent + `"}]}`
+	body := &countingReadCloser{reader: strings.NewReader(reqBody)}
+
+	c, _ := sessionBodyTestContext(
+		t,
+		"/v1/chat/completions",
+		body,
+		int64(len(reqBody)),
+		true,
+	)
+
+	handler := sessionCapture(detector, nil, false)(func(c *echo.Context) error {
+		sid := core.SessionIDFromContext(c.Request().Context())
+		if !strings.HasPrefix(sid, "auto-") {
+			t.Fatalf("session id = %q, want auto- prefix for large agent body", sid)
+		}
+		snapshot := core.GetRequestSnapshot(c.Request().Context())
+		if snapshot == nil || !snapshot.BodyNotCaptured {
+			t.Fatalf("large body should stay audit-not-captured after detection")
 		}
 		return nil
 	})
