@@ -28,6 +28,7 @@ var credentialSQLSchema = []string{
 		api_mode TEXT NOT NULL DEFAULT '',
 		responses_mode TEXT NOT NULL DEFAULT '',
 		proxy TEXT NOT NULL DEFAULT '',
+		headers TEXT NOT NULL DEFAULT '{}',
 		vertex_project TEXT NOT NULL DEFAULT '',
 		vertex_location TEXT NOT NULL DEFAULT '',
 		service_account_file TEXT NOT NULL DEFAULT '',
@@ -42,7 +43,7 @@ var credentialSQLSchema = []string{
 	`CREATE INDEX IF NOT EXISTS idx_provider_credentials_enabled ON provider_credentials(enabled)`,
 }
 
-const selectCredentialColumns = `name, type, api_keys, base_url, api_version, backend, auth_type, api_mode, responses_mode, proxy, ` +
+const selectCredentialColumns = `name, type, api_keys, base_url, api_version, backend, auth_type, api_mode, responses_mode, proxy, headers, ` +
 	`vertex_project, vertex_location, service_account_file, service_account_json, ` +
 	`service_account_json_base64, gcp_scope, models, session_sticky_keys, enabled, created_at, updated_at`
 
@@ -59,6 +60,7 @@ func NewSQLCredentialStore(ctx context.Context, db sqlx.DB) (*SQLCredentialStore
 		`ALTER TABLE provider_credentials ADD COLUMN session_sticky_keys `+sqlx.TypeBool+` NOT NULL DEFAULT TRUE`,
 		`ALTER TABLE provider_credentials ADD COLUMN responses_mode TEXT NOT NULL DEFAULT ''`,
 		`ALTER TABLE provider_credentials ADD COLUMN proxy TEXT NOT NULL DEFAULT ''`,
+		`ALTER TABLE provider_credentials ADD COLUMN headers TEXT NOT NULL DEFAULT '{}'`,
 	); err != nil {
 		return nil, fmt.Errorf("migrate provider_credentials: %w", err)
 	}
@@ -105,13 +107,17 @@ func (s *SQLCredentialStore) Upsert(ctx context.Context, cred ManagedProviderCre
 	if err != nil {
 		return err
 	}
+	headersJSON, err := encodeCredentialHeaders(cred.Headers)
+	if err != nil {
+		return err
+	}
 	_, err = s.db.Exec(ctx, `
 		INSERT INTO provider_credentials (
-			name, type, api_keys, base_url, api_version, backend, auth_type, api_mode, responses_mode, proxy,
+			name, type, api_keys, base_url, api_version, backend, auth_type, api_mode, responses_mode, proxy, headers,
 			vertex_project, vertex_location, service_account_file, service_account_json,
 			service_account_json_base64, gcp_scope, models, session_sticky_keys, enabled, created_at, updated_at
 		)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 		ON CONFLICT(name) DO UPDATE SET
 			type = excluded.type,
 			api_keys = excluded.api_keys,
@@ -122,6 +128,7 @@ func (s *SQLCredentialStore) Upsert(ctx context.Context, cred ManagedProviderCre
 			api_mode = excluded.api_mode,
 			responses_mode = excluded.responses_mode,
 			proxy = excluded.proxy,
+			headers = excluded.headers,
 			vertex_project = excluded.vertex_project,
 			vertex_location = excluded.vertex_location,
 			service_account_file = excluded.service_account_file,
@@ -143,6 +150,7 @@ func (s *SQLCredentialStore) Upsert(ctx context.Context, cred ManagedProviderCre
 		cred.APIMode,
 		cred.ResponsesMode,
 		cred.Proxy,
+		headersJSON,
 		cred.VertexProject,
 		cred.VertexLocation,
 		cred.ServiceAccountFile,
@@ -179,7 +187,7 @@ func (s *SQLCredentialStore) Close() error {
 
 func scanSQLCredential(scanner sqlx.Row) (ManagedProviderCredential, error) {
 	var cred ManagedProviderCredential
-	var apiKeys, models []byte
+	var apiKeys, models, headers []byte
 	var sessionStickyKeys bool
 	var createdAt, updatedAt int64
 	if err := scanner.Scan(
@@ -193,6 +201,7 @@ func scanSQLCredential(scanner sqlx.Row) (ManagedProviderCredential, error) {
 		&cred.APIMode,
 		&cred.ResponsesMode,
 		&cred.Proxy,
+		&headers,
 		&cred.VertexProject,
 		&cred.VertexLocation,
 		&cred.ServiceAccountFile,
@@ -213,6 +222,9 @@ func scanSQLCredential(scanner sqlx.Row) (ManagedProviderCredential, error) {
 		return ManagedProviderCredential{}, err
 	}
 	if cred.Models, err = decodeCredentialList(models); err != nil {
+		return ManagedProviderCredential{}, err
+	}
+	if cred.Headers, err = decodeCredentialHeaders(headers); err != nil {
 		return ManagedProviderCredential{}, err
 	}
 	cred.CreatedAt = time.Unix(createdAt, 0).UTC()

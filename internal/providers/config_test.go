@@ -1951,3 +1951,71 @@ func TestApplyProviderEnvVars_ResponsesMode(t *testing.T) {
 		})
 	}
 }
+
+// --- custom upstream headers ---
+
+func TestBuildProviderConfig_ResolvesCustomHeaders(t *testing.T) {
+	raw := config.RawProviderConfig{
+		Type:    "openai",
+		APIKey:  "sk-test",
+		Headers: map[string]string{"X-Title": "my-app", "x-tenant": " team-a "},
+	}
+	got := buildProviderConfig(raw, globalResilience)
+
+	// Names are canonicalized and values trimmed, so a hand-written YAML map
+	// cannot produce a header the HTTP client would then send twice.
+	if got.Headers["X-Title"] != "my-app" {
+		t.Errorf("Headers[X-Title] = %q, want my-app", got.Headers["X-Title"])
+	}
+	if got.Headers["X-Tenant"] != "team-a" {
+		t.Errorf("Headers[X-Tenant] = %q, want team-a", got.Headers["X-Tenant"])
+	}
+	if _, ok := got.Headers["x-tenant"]; ok {
+		t.Error("Headers retained the non-canonical name x-tenant")
+	}
+}
+
+func TestBuildProviderConfig_DropsUnusableCustomHeaders(t *testing.T) {
+	tests := []struct {
+		name    string
+		headers map[string]string
+		want    int
+	}{
+		{name: "nil", headers: nil, want: 0},
+		{name: "empty", headers: map[string]string{}, want: 0},
+		{
+			name:    "blank value",
+			headers: map[string]string{"X-Title": "   "},
+			want:    0,
+		},
+		{
+			// An unresolved ${VAR} would be sent upstream verbatim as a
+			// literal, so it is dropped like an unresolved API key.
+			name:    "unresolved placeholder",
+			headers: map[string]string{"X-Title": "${MISSING}"},
+			want:    0,
+		},
+		{
+			name:    "blank name",
+			headers: map[string]string{"  ": "value"},
+			want:    0,
+		},
+		{
+			name:    "one usable, one not",
+			headers: map[string]string{"X-Title": "my-app", "X-Empty": ""},
+			want:    1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := buildProviderConfig(config.RawProviderConfig{
+				Type:    "openai",
+				APIKey:  "sk-test",
+				Headers: tt.headers,
+			}, globalResilience)
+			if len(got.Headers) != tt.want {
+				t.Errorf("len(Headers) = %d, want %d (got %v)", len(got.Headers), tt.want, got.Headers)
+			}
+		})
+	}
+}

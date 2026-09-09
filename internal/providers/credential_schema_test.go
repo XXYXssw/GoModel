@@ -42,25 +42,25 @@ func TestCredentialSchemas_DerivesTheFormFromDiscoveryFlags(t *testing.T) {
 		{
 			name:     "an API key against one endpoint",
 			spec:     DiscoveryConfig{DefaultBaseURL: "https://api.example.com/v1"},
-			fields:   []string{"api_keys", "base_url", "responses_mode", "proxy", "session_sticky_keys", "models"},
+			fields:   []string{"api_keys", "base_url", "responses_mode", "proxy", "session_sticky_keys", "models", "headers"},
 			required: []string{"api_keys"},
 			// Nothing else to configure once the key is filled in.
-			advanced: []string{"base_url", "session_sticky_keys", "models"},
+			advanced: []string{"base_url", "session_sticky_keys", "models", "headers"},
 		},
 		{
 			name:     "keyless",
 			spec:     DiscoveryConfig{DefaultBaseURL: "http://localhost:11434", AllowAPIKeyless: true},
-			fields:   []string{"api_keys", "base_url", "responses_mode", "proxy", "session_sticky_keys", "models"},
+			fields:   []string{"api_keys", "base_url", "responses_mode", "proxy", "session_sticky_keys", "models", "headers"},
 			required: nil,
 			// With no key to fill in, the endpoint is the configuration.
-			advanced: []string{"session_sticky_keys", "models"},
+			advanced: []string{"session_sticky_keys", "models", "headers"},
 		},
 		{
 			name:     "an endpoint the operator must name",
 			spec:     DiscoveryConfig{RequireBaseURL: true, SupportsAPIVersion: true},
-			fields:   []string{"api_keys", "base_url", "api_version", "responses_mode", "proxy", "session_sticky_keys", "models"},
+			fields:   []string{"api_keys", "base_url", "api_version", "responses_mode", "proxy", "session_sticky_keys", "models", "headers"},
 			required: []string{"api_keys", "base_url"},
-			advanced: []string{"session_sticky_keys", "models"},
+			advanced: []string{"session_sticky_keys", "models", "headers"},
 		},
 	}
 
@@ -120,7 +120,7 @@ func TestCredentialSchemas_UsesTheRegistrationsDeclaredForm(t *testing.T) {
 	})
 
 	schema := factory.CredentialSchemas()[0]
-	if got, want := fieldNames(schema), []string{"auth_type", "vertex_project", "base_url", "models"}; !equalStrings(got, want) {
+	if got, want := fieldNames(schema), []string{"auth_type", "vertex_project", "base_url", "models", "headers"}; !equalStrings(got, want) {
 		t.Fatalf("fields = %v, want %v (declared order, models appended)", got, want)
 	}
 	// A type that authenticates another way must not offer an API key field.

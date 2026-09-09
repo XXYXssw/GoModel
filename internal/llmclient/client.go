@@ -91,6 +91,12 @@ type Config struct {
 	// HTTP(S) proxy (e.g. "http://127.0.0.1:7890"). Empty means the provider
 	// does not use a proxy (the default).
 	ProxyURL string
+	// Headers are extra HTTP headers merged into every request this client
+	// sends upstream (per-provider custom headers). Names are canonical;
+	// values are applied with Set so a custom header replaces whatever the
+	// provider set rather than appending to it — a second Authorization value
+	// would be a credential leak, not an override. Empty means none.
+	Headers map[string]string
 	// Hooks provides optional observability callbacks invoked on request start and end.
 	Hooks Hooks
 }
@@ -857,6 +863,14 @@ func (c *Client) buildRequest(ctx context.Context, req Request) (*http.Request, 
 		for _, value := range values {
 			httpReq.Header.Add(key, value)
 		}
+	}
+
+	// Apply the operator's custom headers last: they are the deliberate
+	// override, so they win over anything a provider or one request set for
+	// the same name. Set (not Add) keeps a single value, so a custom header
+	// never appends to — and never sits beside — a credential header.
+	for key, value := range c.config.Headers {
+		httpReq.Header.Set(key, value)
 	}
 
 	return httpReq, nil

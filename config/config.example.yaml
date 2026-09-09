@@ -333,6 +333,14 @@ providers:
     # proxy: optionally route this provider's upstream requests through an
     #        HTTP(S) proxy (e.g. "http://127.0.0.1:7890"). Empty = no proxy.
     # proxy: http://127.0.0.1:7890
+    # Extra HTTP headers sent with every request to this provider, for
+    # gateways needing an extra token, tenant or attribution header. They are
+    # applied last, so a name set here overrides the credential header the
+    # provider sets. Values are strings; use ${VAR} to keep secrets in the
+    # environment. Empty = no extra headers (default).
+    # headers:
+    #   X-Title: "my-app"
+    #   HTTP-Referer: "${MY_SITE_URL}"
     # Per-provider resilience overrides (optional).
     # Only specified fields override the global defaults above.
     # resilience:

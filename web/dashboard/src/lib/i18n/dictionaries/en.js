@@ -882,5 +882,9 @@ export default {
   "providers.responsesMode": "Responses Mode",
   "providers.proxy": "Proxy",
   "providers.proxyHint": "Whether this provider's outbound requests go through a proxy. Empty = no proxy (default). Set an address such as http://127.0.0.1:7890 to route all of this provider's requests through it.",
+  "providers.headers": "Custom headers",
+  "providers.headersHint": "Extra HTTP headers sent with every request to this provider, for gateways that need an extra token, tenant, or attribution header. They are applied last, so a name here overrides the credential header the provider sets. Values are shown masked once saved; leave the mask unchanged to keep the stored value.",
+  "providers.addHeader": "Add header",
+  "providers.headerDuplicate": 'Duplicate header name "{name}".',
   "providers.responsesModeHint": "How /v1/responses requests reach this provider. \"Native\" forwards them to the upstream /responses endpoint (for providers that support both chat and responses). \"Convert\" translates them to /chat/completions (for providers that only support chat completions). Empty keeps the provider type default.",
 };

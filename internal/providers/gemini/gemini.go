@@ -136,6 +136,7 @@ func newProvider(providerCfg providers.ProviderConfig, opts providers.ProviderOp
 		Hooks:          opts.Hooks,
 		CircuitBreaker: opts.Resilience.CircuitBreaker,
 		ProxyURL:       opts.Proxy,
+		Headers:         opts.Headers,
 	}
 	nativeCfg := clientCfg
 	nativeCfg.BaseURL = nativeBaseURL

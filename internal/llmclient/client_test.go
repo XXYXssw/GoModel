@@ -2036,3 +2036,63 @@ func TestPreTransportErrorsCloseRawBodyReader(t *testing.T) {
 		}
 	})
 }
+
+// Custom per-provider headers must land on the wire last, so they win over the
+// credential the provider set — and with Set, never as a second value that
+// would leak a credential or confuse the upstream.
+func TestClient_AppliesCustomHeadersLast(t *testing.T) {
+	var received http.Header
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		received = r.Header.Clone()
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+
+	cfg := DefaultConfig("test", server.URL)
+	cfg.Headers = map[string]string{
+		"X-Title":       "my-app",
+		"Authorization": "Bearer custom", // deliberate override of the credential
+	}
+	client := New(cfg, func(req *http.Request) {
+		req.Header.Set("Authorization", "Bearer rotated-key")
+	})
+
+	if err := client.Do(context.Background(), Request{Method: http.MethodGet, Endpoint: "/test"}, nil); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := received.Get("X-Title"); got != "my-app" {
+		t.Errorf("X-Title = %q, want my-app", got)
+	}
+	// The override must replace the credential header, not join it: two
+	// Authorization values would send the rotated key alongside the custom one.
+	if got := received.Values("Authorization"); len(got) != 1 || got[0] != "Bearer custom" {
+		t.Errorf("Authorization values = %v, want exactly [Bearer custom]", got)
+	}
+}
+
+func TestClient_CustomHeadersDoNotOverridePerRequestHeaders(t *testing.T) {
+	var received http.Header
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		received = r.Header.Clone()
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	}))
+	defer server.Close()
+
+	cfg := DefaultConfig("test", server.URL)
+	cfg.Headers = map[string]string{"X-Title": "my-app"}
+	client := New(cfg, nil)
+
+	err := client.Do(context.Background(), Request{
+		Method:   http.MethodGet,
+		Endpoint: "/test",
+		Headers:  http.Header{"X-Title": {"per-request"}},
+	}, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := received.Values("X-Title"); len(got) != 1 || got[0] != "my-app" {
+		t.Errorf("X-Title values = %v, want exactly [my-app]", got)
+	}
+}

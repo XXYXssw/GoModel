@@ -36,6 +36,7 @@ type SanitizedProviderConfig struct {
 	APIVersion        string                    `json:"api_version,omitempty"`
 	Models            []string                  `json:"models,omitempty"`
 	SessionStickyKeys bool                      `json:"session_sticky_keys"`
+	Headers           map[string]string         `json:"headers,omitempty"`
 	Resilience        SanitizedResilienceConfig `json:"resilience"`
 }
 
@@ -104,6 +105,10 @@ func SanitizeProviderConfigs(configs map[string]ProviderConfig) []SanitizedProvi
 			APIVersion:        strings.TrimSpace(cfg.APIVersion),
 			Models:            models,
 			SessionStickyKeys: cfg.SessionStickyKeys,
+			// Only the names: a declarative provider's header values can be
+			// secrets the operator typed into config.yaml, and this view is
+			// served to any dashboard caller allowed to read provider rows.
+			Headers: credentialHeaderNames(cfg.Headers),
 			Resilience: SanitizedResilienceConfig{
 				Retry: SanitizedRetryConfig{
 					MaxRetries:     cfg.Resilience.Retry.MaxRetries,
@@ -130,4 +135,18 @@ func timePtrUTC(t time.Time) *time.Time {
 	}
 	value := t.UTC()
 	return &value
+}
+
+// credentialHeaderNames keeps only the names of a provider's custom upstream
+// headers, so an admin view can show which headers are configured without
+// disclosing the values (which may be secrets typed into config.yaml).
+func credentialHeaderNames(headers map[string]string) map[string]string {
+	if len(headers) == 0 {
+		return nil
+	}
+	names := make(map[string]string, len(headers))
+	for name := range headers {
+		names[name] = ""
+	}
+	return names
 }

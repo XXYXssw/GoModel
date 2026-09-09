@@ -14,6 +14,9 @@ import {
   providerCredentialAuthLabel,
   providerCredentialModelsLabel,
   providerCredentialKeysToRows,
+  providerCredentialHeadersToRows,
+  providerCredentialHeaderRowsToObject,
+  validateProviderCredentialHeaders,
   providerCredentialKeyRowsToArray,
   suggestProviderCredentialName,
   splitCommaList,
@@ -97,6 +100,7 @@ test("the payload carries the fields the provider type accepts", () => {
     "api_keys",
     "base_url",
     "enabled",
+    "headers",
     "models",
     "name",
     "session_sticky_keys",
@@ -547,4 +551,51 @@ test("splitCommaList trims and drops empties", () => {
     ["gpt-4o", "gpt-4o-mini"],
   );
   assert.deepEqual(splitCommaList(""), []);
+});
+
+test("providerCredentialHeadersToRows sorts stored headers by name", () => {
+  const rows = providerCredentialHeadersToRows({ "X-Title": "a", "Authorization": "***********" });
+  assert.deepEqual(rows, [
+    { name: "Authorization", value: "***********" },
+    { name: "X-Title", value: "a" },
+  ]);
+  assert.deepEqual(providerCredentialHeadersToRows(undefined), []);
+  assert.deepEqual(providerCredentialHeadersToRows(null), []);
+  assert.deepEqual(providerCredentialHeadersToRows([]), []);
+});
+
+test("providerCredentialHeaderRowsToObject keeps masks verbatim and drops unnamed rows", () => {
+  const obj = providerCredentialHeaderRowsToObject([
+    { name: "Authorization", value: "***********" },
+    { name: " X-Title ", value: " my-app " },
+    { name: "  ", value: "orphan" },
+  ]);
+  assert.deepEqual(obj, {
+    Authorization: "***********",
+    "X-Title": " my-app ",
+  });
+  assert.deepEqual(providerCredentialHeaderRowsToObject(undefined), {});
+});
+
+test("validateProviderCredentialHeaders rejects duplicate names case-insensitively", () => {
+  assert.equal(validateProviderCredentialHeaders([{ name: "X-Title", value: "a" }]), "");
+  const dup = validateProviderCredentialHeaders([
+    { name: "X-Title", value: "a" },
+    { name: "x-title", value: "b" },
+  ]);
+  assert.notEqual(dup, "");
+  assert.match(dup, /X-Title|x-title/);
+  assert.equal(validateProviderCredentialHeaders(undefined), "");
+});
+
+test("the payload carries custom headers as a wire object", () => {
+  const form = {
+    ...defaultProviderCredentialForm(),
+    name: "my-openai",
+    type: "openai",
+    api_keys: [{ value: "sk-live-123" }],
+    headers: [{ name: "X-Title", value: "my-app" }],
+  };
+  const body = buildProviderCredentialPayload(form, OPENAI_SCHEMA);
+  assert.deepEqual(body.headers, { "X-Title": "my-app" });
 });

@@ -54,7 +54,11 @@ type ManagedProviderCredential struct {
 	ResponsesMode            string
 	// Proxy optionally routes this provider's upstream requests through an
 	// HTTP(S) proxy (e.g. "http://127.0.0.1:7890"). Empty means no proxy.
-	Proxy                    string
+	Proxy string
+	// Headers are extra HTTP headers added to every request this provider
+	// sends upstream. Values are redacted on read; sending the redaction
+	// placeholder back keeps the stored value.
+	Headers                  map[string]string
 	VertexProject            string
 	VertexLocation           string
 	ServiceAccountFile       string
@@ -89,6 +93,7 @@ func (m ManagedProviderCredential) toRawProviderConfig() config.RawProviderConfi
 		APIMode:                  m.APIMode,
 		ResponsesMode:            m.ResponsesMode,
 		Proxy:                    m.Proxy,
+		Headers:                  m.Headers,
 		VertexProject:            m.VertexProject,
 		VertexLocation:           m.VertexLocation,
 		ServiceAccountFile:       m.ServiceAccountFile,

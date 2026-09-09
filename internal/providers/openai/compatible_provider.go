@@ -91,6 +91,10 @@ type CompatibleProvider struct {
 	// the same rotation as the HTTP endpoints.
 	keys               *providers.Keyring
 	providerName       string
+	// customHeaders are the operator's extra upstream headers, retained so the
+	// realtime websocket dial can apply them too — it does not go through the
+	// HTTP client that applies them for every other request.
+	customHeaders      map[string]string
 	requestMutator     RequestMutator
 	adaptChatRequest   func(*core.ChatRequest) (*core.ChatRequest, error)
 	chatRequestHeaders func(context.Context, *core.ChatRequest) http.Header
@@ -101,6 +105,7 @@ func NewCompatibleProvider(apiKey string, opts providers.ProviderOptions, cfg Co
 		keys:               opts.Keyring(apiKey),
 		providerName:       cfg.ProviderName,
 		responsesMode:      responsesModeFor(opts, cfg),
+		customHeaders:      opts.Headers,
 		requestMutator:     cfg.RequestMutator,
 		adaptChatRequest:   cfg.AdaptChatRequest,
 		chatRequestHeaders: cfg.ChatRequestHeaders,
@@ -112,6 +117,7 @@ func NewCompatibleProvider(apiKey string, opts providers.ProviderOptions, cfg Co
 		Hooks:          opts.Hooks,
 		CircuitBreaker: opts.Resilience.CircuitBreaker,
 		ProxyURL:       opts.Proxy,
+		Headers:        opts.Headers,
 	}
 	// Resolved per request, not captured: with several keys configured this is
 	// what spreads successive calls across them.

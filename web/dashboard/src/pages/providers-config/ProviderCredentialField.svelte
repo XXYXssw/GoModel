@@ -75,6 +75,51 @@
         <span>{t("providers.addKey")}</span>
       </button>
     </div>
+  {:else if field.control === "headers"}
+    <div class="vm-target-list">
+      {#each providersConfig.form.headers as header, index (index)}
+        <div class="vm-target-row">
+          <input
+            id={index === 0 ? id : id + "-" + index}
+            type="text"
+            class="mono vm-target-model"
+            placeholder="X-Title"
+            aria-label={"Header name " + (index + 1)}
+            aria-invalid={error ? "true" : undefined}
+            aria-describedby={index === 0 ? describedBy : undefined}
+            bind:value={header.name}
+            oninput={onInput}
+          />
+          <input
+            type="text"
+            class="mono vm-target-model"
+            placeholder="my-app"
+            aria-label={"Header value " + (index + 1)}
+            aria-invalid={error ? "true" : undefined}
+            bind:value={header.value}
+            oninput={onInput}
+          />
+          <TableActionButton
+            label={"Remove header " + (index + 1)}
+            class="table-action-btn-danger table-icon-btn vm-target-remove"
+            onclick={() => providersConfig.removeHeaderRow(index)}
+          >
+            <Icon icon={Trash2} class="table-icon-svg" />
+          </TableActionButton>
+        </div>
+      {/each}
+    </div>
+    <div class="failover-target-actions">
+      <button
+        type="button"
+        id={providersConfig.form.headers.length === 0 ? id : undefined}
+        class="btn btn-with-icon"
+        onclick={() => providersConfig.addHeaderRow()}
+      >
+        <Icon icon={Plus} class="form-action-icon" />
+        <span>{t("providers.addHeader")}</span>
+      </button>
+    </div>
   {:else if field.control === "select"}
     <select
       {id}

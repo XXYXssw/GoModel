@@ -882,5 +882,9 @@ export default {
   "providers.responsesMode": "Responses 模式",
   "providers.proxy": "代理",
   "providers.proxyHint": "该供应商的出站请求是否走代理。留空 = 不走代理（默认）。填写代理地址（如 http://127.0.0.1:7890）后，该供应商的所有请求都通过该代理转发。",
+  "providers.headers": "自定义请求头",
+  "providers.headersHint": "随该供应商的每个请求一起发送的额外 HTTP 请求头，适用于需要额外令牌、租户或来源标识的网关。它们在最后应用，因此此处填写的名称会覆盖供应商设置的鉴权头。值在保存后以掩码显示；保持掩码不变即保留已存储的值。",
+  "providers.addHeader": "添加请求头",
+  "providers.headerDuplicate": "请求头名称 \"{name}\" 重复。",
   "providers.responsesModeHint": "该供应商如何处理 /v1/responses 请求。“原生”直接转发到上游 /responses 端点（适用于同时支持 chat 与 responses 的供应商）；“转换”将其转换为 /chat/completions（适用于只支持 chat completions 的供应商）。留空沿用供应商类型默认。",
 };

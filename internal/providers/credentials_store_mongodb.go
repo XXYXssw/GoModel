@@ -12,25 +12,26 @@ import (
 )
 
 type mongoCredentialDocument struct {
-	ID                       string    `bson:"_id"`
-	Type                     string    `bson:"type"`
-	APIKeys                  []string  `bson:"api_keys,omitempty"`
-	BaseURL                  string    `bson:"base_url,omitempty"`
-	APIVersion               string    `bson:"api_version,omitempty"`
-	Backend                  string    `bson:"backend,omitempty"`
-	AuthType                 string    `bson:"auth_type,omitempty"`
-	APIMode                  string    `bson:"api_mode,omitempty"`
-	VertexProject            string    `bson:"vertex_project,omitempty"`
-	VertexLocation           string    `bson:"vertex_location,omitempty"`
-	ServiceAccountFile       string    `bson:"service_account_file,omitempty"`
-	ServiceAccountJSON       string    `bson:"service_account_json,omitempty"`
-	ServiceAccountJSONBase64 string    `bson:"service_account_json_base64,omitempty"`
-	GCPScope                 string    `bson:"gcp_scope,omitempty"`
-	Models                   []string  `bson:"models,omitempty"`
-	SessionStickyKeys        *bool     `bson:"session_sticky_keys,omitempty"`
-	Enabled                  bool      `bson:"enabled"`
-	CreatedAt                time.Time `bson:"created_at"`
-	UpdatedAt                time.Time `bson:"updated_at"`
+	ID                       string            `bson:"_id"`
+	Type                     string            `bson:"type"`
+	APIKeys                  []string          `bson:"api_keys,omitempty"`
+	BaseURL                  string            `bson:"base_url,omitempty"`
+	APIVersion               string            `bson:"api_version,omitempty"`
+	Backend                  string            `bson:"backend,omitempty"`
+	AuthType                 string            `bson:"auth_type,omitempty"`
+	APIMode                  string            `bson:"api_mode,omitempty"`
+	Headers                  map[string]string `bson:"headers,omitempty"`
+	VertexProject            string            `bson:"vertex_project,omitempty"`
+	VertexLocation           string            `bson:"vertex_location,omitempty"`
+	ServiceAccountFile       string            `bson:"service_account_file,omitempty"`
+	ServiceAccountJSON       string            `bson:"service_account_json,omitempty"`
+	ServiceAccountJSONBase64 string            `bson:"service_account_json_base64,omitempty"`
+	GCPScope                 string            `bson:"gcp_scope,omitempty"`
+	Models                   []string          `bson:"models,omitempty"`
+	SessionStickyKeys        *bool             `bson:"session_sticky_keys,omitempty"`
+	Enabled                  bool              `bson:"enabled"`
+	CreatedAt                time.Time         `bson:"created_at"`
+	UpdatedAt                time.Time         `bson:"updated_at"`
 }
 
 type mongoCredentialIDFilter struct {
@@ -107,6 +108,7 @@ func (s *MongoDBCredentialStore) Upsert(ctx context.Context, cred ManagedProvide
 			"backend":                     cred.Backend,
 			"auth_type":                   cred.AuthType,
 			"api_mode":                    cred.APIMode,
+			"headers":                     cred.Headers,
 			"vertex_project":              cred.VertexProject,
 			"vertex_location":             cred.VertexLocation,
 			"service_account_file":        cred.ServiceAccountFile,
@@ -153,6 +155,7 @@ func credentialFromMongo(doc mongoCredentialDocument) ManagedProviderCredential 
 		Backend:                  doc.Backend,
 		AuthType:                 doc.AuthType,
 		APIMode:                  doc.APIMode,
+		Headers:                  doc.Headers,
 		VertexProject:            doc.VertexProject,
 		VertexLocation:           doc.VertexLocation,
 		ServiceAccountFile:       doc.ServiceAccountFile,

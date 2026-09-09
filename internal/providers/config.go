@@ -2,6 +2,7 @@ package providers
 
 import (
 	"maps"
+	"net/http"
 	"os"
 	"sort"
 	"strconv"
@@ -52,6 +53,10 @@ type ProviderConfig struct {
 	// Proxy optionally routes this provider's upstream requests through an
 	// HTTP(S) proxy (e.g. "http://127.0.0.1:7890"). Empty means no proxy.
 	Proxy                    string
+	// Headers are extra HTTP headers merged into every request this provider
+	// sends upstream, for gateways needing an extra token, tenant or
+	// attribution header. Resolved values keyed by canonical header name.
+	Headers                  map[string]string
 	VertexProject            string
 	VertexLocation           string
 	ServiceAccountFile       string
@@ -887,6 +892,29 @@ func HasResolvedProviderValue(value string) bool {
 	return value != "" && !strings.Contains(value, "${")
 }
 
+// sortedCredentialHeaders returns the provider's extra upstream headers with
+// blank and unresolved-placeholder entries dropped. A header whose value is
+// still a literal `${VAR}` would be sent upstream verbatim, so it is dropped
+// here — the same rule the API key and base URL paths follow. It is called
+// once per provider at startup, so the allocation is not on the request path.
+func sortedCredentialHeaders(headers map[string]string) map[string]string {
+	if len(headers) == 0 {
+		return nil
+	}
+	resolved := make(map[string]string, len(headers))
+	for name, value := range headers {
+		name = strings.TrimSpace(name)
+		if name == "" || !HasResolvedProviderValue(value) {
+			continue
+		}
+		resolved[http.CanonicalHeaderKey(name)] = strings.TrimSpace(value)
+	}
+	if len(resolved) == 0 {
+		return nil
+	}
+	return resolved
+}
+
 // buildProviderConfigs merges each raw provider config with the global ResilienceConfig,
 // producing fully resolved ProviderConfig values.
 func buildProviderConfigs(raw map[string]config.RawProviderConfig, global config.ResilienceConfig) map[string]ProviderConfig {
@@ -914,6 +942,7 @@ func buildProviderConfig(raw config.RawProviderConfig, global config.ResilienceC
 		APIMode:                  raw.APIMode,
 		ResponsesMode:            raw.ResponsesMode,
 		Proxy:                    raw.Proxy,
+		Headers:                  sortedCredentialHeaders(raw.Headers),
 		VertexProject:            raw.VertexProject,
 		VertexLocation:           raw.VertexLocation,
 		ServiceAccountFile:       raw.ServiceAccountFile,

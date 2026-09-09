@@ -2,6 +2,7 @@ package providers
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"slices"
 	"strings"
@@ -31,6 +32,9 @@ func validateCredential(cred ManagedProviderCredential, schema CredentialSchema)
 		return err
 	}
 	if err := validateCredentialProxy(cred, schema); err != nil {
+		return err
+	}
+	if err := validateCredentialHeaders(cred, schema); err != nil {
 		return err
 	}
 	// Google's project/service-account auth replaces the "one required field
@@ -122,6 +126,80 @@ func validateCredentialProxy(cred ManagedProviderCredential, schema CredentialSc
 	default:
 		return credentialFieldError(CredentialFieldProxy,
 			"proxy scheme %q is not supported (use http, https, socks5)", u.Scheme)
+	}
+}
+
+// headerNameValid reports whether name is usable as an HTTP header field name:
+// a non-empty token per RFC 9110 (no separators, spaces, or control bytes).
+func headerNameValid(name string) bool {
+	if name == "" {
+		return false
+	}
+	for i := 0; i < len(name); i++ {
+		c := name[i]
+		if c > 0x7E || !isTokenByte(c) {
+			return false
+		}
+	}
+	return true
+}
+
+// isTokenByte is the RFC 9110 tchar set, the characters a header field name
+// may contain.
+func isTokenByte(c byte) bool {
+	switch {
+	case c >= 'a' && c <= 'z', c >= 'A' && c <= 'Z', c >= '0' && c <= '9':
+		return true
+	}
+	switch c {
+	case '!', '#', '$', '%', '&', '\'', '*', '+', '-', '.', '^', '_', '`', '|', '~':
+		return true
+	}
+	return false
+}
+
+// validateCredentialHeaders rejects a custom header that cannot be set safely:
+// a blank name, a malformed name, or a value carrying a newline (request
+// smuggling). Hop-by-hop and content headers are refused too because they
+// describe the framing of the gateway's own upstream request — overriding them
+// here corrupts the request rather than customizing it.
+func validateCredentialHeaders(cred ManagedProviderCredential, schema CredentialSchema) error {
+	if _, accepted := schema.Field(CredentialFieldHeaders); !accepted {
+		return nil
+	}
+	for name, value := range cred.Headers {
+		canonical := http.CanonicalHeaderKey(strings.TrimSpace(name))
+		if strings.TrimSpace(name) == "" {
+			return credentialFieldError(CredentialFieldHeaders, "header names cannot be blank")
+		}
+		if !headerNameValid(strings.TrimSpace(name)) {
+			return credentialFieldError(CredentialFieldHeaders,
+				"header name %q is not a valid HTTP header name", name)
+		}
+		if blockedCredentialHeader(canonical) {
+			return credentialFieldError(CredentialFieldHeaders,
+				"header %q is set by the gateway for every request and cannot be overridden here", canonical)
+		}
+		if strings.ContainsAny(value, "\r\n") {
+			return credentialFieldError(CredentialFieldHeaders,
+				"header %q value must not contain line breaks", canonical)
+		}
+	}
+	return nil
+}
+
+// blockedCredentialHeader names the headers custom provider headers may not
+// set: hop-by-hop and framing headers that belong to the gateway's own
+// upstream request.
+func blockedCredentialHeader(canonical string) bool {
+	switch canonical {
+	case "Host", "Content-Length", "Connection", "Keep-Alive", "Transfer-Encoding",
+		"Upgrade", "Te", "Trailer", "Proxy-Authorization", "Proxy-Authenticate",
+		"Sec-Websocket-Accept", "Sec-Websocket-Extensions", "Sec-Websocket-Key",
+		"Sec-Websocket-Protocol", "Sec-Websocket-Version":
+		return true
+	default:
+		return false
 	}
 }
 

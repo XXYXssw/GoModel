@@ -19,6 +19,7 @@ export const FIELD_SESSION_STICKY_KEYS = "session_sticky_keys";
 export const FIELD_BASE_URL = "base_url";
 export const FIELD_SERVICE_ACCOUNT_JSON = "service_account_json";
 export const FIELD_MODELS = "models";
+export const FIELD_HEADERS = "headers";
 
 // PROVIDER_CREDENTIAL_FIELDS is the presentation of each credential field:
 // what to call it, which control to render, and what to say about it. The
@@ -104,6 +105,11 @@ export const PROVIDER_CREDENTIAL_FIELDS = {
     control: "text",
     placeholder: "https://www.googleapis.com/auth/cloud-platform",
   },
+  [FIELD_HEADERS]: {
+    label: t("providers.headers"),
+    control: "headers",
+    hint: t("providers.headersHint"),
+  },
   [FIELD_MODELS]: {
     label: "Models (comma-separated)",
     control: "text",
@@ -145,6 +151,7 @@ export function defaultProviderCredentialForm() {
     api_mode: "",
     responses_mode: "",
     proxy: "",
+    headers: [],
     vertex_project: "",
     vertex_location: "",
     service_account_file: "",
@@ -353,6 +360,7 @@ export function providerCredentialRowToForm(row) {
     api_mode: String((row && row.api_mode) || ""),
     responses_mode: String((row && row.responses_mode) || ""),
     proxy: String((row && row.proxy) || ""),
+    headers: providerCredentialHeadersToRows(row && row.headers),
     vertex_project: String((row && row.vertex_project) || ""),
     vertex_location: String((row && row.vertex_location) || ""),
     service_account_file: String((row && row.service_account_file) || ""),
@@ -423,6 +431,10 @@ function validateProviderCredentialField(form, field) {
       return t("providers.removeEmptyRow");
     }
     return "";
+  }
+
+  if (field.name === FIELD_HEADERS) {
+    return validateProviderCredentialHeaders(form && form.headers);
   }
 
   const value = String((form && form[field.name]) || "").trim();
@@ -496,11 +508,60 @@ export function buildProviderCredentialPayload(form, schema) {
   return payload;
 }
 
+// providerCredentialHeadersToRows converts a stored headers object (values
+// usually "***********" masks) into editable {name, value} rows, sorted by
+// name so the list is stable across saves.
+export function providerCredentialHeadersToRows(headers) {
+  if (!headers || typeof headers !== "object" || Array.isArray(headers)) {
+    return [];
+  }
+  return Object.keys(headers)
+    .sort((a, b) => a.localeCompare(b))
+    .map((name) => ({ name, value: String(headers[name] || "") }));
+}
+
+// providerCredentialHeaderRowsToObject flattens editor rows back into the wire
+// object, dropping rows with an empty name. Values are NOT trimmed: an
+// untouched "***********" mask must be sent verbatim so the server preserves
+// the stored value at that name.
+export function providerCredentialHeaderRowsToObject(rows) {
+  const headers = {};
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const name = String((row && row.name) || "").trim();
+    if (!name) {
+      continue;
+    }
+    headers[name] = String((row && row.value) || "");
+  }
+  return headers;
+}
+
+// validateProviderCredentialHeaders checks the header rows for duplicates and
+// unusable names. Header values may legitimately be anything (including the
+// redaction mask), so only names are checked here.
+export function validateProviderCredentialHeaders(rows) {
+  const seen = new Set();
+  for (const row of Array.isArray(rows) ? rows : []) {
+    const name = String((row && row.name) || "").trim();
+    if (!name) {
+      continue;
+    }
+    const key = name.toLowerCase();
+    if (seen.has(key)) {
+      return t("providers.headerDuplicate", { name });
+    }
+    seen.add(key);
+  }
+  return "";
+}
+
 // providerCredentialPayloadValue converts one form field to its wire value.
 function providerCredentialPayloadValue(form, name) {
   switch (name) {
     case FIELD_API_KEYS:
       return providerCredentialKeyRowsToArray(form && form.api_keys);
+    case FIELD_HEADERS:
+      return providerCredentialHeaderRowsToObject(form && form.headers);
     case FIELD_MODELS:
       return splitCommaList(form && form.models);
     case FIELD_SESSION_STICKY_KEYS:

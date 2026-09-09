@@ -26,6 +26,12 @@ type ProviderOptions struct {
 	// Proxy is the resolved per-provider proxy URL; empty means no proxy.
 	// Constructors copy it into their llmclient.Config.ProxyURL.
 	Proxy string
+	// Headers carries the provider's resolved custom upstream headers. It is
+	// threaded to llmclient.Config so the shared client applies them exactly
+	// once — after credential and request headers, and through Set (replace)
+	// rather than Add, so a custom header cannot be appended to a credential
+	// header the provider just set.
+	Headers map[string]string
 	// Keys carries every API key configured for this provider instance. It is
 	// nil for keyless providers and for constructors invoked outside the
 	// factory; use the Keyring method rather than reading it directly.
@@ -148,6 +154,7 @@ func (f *ProviderFactory) Create(cfg ProviderConfig) (core.Provider, error) {
 		Resilience:    cfg.Resilience,
 		ResponsesMode: cfg.ResponsesMode,
 		Proxy:         cfg.Proxy,
+		Headers:       cfg.Headers,
 		Keys:          NewKeyringWithSessionStickiness(cfg.SessionStickyKeys, cfg.APIKeys...),
 	}
 

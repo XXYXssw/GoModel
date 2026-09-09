@@ -38,25 +38,29 @@ const redactedCredentialValue = "***********"
 // api_keys or the service-account fields preserves the stored value at that
 // position.
 type upsertProviderCredentialRequest struct {
-	Name                     string   `json:"name"`
-	Type                     string   `json:"type"`
-	APIKeys                  []string `json:"api_keys,omitempty"`
-	SessionStickyKeys        *bool    `json:"session_sticky_keys,omitempty"`
-	BaseURL                  string   `json:"base_url,omitempty"`
-	APIVersion               string   `json:"api_version,omitempty"`
-	Backend                  string   `json:"backend,omitempty"`
-	AuthType                 string   `json:"auth_type,omitempty"`
-	APIMode                  string   `json:"api_mode,omitempty"`
-	ResponsesMode            string   `json:"responses_mode,omitempty"`
-	Proxy                    string   `json:"proxy,omitempty"`
-	VertexProject            string   `json:"vertex_project,omitempty"`
-	VertexLocation           string   `json:"vertex_location,omitempty"`
-	ServiceAccountFile       string   `json:"service_account_file,omitempty"`
-	ServiceAccountJSON       string   `json:"service_account_json,omitempty"`
-	ServiceAccountJSONBase64 string   `json:"service_account_json_base64,omitempty"`
-	GCPScope                 string   `json:"gcp_scope,omitempty"`
-	Models                   []string `json:"models,omitempty"`
-	Enabled                  *bool    `json:"enabled,omitempty"`
+	Name              string   `json:"name"`
+	Type              string   `json:"type"`
+	APIKeys           []string `json:"api_keys,omitempty"`
+	SessionStickyKeys *bool    `json:"session_sticky_keys,omitempty"`
+	BaseURL           string   `json:"base_url,omitempty"`
+	APIVersion        string   `json:"api_version,omitempty"`
+	Backend           string   `json:"backend,omitempty"`
+	AuthType          string   `json:"auth_type,omitempty"`
+	APIMode           string   `json:"api_mode,omitempty"`
+	ResponsesMode     string   `json:"responses_mode,omitempty"`
+	Proxy             string   `json:"proxy,omitempty"`
+	// Headers are extra upstream headers. A value that is entirely asterisks
+	// (three or more) preserves the stored value at that name, so the
+	// dashboard never has to re-submit a secret header on every edit.
+	Headers                  map[string]string `json:"headers,omitempty"`
+	VertexProject            string            `json:"vertex_project,omitempty"`
+	VertexLocation           string            `json:"vertex_location,omitempty"`
+	ServiceAccountFile       string            `json:"service_account_file,omitempty"`
+	ServiceAccountJSON       string            `json:"service_account_json,omitempty"`
+	ServiceAccountJSONBase64 string            `json:"service_account_json_base64,omitempty"`
+	GCPScope                 string            `json:"gcp_scope,omitempty"`
+	Models                   []string          `json:"models,omitempty"`
+	Enabled                  *bool             `json:"enabled,omitempty"`
 }
 
 // providerCredentialFieldResponse describes one credential field a provider
@@ -87,28 +91,29 @@ type providerCredentialTypeResponse struct {
 // credential: its definition (secrets redacted) plus whether it is read-only
 // (config/env-declared).
 type providerCredentialViewResponse struct {
-	Name                     string     `json:"name"`
-	Type                     string     `json:"type"`
-	APIKeys                  []string   `json:"api_keys,omitempty"`
-	SessionStickyKeys        bool       `json:"session_sticky_keys"`
-	BaseURL                  string     `json:"base_url,omitempty"`
-	APIVersion               string     `json:"api_version,omitempty"`
-	Backend                  string     `json:"backend,omitempty"`
-	AuthType                 string     `json:"auth_type,omitempty"`
-	APIMode                  string     `json:"api_mode,omitempty"`
-	ResponsesMode            string     `json:"responses_mode,omitempty"`
-	Proxy                    string     `json:"proxy,omitempty"`
-	VertexProject            string     `json:"vertex_project,omitempty"`
-	VertexLocation           string     `json:"vertex_location,omitempty"`
-	ServiceAccountFile       string     `json:"service_account_file,omitempty"`
-	ServiceAccountJSON       string     `json:"service_account_json,omitempty"`
-	ServiceAccountJSONBase64 string     `json:"service_account_json_base64,omitempty"`
-	GCPScope                 string     `json:"gcp_scope,omitempty"`
-	Models                   []string   `json:"models,omitempty"`
-	Enabled                  bool       `json:"enabled"`
-	Managed                  bool       `json:"managed"`
-	CreatedAt                *time.Time `json:"created_at,omitempty"`
-	UpdatedAt                *time.Time `json:"updated_at,omitempty"`
+	Name                     string            `json:"name"`
+	Type                     string            `json:"type"`
+	APIKeys                  []string          `json:"api_keys,omitempty"`
+	SessionStickyKeys        bool              `json:"session_sticky_keys"`
+	BaseURL                  string            `json:"base_url,omitempty"`
+	APIVersion               string            `json:"api_version,omitempty"`
+	Backend                  string            `json:"backend,omitempty"`
+	AuthType                 string            `json:"auth_type,omitempty"`
+	APIMode                  string            `json:"api_mode,omitempty"`
+	ResponsesMode            string            `json:"responses_mode,omitempty"`
+	Proxy                    string            `json:"proxy,omitempty"`
+	Headers                  map[string]string `json:"headers,omitempty"`
+	VertexProject            string            `json:"vertex_project,omitempty"`
+	VertexLocation           string            `json:"vertex_location,omitempty"`
+	ServiceAccountFile       string            `json:"service_account_file,omitempty"`
+	ServiceAccountJSON       string            `json:"service_account_json,omitempty"`
+	ServiceAccountJSONBase64 string            `json:"service_account_json_base64,omitempty"`
+	GCPScope                 string            `json:"gcp_scope,omitempty"`
+	Models                   []string          `json:"models,omitempty"`
+	Enabled                  bool              `json:"enabled"`
+	Managed                  bool              `json:"managed"`
+	CreatedAt                *time.Time        `json:"created_at,omitempty"`
+	UpdatedAt                *time.Time        `json:"updated_at,omitempty"`
 }
 
 // ListProviderCredentials handles GET /admin/provider-credentials.
@@ -307,6 +312,10 @@ func (h *Handler) buildProviderCredentialUpsert(ctx context.Context, name string
 	if err != nil {
 		return providers.ManagedProviderCredential{}, err
 	}
+	headers, err := mergeRedactedCredentialHeaders(req.Headers, currentHeaders(current))
+	if err != nil {
+		return providers.ManagedProviderCredential{}, err
+	}
 
 	enabled := true
 	if req.Enabled != nil {
@@ -327,6 +336,7 @@ func (h *Handler) buildProviderCredentialUpsert(ctx context.Context, name string
 		APIMode:                  strings.TrimSpace(req.APIMode),
 		ResponsesMode:            strings.TrimSpace(req.ResponsesMode),
 		Proxy:                    strings.TrimSpace(req.Proxy),
+		Headers:                  headers,
 		VertexProject:            strings.TrimSpace(req.VertexProject),
 		VertexLocation:           strings.TrimSpace(req.VertexLocation),
 		ServiceAccountFile:       strings.TrimSpace(req.ServiceAccountFile),
@@ -350,6 +360,37 @@ func currentAPIKeys(current *providers.ManagedProviderCredential) []string {
 		return nil
 	}
 	return current.APIKeys
+}
+
+// mergeRedactedCredentialHeaders resolves all-asterisk placeholders in the
+// custom header map positionally by name against the stored map, the same rule
+// the API key list and MCP headers follow: a redacted value the dashboard
+// echoes back keeps the stored secret instead of persisting the mask.
+func mergeRedactedCredentialHeaders(incoming, stored map[string]string) (map[string]string, error) {
+	if len(incoming) == 0 {
+		return nil, nil
+	}
+	merged := make(map[string]string, len(incoming))
+	for name, value := range incoming {
+		if !isRedactedCredentialValue(value) {
+			merged[name] = value
+			continue
+		}
+		kept, ok := stored[name]
+		if !ok {
+			return nil, core.NewInvalidRequestError("header "+name+" is redacted but has no stored value to preserve; provide the real value", nil).
+				WithParam(providers.CredentialFieldHeaders)
+		}
+		merged[name] = kept
+	}
+	return merged, nil
+}
+
+func currentHeaders(current *providers.ManagedProviderCredential) map[string]string {
+	if current == nil {
+		return nil
+	}
+	return current.Headers
 }
 
 func currentField(current *providers.ManagedProviderCredential, get func(providers.ManagedProviderCredential) string) string {
@@ -418,6 +459,7 @@ func (h *Handler) providerCredentialView(cred providers.ManagedProviderCredentia
 		APIMode:            cred.APIMode,
 		ResponsesMode:      cred.ResponsesMode,
 		Proxy:              cred.Proxy,
+		Headers:            redactHeaders(cred.Headers),
 		VertexProject:      cred.VertexProject,
 		VertexLocation:     cred.VertexLocation,
 		ServiceAccountFile: cred.ServiceAccountFile,
@@ -463,6 +505,20 @@ func nonZeroTime(t time.Time) *time.Time {
 		return nil
 	}
 	return &t
+}
+
+// redactHeaders keeps header names but replaces every value, so a view can
+// show which headers a provider sends without disclosing the secrets they
+// carry. Sending the mask back on upsert preserves the stored value.
+func redactHeaders(headers map[string]string) map[string]string {
+	if len(headers) == 0 {
+		return nil
+	}
+	redacted := make(map[string]string, len(headers))
+	for name := range headers {
+		redacted[name] = redactedCredentialValue
+	}
+	return redacted
 }
 
 // redactList keeps the entry count (so operators can see how many keys are

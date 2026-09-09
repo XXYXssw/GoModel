@@ -15,6 +15,7 @@ const (
 	CredentialFieldAPIMode                  = "api_mode"
 	CredentialFieldResponsesMode            = "responses_mode"
 	CredentialFieldProxy                    = "proxy"
+	CredentialFieldHeaders                  = "headers"
 	CredentialFieldVertexProject            = "vertex_project"
 	CredentialFieldVertexLocation           = "vertex_location"
 	CredentialFieldServiceAccountFile       = "service_account_file"
@@ -107,6 +108,7 @@ func credentialSchema(providerType string, spec DiscoveryConfig) CredentialSchem
 		}
 	}
 	schema.Fields = append(schema.Fields, CredentialField{Name: CredentialFieldModels, Advanced: true})
+	schema.Fields = append(schema.Fields, CredentialField{Name: CredentialFieldHeaders, Advanced: true})
 	return schema
 }
 
@@ -162,6 +164,14 @@ func credentialFieldValue(cred ManagedProviderCredential, name string) string {
 		return cred.ResponsesMode
 	case CredentialFieldProxy:
 		return cred.Proxy
+	case CredentialFieldHeaders:
+		if len(cred.Headers) == 0 {
+			return ""
+		}
+		for _, value := range cred.Headers {
+			return value
+		}
+		return ""
 	case CredentialFieldVertexProject:
 		return cred.VertexProject
 	case CredentialFieldVertexLocation:

@@ -27,6 +27,11 @@ type RawProviderConfig struct {
 	// Proxy optionally routes this provider's upstream requests through an
 	// HTTP(S) proxy (e.g. "http://127.0.0.1:7890"). Empty means no proxy.
 	Proxy string `yaml:"proxy"`
+	// Headers are extra HTTP headers added to every request this provider
+	// sends upstream, for gateways that need an extra token, tenant or
+	// attribution header. `${VAR}` placeholders are expanded like every other
+	// provider field. Values are redacted in admin reads.
+	Headers map[string]string `yaml:"headers"`
 	VertexProject            string `yaml:"vertex_project"`
 	VertexLocation           string `yaml:"vertex_location"`
 	ServiceAccountFile       string `yaml:"service_account_file"`

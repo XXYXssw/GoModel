@@ -323,3 +323,79 @@ func TestCredentialsService_CredentialSchemasCoverEveryRegisteredType(t *testing
 		t.Error("CredentialSchema(unknown) should still fall back to the derived form")
 	}
 }
+
+// --- custom headers ---
+
+func TestValidateCredentialHeaders_AcceptsUsableHeaders(t *testing.T) {
+	schema := CredentialSchema{Type: "openai", Fields: []CredentialField{{Name: CredentialFieldHeaders}}}
+	cred := ManagedProviderCredential{
+		Name: "openai",
+		Type: "openai",
+		Headers: map[string]string{
+			"X-Title":       "my-app",
+			"HTTP-Referer":  "https://example.com",
+			"Authorization": "Bearer sk-supplied",
+		},
+	}
+	if err := validateCredential(cred, schema); err != nil {
+		t.Errorf("validateCredential = %v, want nil", err)
+	}
+}
+
+func TestValidateCredentialHeaders_RejectsHopByHopAndFramingHeaders(t *testing.T) {
+	schema := CredentialSchema{Type: "openai", Fields: []CredentialField{{Name: CredentialFieldHeaders}}}
+	blocked := []string{
+		"Host", "Content-Length", "Connection", "Transfer-Encoding",
+		"Upgrade", "Proxy-Authorization", "Sec-Websocket-Key",
+	}
+	for _, name := range blocked {
+		cred := ManagedProviderCredential{
+			Name:    "openai",
+			Type:    "openai",
+			Headers: map[string]string{name: "anything"},
+		}
+		err := validateCredential(cred, schema)
+		if err == nil {
+			t.Errorf("header %q: validateCredential = nil, want rejection", name)
+			continue
+		}
+		var fieldErr *CredentialFieldError
+		if !errors.As(err, &fieldErr) || fieldErr.Field != CredentialFieldHeaders {
+			t.Errorf("header %q: err = %v, want a %s field error", name, err, CredentialFieldHeaders)
+		}
+	}
+}
+
+func TestValidateCredentialHeaders_RejectsMalformedNamesAndInjectedLineBreaks(t *testing.T) {
+	schema := CredentialSchema{Type: "openai", Fields: []CredentialField{{Name: CredentialFieldHeaders}}}
+	tests := []struct {
+		name    string
+		headers map[string]string
+	}{
+		{name: "blank name", headers: map[string]string{"": "value"}},
+		{name: "space in name", headers: map[string]string{"X Bad": "value"}},
+		{name: "CRLF in value", headers: map[string]string{"X-Bad": "a\r\nX-Evil: 1"}},
+		{name: "LF in value", headers: map[string]string{"X-Bad": "a\nX-Evil: 1"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cred := ManagedProviderCredential{Name: "openai", Type: "openai", Headers: tt.headers}
+			if err := validateCredential(cred, schema); err == nil {
+				t.Error("validateCredential = nil, want rejection")
+			}
+		})
+	}
+}
+
+func TestValidateCredentialHeaders_IgnoresTypesThatDoNotDeclareIt(t *testing.T) {
+	// Every type accepts headers today; a form that drops the field must not
+	// have its (unreachable) values rejected by a stale row.
+	cred := ManagedProviderCredential{
+		Name:    "openai",
+		Type:    "openai",
+		Headers: map[string]string{"Host": "example.com"},
+	}
+	if err := validateCredential(cred, CredentialSchema{Type: "openai"}); err != nil {
+		t.Errorf("validateCredential = %v, want nil when the field is not offered", err)
+	}
+}

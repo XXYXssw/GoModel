@@ -63,12 +63,17 @@ func (p *Provider) realtimeHTTPTarget(ctx context.Context, req *core.RealtimeReq
 	return &core.RealtimeHTTPTarget{URL: target, Headers: p.realtimeAuthHeaders(ctx)}, nil
 }
 
-// realtimeAuthHeaders picks the next key in the rotation. A realtime session is
-// long-lived, so the key is chosen once per session rather than per event.
+// realtimeAuthHeaders picks the next key in the rotation and overlays the
+// operator's custom headers, so a provider needing an extra upstream header
+// also gets it on the websocket dial. A realtime session is long-lived, so the
+// key is chosen once per session rather than per event.
 func (p *Provider) realtimeAuthHeaders(ctx context.Context) http.Header {
 	headers := http.Header{}
 	if apiKey := p.keys.NextForContext(ctx); apiKey != "" {
 		headers.Set("Authorization", "Bearer "+apiKey)
+	}
+	for key, value := range p.customHeaders {
+		headers.Set(key, value)
 	}
 	return headers
 }

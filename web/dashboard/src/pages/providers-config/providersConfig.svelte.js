@@ -207,6 +207,16 @@ class ProvidersConfigState {
     this.clearFieldError("api_keys");
   }
 
+  addHeaderRow() {
+    this.form.headers.push({ name: "", value: "" });
+    this.clearFieldError("headers");
+  }
+
+  removeHeaderRow(index) {
+    this.form.headers.splice(index, 1);
+    this.clearFieldError("headers");
+  }
+
   // #reportSaveError routes a rejected save to the input that caused it. The
   // gateway names the offending credential field in `error.param`, using the
   // same names as the schema, so a server-side rule (which field combinations
