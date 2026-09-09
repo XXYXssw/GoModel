@@ -275,6 +275,7 @@ func TestCacheFile(t *testing.T) {
 
 		registry := NewModelRegistry(false)
 		registry.SetCache(modelcache.NewLocalCache(cacheFile))
+		registry.SetConfiguredProviderModelsMode(config.ConfiguredProviderModelsModeFallback)
 		registry.SetProviderConfiguredModels("vllm", []string{"meta-llama/Llama-3.1-8B-Instruct"})
 
 		mock := &registryMockProvider{name: "vllm"}

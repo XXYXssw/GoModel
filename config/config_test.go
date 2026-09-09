@@ -129,8 +129,8 @@ func TestBuildDefaultConfig(t *testing.T) {
 	if got, want := cfg.Server.EnabledPassthroughProviders, []string{"openai", "openrouter", "kilo"}; !reflect.DeepEqual(got, want) {
 		t.Errorf("expected Server.EnabledPassthroughProviders=%v, got %v", want, got)
 	}
-	if cfg.Models.ConfiguredProviderModelsMode != ConfiguredProviderModelsModeFallback {
-		t.Errorf("expected Models.ConfiguredProviderModelsMode=fallback, got %q", cfg.Models.ConfiguredProviderModelsMode)
+	if cfg.Models.ConfiguredProviderModelsMode != ConfiguredProviderModelsModeAllowlist {
+		t.Errorf("expected Models.ConfiguredProviderModelsMode=allowlist, got %q", cfg.Models.ConfiguredProviderModelsMode)
 	}
 	if cfg.Cache.Model.Local != nil {
 		t.Error("expected Cache.Model.Local to be nil in raw defaults")

@@ -16,7 +16,10 @@ type ModelsConfig struct {
 
 	// ConfiguredProviderModelsMode controls how providers.<name>.models and
 	// provider *_MODELS env vars affect the provider model inventory.
-	// Supported values: "fallback", "allowlist". Default: "fallback".
+	// Supported values: "allowlist", "fallback". Default: "allowlist".
+	// "allowlist" exposes only the explicitly configured models and skips
+	// upstream /models for providers with a configured list; "fallback" uses
+	// the configured list only when upstream /models fails, is nil, or empty.
 	ConfiguredProviderModelsMode ConfiguredProviderModelsMode `yaml:"configured_provider_models_mode" env:"CONFIGURED_PROVIDER_MODELS_MODE"`
 }
 
@@ -48,7 +51,7 @@ func NormalizeConfiguredProviderModelsMode(mode ConfiguredProviderModelsMode) Co
 func ResolveConfiguredProviderModelsMode(mode ConfiguredProviderModelsMode) ConfiguredProviderModelsMode {
 	mode = NormalizeConfiguredProviderModelsMode(mode)
 	if mode == "" {
-		return ConfiguredProviderModelsModeFallback
+		return ConfiguredProviderModelsModeAllowlist
 	}
 	return mode
 }

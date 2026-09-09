@@ -104,7 +104,7 @@ func buildDefaultConfig() *Config {
 		Models: ModelsConfig{
 			EnabledByDefault:                true,
 			KeepOnlyAliasesAtModelsEndpoint: false,
-			ConfiguredProviderModelsMode:    ConfiguredProviderModelsModeFallback,
+			ConfiguredProviderModelsMode:    ConfiguredProviderModelsModeAllowlist,
 		},
 		Cache: CacheConfig{
 			Model: ModelCacheConfig{

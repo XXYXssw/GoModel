@@ -831,7 +831,7 @@ export default {
   "providers.pasteJson": "粘贴服务账号 JSON",
   "providers.savedValueHint": "已保存的值显示为 ***********；保持星号不变即保留已存值，或清空以移除。",
   "providers.savedValueHint2": "已保存的值显示为 ***********；保持星号不变即保留已存值。",
-  "providers.modelsHint": "留空则从供应商的 /models 端点自动发现模型（如支持）。",
+  "providers.modelsHint": "留空则从供应商的 /models 端点自动发现模型；填入则仅暴露该列表（此供应商将跳过上游 /models）。",
   "providers.defaultsTo": "默认为 {url}",
   "providers.selectTypeError": "请选择供应商类型。",
   "providers.nameRequired": "必须填写名称。",

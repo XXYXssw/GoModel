@@ -138,6 +138,7 @@ func TestModelRegistry(t *testing.T) {
 
 	t.Run("ConfiguredModelsFallbackModeKeepsUpstreamWhenAvailable", func(t *testing.T) {
 		registry := NewModelRegistry(false)
+		registry.SetConfiguredProviderModelsMode(config.ConfiguredProviderModelsModeFallback)
 		mock := &registryMockProvider{
 			name: "test",
 			modelsResponse: &core.ModelsResponse{
@@ -166,6 +167,7 @@ func TestModelRegistry(t *testing.T) {
 
 	t.Run("ConfiguredModelsFallbackModeUsesConfiguredWhenUpstreamFails", func(t *testing.T) {
 		registry := NewModelRegistry(false)
+		registry.SetConfiguredProviderModelsMode(config.ConfiguredProviderModelsModeFallback)
 		mock := &registryMockProvider{
 			name: "test",
 			err:  errors.New("models unavailable"),

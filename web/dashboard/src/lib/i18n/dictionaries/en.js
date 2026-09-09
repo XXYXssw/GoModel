@@ -831,7 +831,7 @@ export default {
   "providers.pasteJson": "Paste service account JSON",
   "providers.savedValueHint": "Saved values are shown as ***********; leave the asterisks unchanged to keep the stored value, or clear it to remove.",
   "providers.savedValueHint2": "Saved values are shown as ***********; leave the asterisks unchanged to keep the stored value.",
-  "providers.modelsHint": "Leave empty to auto-discover models from the provider's /models endpoint where supported.",
+  "providers.modelsHint": "Leave empty to auto-discover models from the provider's /models endpoint; fill in to expose exactly this list (upstream /models is skipped for this provider).",
   "providers.defaultsTo": "Defaults to {url}",
   "providers.selectTypeError": "Select a provider type.",
   "providers.nameRequired": "Name is required.",
