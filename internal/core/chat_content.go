@@ -83,9 +83,10 @@ func (p *ContentPart) UnmarshalJSON(data []byte) error {
 func (p ContentPart) MarshalJSON() ([]byte, error) {
 	switch p.Type {
 	case "text", "input_text":
-		if p.Text == "" {
-			return nil, fmt.Errorf("text part is missing text")
-		}
+		// Empty text parts are tolerated: clients legitimately send them as
+		// placeholders next to image/audio parts (e.g. an agent receiving an
+		// image with no accompanying prompt), and downstream providers that
+		// disallow empty text blocks already skip them.
 		return marshalWithUnknownJSONFields(struct {
 			Type string `json:"type"`
 			Text string `json:"text"`
@@ -399,12 +400,16 @@ func unmarshalContentPart(data []byte) (ContentPart, error) {
 
 	switch raw.Type {
 	case "text", "input_text":
-		if raw.Text == nil || *raw.Text == "" {
-			return ContentPart{}, fmt.Errorf("text part is missing text")
+		// Accept empty (or omitted) text: many clients emit a placeholder
+		// text part alongside image/audio parts, and pure-image messages
+		// have no text at all.
+		text := ""
+		if raw.Text != nil {
+			text = *raw.Text
 		}
 		return ContentPart{
 			Type:        "text",
-			Text:        *raw.Text,
+			Text:        text,
 			ExtraFields: extraFields,
 		}, nil
 	case "image_url", "input_image":
@@ -435,9 +440,7 @@ func unmarshalContentPart(data []byte) (ContentPart, error) {
 func normalizeTypedContentPart(part ContentPart) (ContentPart, error) {
 	switch part.Type {
 	case "text", "input_text":
-		if part.Text == "" {
-			return ContentPart{}, fmt.Errorf("text part is missing text")
-		}
+		// Empty text parts are valid placeholders, see unmarshalContentPart.
 		return ContentPart{
 			Type:        "text",
 			Text:        part.Text,

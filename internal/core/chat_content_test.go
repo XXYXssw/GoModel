@@ -165,39 +165,77 @@ func TestResponseMessageUnmarshalJSON_PreservesNullContentForToolCalls(t *testin
 	}
 }
 
-func TestNormalizeMessageContent_RejectsEmptyTypedTextPart(t *testing.T) {
-	_, err := NormalizeMessageContent([]ContentPart{{Type: "text", Text: ""}})
-	if err == nil {
-		t.Fatal("NormalizeMessageContent() succeeded, want error")
+func TestNormalizeMessageContent_AllowsEmptyTypedTextPart(t *testing.T) {
+	normalized, err := NormalizeMessageContent([]ContentPart{{Type: "text", Text: ""}})
+	if err != nil {
+		t.Fatalf("NormalizeMessageContent() error = %v, want nil", err)
 	}
-	if !strings.Contains(err.Error(), "text part is missing text") {
-		t.Fatalf("error = %v, want text validation error", err)
+	parts, ok := normalized.([]ContentPart)
+	if !ok || len(parts) != 1 || parts[0].Type != "text" || parts[0].Text != "" {
+		t.Fatalf("normalized = %#v, want single empty text part", normalized)
 	}
 }
 
-func TestMessageUnmarshalJSON_RejectsEmptyJSONTextPart(t *testing.T) {
+func TestMessageUnmarshalJSON_AllowsEmptyJSONTextPart(t *testing.T) {
 	var msg Message
-	err := json.Unmarshal([]byte(`{"role":"user","content":[{"type":"text","text":""}]}`), &msg)
-	if err == nil {
-		t.Fatal("json.Unmarshal() succeeded, want error")
+	if err := json.Unmarshal([]byte(`{"role":"user","content":[{"type":"text","text":""},{"type":"image_url","image_url":{"url":"https://example.com/img.png"}}]}`), &msg); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v, want nil", err)
 	}
-	if !strings.Contains(err.Error(), "text part is missing text") {
-		t.Fatalf("error = %v, want text validation error", err)
+	parts, ok := msg.Content.([]ContentPart)
+	if !ok || len(parts) != 2 {
+		t.Fatalf("Content = %#v, want 2 parts", msg.Content)
+	}
+	if parts[0].Type != "text" || parts[0].Text != "" {
+		t.Fatalf("first part = %+v, want empty text part", parts[0])
 	}
 }
 
-func TestNormalizeMessageContent_RejectsEmptyMapTextPart(t *testing.T) {
-	_, err := NormalizeMessageContent([]any{
+func TestMessageUnmarshalJSON_AllowsTextPartWithoutTextField(t *testing.T) {
+	var msg Message
+	if err := json.Unmarshal([]byte(`{"role":"user","content":[{"type":"text"},{"type":"image_url","image_url":{"url":"https://example.com/img.png"}}]}`), &msg); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v, want nil", err)
+	}
+	parts, ok := msg.Content.([]ContentPart)
+	if !ok || len(parts) != 2 {
+		t.Fatalf("Content = %#v, want 2 parts", msg.Content)
+	}
+	if parts[0].Type != "text" || parts[0].Text != "" {
+		t.Fatalf("first part = %+v, want empty text part", parts[0])
+	}
+}
+
+func TestNormalizeMessageContent_AllowsEmptyMapTextPart(t *testing.T) {
+	normalized, err := NormalizeMessageContent([]any{
 		map[string]any{
 			"type": "text",
 			"text": "",
 		},
+		map[string]any{
+			"type": "image_url",
+			"image_url": map[string]any{
+				"url": "https://example.com/img.png",
+			},
+		},
 	})
-	if err == nil {
-		t.Fatal("NormalizeMessageContent() succeeded, want error")
+	if err != nil {
+		t.Fatalf("NormalizeMessageContent() error = %v, want nil", err)
 	}
-	if !strings.Contains(err.Error(), "text part is missing text") {
-		t.Fatalf("error = %v, want text validation error", err)
+	parts, ok := normalized.([]ContentPart)
+	if !ok || len(parts) != 2 {
+		t.Fatalf("normalized = %#v, want 2 parts", normalized)
+	}
+}
+
+func TestContentPart_MarshalJSON_AllowsEmptyText(t *testing.T) {
+	body, err := json.Marshal([]ContentPart{
+		{Type: "text", Text: ""},
+		{Type: "image_url", ImageURL: &ImageURLContent{URL: "https://example.com/img.png"}},
+	})
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v, want nil", err)
+	}
+	if !strings.Contains(string(body), `{"type":"text","text":""}`) {
+		t.Fatalf("body = %s, want empty text part preserved", body)
 	}
 }
 
