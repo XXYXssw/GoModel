@@ -2228,3 +2228,73 @@ data: {"responseId":"gemini-native-stream-response","candidates":[{"content":{"r
 		t.Fatalf("stream = %q, want [DONE]", stream)
 	}
 }
+
+func TestChatCompletion_NativeMultimodalToolResultParts(t *testing.T) {
+	t.Setenv(useNativeAPIEnvVar, "true")
+
+	var captured map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Fatalf("failed to read request body: %v", err)
+		}
+		if err := json.Unmarshal(body, &captured); err != nil {
+			t.Fatalf("failed to unmarshal request: %v", err)
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{
+			"candidates": [{
+				"content": {"role": "model", "parts": [{"text": "ok"}]},
+				"finishReason": "STOP"
+			}]
+		}`))
+	}))
+	defer server.Close()
+
+	provider := NewWithHTTPClient("test-api-key", nil, llmclient.Hooks{})
+	provider.SetModelsURL(server.URL)
+
+	_, err := provider.ChatCompletion(context.Background(), &core.ChatRequest{
+		Model: "gemini-2.5-flash",
+		Messages: []core.Message{
+			{Role: "user", Content: "take a screenshot"},
+			{Role: "assistant", Content: "", ToolCalls: []core.ToolCall{{
+				ID:       "call_1",
+				Type:     "function",
+				Function: core.FunctionCall{Name: "screenshot", Arguments: "{}"},
+			}}},
+			{Role: "tool", ToolCallID: "call_1", Content: []core.ContentPart{
+				{Type: "text", Text: "here it is"},
+				{Type: "image_url", ImageURL: &core.ImageURLContent{URL: "data:image/png;base64,AAAA"}},
+			}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	contents, ok := captured["contents"].([]any)
+	if !ok || len(contents) != 3 {
+		t.Fatalf("contents = %#v, want three entries", captured["contents"])
+	}
+	toolContent, ok := contents[2].(map[string]any)
+	if !ok {
+		t.Fatalf("tool content = %#v", contents[2])
+	}
+	parts, ok := toolContent["parts"].([]any)
+	if !ok || len(parts) != 1 {
+		t.Fatalf("tool parts = %#v, want one functionResponse part", toolContent["parts"])
+	}
+	functionResponse, ok := parts[0].(map[string]any)["functionResponse"].(map[string]any)
+	if !ok {
+		t.Fatalf("part = %#v, want functionResponse", parts[0])
+	}
+	responseParts, ok := functionResponse["parts"].([]any)
+	if !ok || len(responseParts) != 1 {
+		t.Fatalf("functionResponse.parts = %#v, want one media part", functionResponse["parts"])
+	}
+	inline, ok := responseParts[0].(map[string]any)["inline_data"].(map[string]any)
+	if !ok || inline["data"] != "AAAA" {
+		t.Fatalf("inline_data = %#v, want base64 image", responseParts[0])
+	}
+}

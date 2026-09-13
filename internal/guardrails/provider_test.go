@@ -2209,6 +2209,49 @@ func TestApplyMessagesToResponses_PreservesStringFunctionCallOutputMapEnvelope(t
 	}
 }
 
+func TestApplyMessagesToResponses_PreservesTypedMultimodalFunctionCallOutput(t *testing.T) {
+	req := &core.ResponsesRequest{
+		Model: "gpt-4",
+		Input: []core.ResponsesInputElement{
+			{
+				Type:   "function_call_output",
+				CallID: "call_123",
+				Output: []any{
+					map[string]any{"type": "input_text", "text": "patient John Smith"},
+					map[string]any{"type": "input_image", "image_url": "data:image/png;base64,AAAA"},
+				},
+			},
+		},
+	}
+	msgs := []Message{{
+		Role:       "tool",
+		ToolCallID: "call_123",
+		Content:    `[{"type":"input_text","text":"patient [|---|](PERSON_1)"},{"type":"input_image","image_url":"data:image/png;base64,AAAA"}]`,
+	}}
+
+	result, err := applyMessagesToResponses(req, msgs)
+	if err != nil {
+		t.Fatalf("applyMessagesToResponses() error = %v", err)
+	}
+
+	input, ok := result.Input.([]core.ResponsesInputElement)
+	if !ok || len(input) != 1 {
+		t.Fatalf("Input = %#v, want []core.ResponsesInputElement len=1", result.Input)
+	}
+	parts, ok := input[0].Output.([]any)
+	if !ok || len(parts) != 2 {
+		t.Fatalf("Output = %#v, want 2 content parts", input[0].Output)
+	}
+	text, _ := parts[0].(map[string]any)
+	if text["text"] != "patient [|---|](PERSON_1)" {
+		t.Fatalf("text part = %#v, want rewritten text", parts[0])
+	}
+	image, _ := parts[1].(map[string]any)
+	if image["image_url"] != "data:image/png;base64,AAAA" {
+		t.Fatalf("image part = %#v, want image preserved", parts[1])
+	}
+}
+
 func TestApplyMessagesToResponses_PreservesArrayEnvelopeForAnyInput(t *testing.T) {
 	req := &core.ResponsesRequest{
 		Model: "gpt-4",

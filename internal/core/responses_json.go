@@ -218,7 +218,11 @@ func (e *ResponsesInputElement) UnmarshalJSON(data []byte) error {
 			_ = json.Unmarshal(v, &e.Status)
 		}
 		if v, ok := raw["output"]; ok {
-			e.Output = stringifyRawValue(v)
+			decoded, err := decodeRawJSONValue(v)
+			if err != nil {
+				return err
+			}
+			e.Output = decoded
 		}
 	case "", "message":
 		if v, ok := raw["role"]; ok {
@@ -283,7 +287,7 @@ func (e ResponsesInputElement) MarshalJSON() ([]byte, error) {
 		return marshalWithUnknownJSONFields(struct {
 			Type   string `json:"type"`
 			CallID string `json:"call_id,omitempty"`
-			Output string `json:"output,omitempty"`
+			Output any    `json:"output,omitempty"`
 			Status string `json:"status,omitempty"`
 		}{
 			Type:   "function_call_output",
@@ -364,4 +368,20 @@ func stringifyRawValue(raw json.RawMessage) string {
 		}
 	}
 	return string(trimmed)
+}
+
+// decodeRawJSONValue decodes a raw JSON value into its natural Go shape:
+// strings stay strings, objects become maps, arrays become slices, and JSON
+// null becomes nil. Unlike stringifyRawValue it does not flatten structured
+// payloads, which keeps multimodal tool results intact.
+func decodeRawJSONValue(raw json.RawMessage) (any, error) {
+	trimmed := bytes.TrimSpace(raw)
+	if len(trimmed) == 0 || IsJSONNull(trimmed) {
+		return nil, nil
+	}
+	var value any
+	if err := json.Unmarshal(trimmed, &value); err != nil {
+		return nil, err
+	}
+	return value, nil
 }

@@ -209,7 +209,7 @@ func convertBlockMessage(role string, blocks []ContentBlock) ([]core.Message, er
 			if id == "" {
 				return nil, fmt.Errorf("tool_result block is missing tool_use_id")
 			}
-			content, err := toolResultText(block.Content)
+			content, err := toolResultContent(block.Content)
 			if err != nil {
 				return nil, err
 			}
@@ -379,28 +379,41 @@ func validatedCacheControlJSON(raw json.RawMessage) (json.RawMessage, error) {
 	return validated, nil
 }
 
-// toolResultText extracts the text payload of a tool_result block content,
-// which itself may be a string or an array of text blocks. A present but
-// malformed or non-text tool_result content is an error rather than silently
-// dropped: the downstream provider must not receive an empty tool response.
-func toolResultText(raw json.RawMessage) (string, error) {
+// toolResultContent extracts the payload of a tool_result block content, which
+// itself may be a string or an array of text/image blocks. A present but
+// malformed tool_result content is an error rather than silently dropped: the
+// downstream provider must not receive an empty tool response. Image blocks are
+// preserved as canonical image_url parts so multimodal tool results (for
+// example a screenshot) keep their pixels instead of being flattened to text.
+func toolResultContent(raw json.RawMessage) (core.MessageContent, error) {
 	text, blocks, err := parseContent(raw)
 	if err != nil {
-		return "", fmt.Errorf("tool_result content: %v", err)
+		return nil, fmt.Errorf("tool_result content: %v", err)
 	}
 	if blocks == nil {
 		return text, nil
 	}
-	parts := make([]string, 0, len(blocks))
+	parts := make([]core.ContentPart, 0, len(blocks))
 	for _, block := range blocks {
-		if block.Type != "text" {
-			return "", fmt.Errorf("tool_result content block type %q is not supported; only text is allowed", block.Type)
-		}
-		if block.Text != "" {
-			parts = append(parts, block.Text)
+		switch block.Type {
+		case "text":
+			if block.Text != "" {
+				parts = append(parts, core.ContentPart{Type: "text", Text: block.Text})
+			}
+		case "image":
+			url, err := imageURLFromSource(block.Source)
+			if err != nil {
+				return nil, fmt.Errorf("tool_result content: %v", err)
+			}
+			parts = append(parts, core.ContentPart{
+				Type:     "image_url",
+				ImageURL: &core.ImageURLContent{URL: url},
+			})
+		default:
+			return nil, fmt.Errorf("tool_result content block type %q is not supported; only text and image are allowed", block.Type)
 		}
 	}
-	return strings.Join(parts, "\n"), nil
+	return collapseParts(parts), nil
 }
 
 func imageURLFromSource(source *Source) (string, error) {
@@ -573,8 +586,15 @@ func EstimateInputTokens(req *MessagesRequest) int {
 		for _, block := range blocks {
 			chars += len(block.Text) + len(block.Thinking)
 			chars += len(bytes.TrimSpace(block.Input))
-			result, _ := toolResultText(block.Content)
-			chars += len(result)
+			result, _ := toolResultContent(block.Content)
+			chars += len(core.ExtractTextContent(result))
+			if parts, ok := core.NormalizeContentParts(result); ok {
+				for _, part := range parts {
+					if part.ImageURL != nil {
+						chars += len(part.ImageURL.URL)
+					}
+				}
+			}
 		}
 	}
 	for _, tool := range req.Tools {

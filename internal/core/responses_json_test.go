@@ -80,8 +80,9 @@ func TestResponsesRequestUnmarshalJSON_ArrayInputFunctionCall(t *testing.T) {
 	if input[1].Type != "function_call_output" || input[1].CallID != "call_123" {
 		t.Fatalf("Input[1] = %+v, want function_call_output with call_id=call_123", input[1])
 	}
-	if input[1].Output != `{"temperature_c":21}` {
-		t.Fatalf("Input[1].Output = %q, want stringified JSON object", input[1].Output)
+	output, ok := input[1].Output.(map[string]any)
+	if !ok || output["temperature_c"] != float64(21) {
+		t.Fatalf("Input[1].Output = %#v, want preserved JSON object", input[1].Output)
 	}
 }
 
@@ -1094,5 +1095,52 @@ func TestResponsesInputElementRoundTrip(t *testing.T) {
 	}
 	if input2[2].Type != "function_call_output" || input2[2].Output != `{"temperature_c":21}` {
 		t.Fatalf("round-trip Input[2] = %+v, want function_call_output with output preserved", input2[2])
+	}
+}
+
+func TestResponsesInputElementFunctionCallOutputPreservesMultimodalParts(t *testing.T) {
+	original := `{"model":"gpt-4o-mini","input":[
+		{"type":"function_call_output","call_id":"call_123","output":[
+			{"type":"input_text","text":"screenshot attached"},
+			{"type":"input_image","image_url":"data:image/png;base64,AAAA"}
+		]}
+	]}`
+
+	var req ResponsesRequest
+	if err := json.Unmarshal([]byte(original), &req); err != nil {
+		t.Fatalf("unmarshal error = %v", err)
+	}
+	input, ok := req.Input.([]ResponsesInputElement)
+	if !ok || len(input) != 1 {
+		t.Fatalf("Input = %#v, want []ResponsesInputElement len=1", req.Input)
+	}
+	parts, ok := input[0].Output.([]any)
+	if !ok || len(parts) != 2 {
+		t.Fatalf("Output = %#v, want 2 content parts", input[0].Output)
+	}
+	image, ok := parts[1].(map[string]any)
+	if !ok || image["image_url"] != "data:image/png;base64,AAAA" {
+		t.Fatalf("image part = %#v, want image_url preserved", parts[1])
+	}
+
+	body, err := json.Marshal(req)
+	if err != nil {
+		t.Fatalf("marshal error = %v", err)
+	}
+	if !bytes.Contains(body, []byte(`"data:image/png;base64,AAAA"`)) {
+		t.Fatalf("marshaled body lost the image: %s", body)
+	}
+
+	var req2 ResponsesRequest
+	if err := json.Unmarshal(body, &req2); err != nil {
+		t.Fatalf("re-unmarshal error = %v", err)
+	}
+	input2, ok := req2.Input.([]ResponsesInputElement)
+	if !ok || len(input2) != 1 {
+		t.Fatalf("round-trip Input = %#v, want []ResponsesInputElement len=1", req2.Input)
+	}
+	parts2, ok := input2[0].Output.([]any)
+	if !ok || len(parts2) != 2 {
+		t.Fatalf("round-trip Output = %#v, want 2 content parts", input2[0].Output)
 	}
 }

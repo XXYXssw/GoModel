@@ -287,7 +287,7 @@ func convertResponsesInputElement(item core.ResponsesInputElement, index int) (c
 		if callID == "" {
 			return core.Message{}, "", core.NewInvalidRequestError(fmt.Sprintf("invalid responses input item at index %d: function_call_output call_id is required", index), nil)
 		}
-		content, err := stringifyResponsesInputValueWithError(item.Output)
+		content, err := responsesToolOutputToChatContent(item.Output)
 		if err != nil {
 			return core.Message{}, "", core.NewInvalidRequestError(
 				fmt.Sprintf("invalid responses input item at index %d: function_call_output.output must be JSON-serializable", index),
@@ -354,7 +354,7 @@ func convertResponsesInputMap(item map[string]any, index int) (core.Message, str
 		if callID == "" {
 			return core.Message{}, "", core.NewInvalidRequestError(fmt.Sprintf("invalid responses input item at index %d: function_call_output call_id is required", index), nil)
 		}
-		content, err := stringifyResponsesInputValueWithError(item["output"])
+		content, err := responsesToolOutputToChatContent(item["output"])
 		if err != nil {
 			return core.Message{}, "", core.NewInvalidRequestError(
 				fmt.Sprintf("invalid responses input item at index %d: function_call_output.output must be JSON-serializable", index),
@@ -468,6 +468,25 @@ func stringifyResponsesInputValue(value any) string {
 		return ""
 	}
 	return encoded
+}
+
+// responsesToolOutputToChatContent maps a function_call_output.output payload
+// onto chat tool-message content. Plain strings pass through; structured
+// content arrays (input_text/input_image/input_audio) are preserved as chat
+// content parts so multimodal tool results survive translation; any other JSON
+// value is serialized to a string, matching the historical representation.
+func responsesToolOutputToChatContent(output any) (any, error) {
+	switch output.(type) {
+	case nil:
+		return "", nil
+	case string:
+		return output, nil
+	case []core.ContentPart, []any, []map[string]any:
+		if content, ok := ConvertResponsesContentToChatContent(output); ok {
+			return content, nil
+		}
+	}
+	return stringifyResponsesInputValueWithError(output)
 }
 
 func stringifyResponsesInputValueWithError(value any) (string, error) {

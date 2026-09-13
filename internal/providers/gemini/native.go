@@ -70,6 +70,10 @@ type geminiFunctionResponse struct {
 	ID       string          `json:"id,omitempty"`
 	Name     string          `json:"name,omitempty"`
 	Response json.RawMessage `json:"response,omitempty"`
+	// Parts carries multimodal function-response parts (for example an image
+	// returned by a tool). Gemini expects the JSON payload in response and any
+	// inline media in parts.
+	Parts []geminiPart `json:"parts,omitempty"`
 }
 
 type geminiTool struct {
@@ -235,13 +239,39 @@ func geminiPartsFromToolMessage(msg core.Message, functionName string) ([]gemini
 	if err != nil {
 		return nil, err
 	}
-	return []geminiPart{{
-		FunctionResponse: &geminiFunctionResponse{
-			ID:       msg.ToolCallID,
-			Name:     functionName,
-			Response: response,
-		},
-	}}, nil
+	functionResponse := &geminiFunctionResponse{
+		ID:       msg.ToolCallID,
+		Name:     functionName,
+		Response: response,
+	}
+	// Multimodal tool results (for example a screenshot) travel in the
+	// function response's parts; text keeps flowing through the JSON payload so
+	// providers that only understand text are unaffected.
+	if parts, ok := core.NormalizeContentParts(msg.Content); ok {
+		mediaParts, err := geminiMediaPartsFromContentParts(parts)
+		if err != nil {
+			return nil, err
+		}
+		functionResponse.Parts = mediaParts
+	}
+	return []geminiPart{{FunctionResponse: functionResponse}}, nil
+}
+
+// geminiMediaPartsFromContentParts maps the non-text parts of a tool result to
+// Gemini parts. Text is skipped because it is already carried in the function
+// response JSON payload.
+func geminiMediaPartsFromContentParts(parts []core.ContentPart) ([]geminiPart, error) {
+	media := make([]core.ContentPart, 0, len(parts))
+	for _, part := range parts {
+		if part.Type == "text" {
+			continue
+		}
+		media = append(media, part)
+	}
+	if len(media) == 0 {
+		return nil, nil
+	}
+	return geminiPartsFromContentParts(media)
 }
 
 func geminiToolResponsePayload(content string) (json.RawMessage, error) {

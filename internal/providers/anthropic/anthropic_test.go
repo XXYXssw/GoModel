@@ -2067,6 +2067,43 @@ func TestConvertToAnthropicRequest_NormalizesToolResultID(t *testing.T) {
 	}
 }
 
+func TestConvertToAnthropicRequest_PreservesMultimodalToolResult(t *testing.T) {
+	result, err := convertToAnthropicRequest(&core.ChatRequest{
+		Model: "claude-sonnet-4-5-20250929",
+		Messages: []core.Message{
+			{
+				Role:       "tool",
+				ToolCallID: "call_123",
+				Content: []core.ContentPart{
+					{Type: "text", Text: "here is the screenshot"},
+					{Type: "image_url", ImageURL: &core.ImageURLContent{URL: "data:image/png;base64,AAAA"}},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("convertToAnthropicRequest() error = %v, want nil", err)
+	}
+
+	blocks, ok := result.Messages[0].Content.([]anthropicContentBlock)
+	if !ok || len(blocks) != 1 {
+		t.Fatalf("content = %#v, want one tool_result block", result.Messages[0].Content)
+	}
+	if blocks[0].Type != "tool_result" {
+		t.Fatalf("block type = %q, want tool_result", blocks[0].Type)
+	}
+	inner, ok := blocks[0].Content.([]anthropicContentBlock)
+	if !ok || len(inner) != 2 {
+		t.Fatalf("tool_result content = %#v, want two content blocks", blocks[0].Content)
+	}
+	if inner[0].Type != "text" || inner[0].Text != "here is the screenshot" {
+		t.Errorf("text block = %+v", inner[0])
+	}
+	if inner[1].Type != "image" || inner[1].Source == nil || inner[1].Source.Data != "AAAA" {
+		t.Errorf("image block = %+v", inner[1])
+	}
+}
+
 func TestParseToolCallArguments_UsesJSONNumber(t *testing.T) {
 	parsed, err := parseToolCallArguments(`{"value":9007199254740993}`)
 	if err != nil {

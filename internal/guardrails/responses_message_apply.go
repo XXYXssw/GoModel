@@ -236,7 +236,7 @@ func applyGuardedResponsesElementToOriginal(original core.ResponsesInputElement,
 		if modified.Role != "tool" {
 			return core.ResponsesInputElement{}, core.NewInvalidRequestError("guardrails cannot reorder or retag responses input items", nil)
 		}
-		preserved.Output = modified.Content
+		preserved.Output = restoreResponsesInputOutputValue(original.Output, modified.Content)
 		return preserved, nil
 	default:
 		role := strings.TrimSpace(original.Role)
@@ -337,11 +337,22 @@ func patchResponsesInputMap(original map[string]any, patched core.ResponsesInput
 	return cloned, nil
 }
 
-func restoreResponsesInputOutputValue(original any, rewritten string) any {
+// restoreResponsesInputOutputValue keeps the original output envelope shape
+// when a guardrail rewrites the text of a structured tool result: string
+// outputs stay strings, while array/object outputs are re-decoded from the
+// rewritten JSON so images and other parts are not flattened away.
+func restoreResponsesInputOutputValue(original, rewritten any) any {
 	if _, ok := original.(string); ok {
+		if text, ok := rewritten.(string); ok {
+			return text
+		}
+		return ""
+	}
+	text, ok := rewritten.(string)
+	if !ok {
 		return rewritten
 	}
-	if strings.TrimSpace(rewritten) == "" {
+	if strings.TrimSpace(text) == "" {
 		if original == nil {
 			return nil
 		}
@@ -349,7 +360,7 @@ func restoreResponsesInputOutputValue(original any, rewritten string) any {
 	}
 
 	var decoded any
-	if err := json.Unmarshal([]byte(rewritten), &decoded); err == nil {
+	if err := json.Unmarshal([]byte(text), &decoded); err == nil {
 		return decoded
 	}
 	if original == nil {

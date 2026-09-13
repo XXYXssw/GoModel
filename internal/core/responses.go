@@ -177,7 +177,11 @@ type ResponsesInputElement struct {
 	Arguments string `json:"arguments,omitempty"`
 
 	// Function call output fields (type="function_call_output") — CallID shared above
-	Output      string            `json:"output,omitempty"`
+	// Output is the tool result payload. The Responses API accepts a plain
+	// string or an array of content items (input_text/input_image/input_audio),
+	// so it is kept dynamic: structured tool results must reach multimodal
+	// providers instead of being flattened into a JSON string.
+	Output      any               `json:"output,omitempty"`
 	Raw         json.RawMessage   `json:"-" swaggerignore:"true"`
 	ExtraFields UnknownJSONFields `json:"-" swaggerignore:"true"`
 }

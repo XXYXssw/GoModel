@@ -277,6 +277,63 @@ func TestConvertResponsesRequestToChat(t *testing.T) {
 			},
 		},
 		{
+			name: "function call output preserves multimodal content parts",
+			input: mustResponsesRequest(`{
+				"model":"test-model",
+				"input":[{
+					"type":"function_call_output",
+					"call_id":"call_789",
+					"output":[
+						{"type":"input_text","text":"screenshot attached"},
+						{"type":"input_image","image_url":"data:image/png;base64,AAAA"}
+					]
+				}]
+			}`),
+			checkFn: func(t *testing.T, req *core.ChatRequest) {
+				if len(req.Messages) != 1 {
+					t.Fatalf("len(Messages) = %d, want 1", len(req.Messages))
+				}
+				msg := req.Messages[0]
+				if msg.Role != "tool" || msg.ToolCallID != "call_789" {
+					t.Fatalf("unexpected tool result message: %+v", msg)
+				}
+				parts, ok := msg.Content.([]core.ContentPart)
+				if !ok || len(parts) != 2 {
+					t.Fatalf("Content = %#v, want 2 content parts", msg.Content)
+				}
+				if parts[0].Type != "text" || parts[0].Text != "screenshot attached" {
+					t.Errorf("text part = %+v", parts[0])
+				}
+				if parts[1].Type != "image_url" || parts[1].ImageURL == nil || parts[1].ImageURL.URL != "data:image/png;base64,AAAA" {
+					t.Fatalf("image part = %+v", parts[1])
+				}
+			},
+		},
+		{
+			name: "map function call output preserves multimodal content parts",
+			input: &core.ResponsesRequest{
+				Model: "test-model",
+				Input: []map[string]any{
+					{
+						"type":    "function_call_output",
+						"call_id": "call_790",
+						"output": []any{
+							map[string]any{"type": "input_image", "image_url": "data:image/png;base64,BBBB"},
+						},
+					},
+				},
+			},
+			checkFn: func(t *testing.T, req *core.ChatRequest) {
+				if len(req.Messages) != 1 {
+					t.Fatalf("len(Messages) = %d, want 1", len(req.Messages))
+				}
+				parts, ok := req.Messages[0].Content.([]core.ContentPart)
+				if !ok || len(parts) != 1 || parts[0].ImageURL == nil || parts[0].ImageURL.URL != "data:image/png;base64,BBBB" {
+					t.Fatalf("Content = %#v, want one image content part", req.Messages[0].Content)
+				}
+			},
+		},
+		{
 			name: "assistant text merges with later function call item",
 			input: &core.ResponsesRequest{
 				Model: "test-model",

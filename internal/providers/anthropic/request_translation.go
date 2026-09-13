@@ -241,11 +241,19 @@ func buildAnthropicMessageContent(msg core.Message) (any, error) {
 		if err != nil {
 			return nil, err
 		}
+		// Tool results may carry multimodal content (for example a screenshot
+		// returned by a tool). Anthropic accepts tool_result.content as a string
+		// or an array of text/image blocks, so preserve structured parts instead
+		// of flattening them to text.
+		content, err := convertMessageContentToAnthropic(msg.Content)
+		if err != nil {
+			return nil, err
+		}
 		return []anthropicContentBlock{
 			{
 				Type:         "tool_result",
 				ToolUseID:    toolUseID,
-				Content:      core.ExtractTextContent(msg.Content),
+				Content:      content,
 				CacheControl: cacheControl,
 			},
 		}, nil

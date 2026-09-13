@@ -71,7 +71,8 @@ func TestToChatRequestRejectsInvalidShapes(t *testing.T) {
 		{name: "malformed system", body: `{"model":"m","max_tokens":10,"system":42,"messages":[{"role":"user","content":"hi"}]}`},
 		{name: "non-text system block", body: `{"model":"m","max_tokens":10,"system":[{"type":"image"}],"messages":[{"role":"user","content":"hi"}]}`},
 		{name: "malformed tool_result content", body: `{"model":"m","max_tokens":10,"messages":[{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":42}]}]}`},
-		{name: "non-text tool_result block", body: `{"model":"m","max_tokens":10,"messages":[{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":[{"type":"image"}]}]}]}`},
+		{name: "unsupported tool_result block", body: `{"model":"m","max_tokens":10,"messages":[{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":[{"type":"document"}]}]}]}`},
+		{name: "image tool_result block without source", body: `{"model":"m","max_tokens":10,"messages":[{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":[{"type":"image"}]}]}]}`},
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
@@ -243,6 +244,43 @@ func TestToChatRequestToolUseAndResult(t *testing.T) {
 	}
 	if chat.Messages[2].Role != "user" || chat.Messages[2].Content != "thanks" {
 		t.Errorf("user message = %+v", chat.Messages[2])
+	}
+}
+
+func TestToChatRequestToolResultImage(t *testing.T) {
+	chat, err := ToChatRequest(mustDecode(t, `{
+		"model":"m","max_tokens":10,
+		"messages":[
+			{"role":"assistant","content":[
+				{"type":"tool_use","id":"tu_1","name":"screenshot","input":{}}
+			]},
+			{"role":"user","content":[
+				{"type":"tool_result","tool_use_id":"tu_1","content":[
+					{"type":"text","text":"here is the screen"},
+					{"type":"image","source":{"type":"base64","media_type":"image/png","data":"AAAA"}}
+				]}
+			]}
+		]
+	}`))
+	if err != nil {
+		t.Fatalf("ToChatRequest: %v", err)
+	}
+	if len(chat.Messages) != 2 {
+		t.Fatalf("messages = %d, want 2 (assistant, tool)", len(chat.Messages))
+	}
+	tool := chat.Messages[1]
+	if tool.Role != "tool" || tool.ToolCallID != "tu_1" {
+		t.Fatalf("tool message = %+v", tool)
+	}
+	parts, ok := tool.Content.([]core.ContentPart)
+	if !ok || len(parts) != 2 {
+		t.Fatalf("tool content = %#v, want 2 content parts", tool.Content)
+	}
+	if parts[0].Type != "text" || parts[0].Text != "here is the screen" {
+		t.Errorf("text part = %+v", parts[0])
+	}
+	if parts[1].Type != "image_url" || parts[1].ImageURL == nil || parts[1].ImageURL.URL != "data:image/png;base64,AAAA" {
+		t.Errorf("image part = %+v", parts[1])
 	}
 }
 
