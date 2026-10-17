@@ -181,10 +181,9 @@ func (r *Router) resolveQualifiedSelector(requested core.RequestedModelSelector,
 		return core.ModelSelector{}, false
 	}
 	for _, entry := range entries {
-		if strings.TrimSpace(entry.Model.ID) != rawModelID {
-			continue
+		if matchModelID(rawModelID, strings.TrimSpace(entry.Model.ID)) {
+			return core.ModelSelector{Provider: entry.ProviderName, Model: entry.Model.ID}, true
 		}
-		return core.ModelSelector{Provider: entry.ProviderName, Model: entry.Model.ID}, true
 	}
 
 	return core.ModelSelector{}, false
@@ -201,23 +200,34 @@ func resolveProviderOwnedRawSelector(entries []ModelWithProvider, providerSegmen
 		if strings.TrimSpace(entry.ProviderName) != providerSegment {
 			continue
 		}
-		if strings.TrimSpace(entry.Model.ID) != rawModelID {
-			continue
+		if matchModelID(rawModelID, strings.TrimSpace(entry.Model.ID)) {
+			return core.ModelSelector{Provider: entry.ProviderName, Model: entry.Model.ID}, true
 		}
-		return core.ModelSelector{Provider: entry.ProviderName, Model: entry.Model.ID}, true
 	}
 
 	for _, entry := range entries {
 		if strings.TrimSpace(entry.ProviderType) != providerSegment {
 			continue
 		}
-		if strings.TrimSpace(entry.Model.ID) != rawModelID {
-			continue
+		if matchModelID(rawModelID, strings.TrimSpace(entry.Model.ID)) {
+			return core.ModelSelector{Provider: entry.ProviderName, Model: entry.Model.ID}, true
 		}
-		return core.ModelSelector{Provider: entry.ProviderName, Model: entry.Model.ID}, true
 	}
 
 	return core.ModelSelector{}, false
+}
+
+func matchModelID(requested, target string) bool {
+	if requested == target {
+		return true
+	}
+	if strings.TrimPrefix(requested, "models/") == strings.TrimPrefix(target, "models/") {
+		return true
+	}
+	if strings.TrimPrefix(requested, "google/") == strings.TrimPrefix(target, "google/") {
+		return true
+	}
+	return false
 }
 
 func (r *Router) hasConfiguredProviderName(providerName string) bool {

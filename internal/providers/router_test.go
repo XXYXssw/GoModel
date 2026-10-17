@@ -1111,6 +1111,91 @@ func TestRouterChatCompletion_PrefersProviderTypeSelectorOverRawSlashModel(t *te
 	}
 }
 
+func TestRouterChatCompletion_AIStudioGeminiSlashModel(t *testing.T) {
+	geminiResp := &core.ChatResponse{ID: "gemini-test", Model: "gemini-3.8-flash"}
+	geminiMock := &mockProvider{name: "AIStudio", chatResponse: geminiResp}
+
+	registry := newTestRegistryWithModels(
+		registryModelEntry{
+			provider:     geminiMock,
+			providerName: "AIStudio",
+			providerType: "gemini",
+			modelID:      "gemini-3.8-flash",
+		},
+	)
+
+	router, _ := NewRouter(registry)
+
+	// 1. Provider name + models/ prefix
+	resp, err := router.ChatCompletion(context.Background(), &core.ChatRequest{Model: "AIStudio/models/gemini-3.8-flash"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp.ID != "gemini-test" {
+		t.Fatalf("expected gemini response, got %q", resp.ID)
+	}
+
+	// 2. Provider name without models/ prefix
+	resp2, err := router.ChatCompletion(context.Background(), &core.ChatRequest{Model: "AIStudio/gemini-3.8-flash"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp2.ID != "gemini-test" {
+		t.Fatalf("expected gemini response, got %q", resp2.ID)
+	}
+
+	// 3. Provider type + models/ prefix
+	resp3, err := router.ChatCompletion(context.Background(), &core.ChatRequest{Model: "gemini/models/gemini-3.8-flash"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp3.ID != "gemini-test" {
+		t.Fatalf("expected gemini response, got %q", resp3.ID)
+	}
+
+	// 4. Raw model with models/ prefix (unqualified)
+	resp4, err := router.ChatCompletion(context.Background(), &core.ChatRequest{Model: "models/gemini-3.8-flash"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp4.ID != "gemini-test" {
+		t.Fatalf("expected gemini response, got %q", resp4.ID)
+	}
+}
+
+func TestRouterChatCompletion_AIStudioGeminiSlashModelRegisteredWithPrefix(t *testing.T) {
+	geminiResp := &core.ChatResponse{ID: "gemini-test", Model: "models/gemini-3.8-flash"}
+	geminiMock := &mockProvider{name: "AIStudio", chatResponse: geminiResp}
+
+	registry := newTestRegistryWithModels(
+		registryModelEntry{
+			provider:     geminiMock,
+			providerName: "AIStudio",
+			providerType: "gemini",
+			modelID:      "models/gemini-3.8-flash",
+		},
+	)
+
+	router, _ := NewRouter(registry)
+
+	// Both AIStudio/models/gemini-3.8-flash and AIStudio/gemini-3.8-flash should work
+	resp1, err := router.ChatCompletion(context.Background(), &core.ChatRequest{Model: "AIStudio/models/gemini-3.8-flash"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp1.ID != "gemini-test" {
+		t.Fatalf("expected gemini response, got %q", resp1.ID)
+	}
+
+	resp2, err := router.ChatCompletion(context.Background(), &core.ChatRequest{Model: "AIStudio/gemini-3.8-flash"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp2.ID != "gemini-test" {
+		t.Fatalf("expected gemini response, got %q", resp2.ID)
+	}
+}
+
 func TestRouterChatCompletion_ProviderQualifiedRawSlashModelStillWorks(t *testing.T) {
 	openAIResp := &core.ChatResponse{ID: "openai-test", Model: "gpt-5-nano"}
 	openRouterResp := &core.ChatResponse{ID: "openrouter", Model: "openai/gpt-5-nano"}

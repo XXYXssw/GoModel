@@ -4,6 +4,7 @@ import (
 	"github.com/enterpilot/gomodel/config"
 	"github.com/enterpilot/gomodel/internal/observability"
 	"github.com/enterpilot/gomodel/internal/providers"
+	"github.com/enterpilot/gomodel/internal/providers/gemini"
 	"github.com/enterpilot/gomodel/internal/providers/kilo"
 	"github.com/enterpilot/gomodel/internal/providers/openai"
 	"github.com/enterpilot/gomodel/internal/providers/openrouter"
@@ -20,6 +21,7 @@ func defaultProviderFactory(cfg *config.Config) *providers.ProviderFactory {
 
 	factory.Add(openai.Registration)
 	factory.Add(openrouter.Registration)
+	factory.Add(gemini.Registration)
 	factory.Add(kilo.Registration)
 
 	return factory

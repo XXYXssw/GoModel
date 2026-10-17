@@ -430,21 +430,35 @@ func (p *Provider) openAICompatibleChatBody(req *core.ChatRequest) (any, error) 
 			rewritten.Model = model
 			req = &rewritten
 		}
+	} else if p.backend == geminiBackendAIStudio {
+		if model := normalizeGeminiModelID(req.Model); strings.TrimSpace(model) != "" && model != req.Model {
+			rewritten := *req
+			rewritten.Model = model
+			req = &rewritten
+		}
 	}
 	return adaptChatRequest(req)
 }
 
 func (p *Provider) openAICompatibleEmbeddingBody(req *core.EmbeddingRequest) (any, error) {
-	if p.backend != geminiBackendVertex {
-		return req, nil
+	if p.backend == geminiBackendVertex {
+		model := vertexOpenAIModelID(req.Model)
+		if strings.TrimSpace(model) == "" {
+			return req, nil
+		}
+		rewritten := *req
+		rewritten.Model = model
+		return &rewritten, nil
+	} else if p.backend == geminiBackendAIStudio {
+		model := normalizeGeminiModelID(req.Model)
+		if strings.TrimSpace(model) == "" || model == req.Model {
+			return req, nil
+		}
+		rewritten := *req
+		rewritten.Model = model
+		return &rewritten, nil
 	}
-	model := vertexOpenAIModelID(req.Model)
-	if strings.TrimSpace(model) == "" {
-		return req, nil
-	}
-	rewritten := *req
-	rewritten.Model = model
-	return &rewritten, nil
+	return req, nil
 }
 
 // ChatCompletion sends a chat completion request to Gemini

@@ -49,6 +49,22 @@ func TestDefaultProviderFactoryCredentialForms(t *testing.T) {
 			fields:       []string{"api_keys", "base_url", "responses_mode", "proxy", "session_sticky_keys", "models", "headers"},
 			required:     []string{"api_keys"},
 		},
+		{
+			// One adapter, two backends: an AI Studio key, or Google
+			// credentials once it points at Vertex.
+			providerType: "gemini",
+			fields: []string{
+				"api_keys", "backend", "base_url", "api_mode", "auth_type",
+				"vertex_project", "vertex_location", "service_account_json",
+				"service_account_file", "service_account_json_base64", "gcp_scope", "session_sticky_keys", "models", "headers",
+			},
+			required: nil,
+			options: map[string][]string{
+				"backend":   {"aistudio", "vertex"},
+				"api_mode":  {"native", "openai_compatible"},
+				"auth_type": {"api_key", "gcp_adc", "gcp_service_account"},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -108,7 +124,7 @@ var credentialPayloadFields = []string{
 
 func TestDefaultProviderFactoryRegistersAllProviderTypes(t *testing.T) {
 	expected := []string{
-		"kilo", "openai", "openrouter",
+		"gemini", "kilo", "openai", "openrouter",
 	}
 
 	for _, metricsEnabled := range []bool{false, true} {

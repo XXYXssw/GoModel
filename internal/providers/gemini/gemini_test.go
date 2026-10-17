@@ -2298,3 +2298,66 @@ func TestChatCompletion_NativeMultimodalToolResultParts(t *testing.T) {
 		t.Fatalf("inline_data = %#v, want base64 image", responseParts[0])
 	}
 }
+
+func TestChatCompletion_AIStudioGemini38Flash(t *testing.T) {
+	t.Setenv(useNativeAPIEnvVar, "true")
+
+	var receivedPath string
+	var receivedKey string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedPath = r.URL.Path
+		receivedKey = r.Header.Get("x-goog-api-key")
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"responseId": "gemini-38-flash-resp",
+			"candidates": []map[string]any{
+				{
+					"content": map[string]any{
+						"role": "model",
+						"parts": []map[string]any{
+							{"text": "Hello from Gemini 3.8 Flash!"},
+						},
+					},
+					"finishReason": "STOP",
+				},
+			},
+			"usageMetadata": map[string]any{
+				"promptTokenCount":     5,
+				"candidatesTokenCount": 8,
+				"totalTokenCount":      13,
+			},
+		})
+	}))
+	defer server.Close()
+
+	p := New(providers.ProviderConfig{
+		APIKey:  "test-aistudio-key",
+		BaseURL: server.URL,
+		Backend: geminiBackendAIStudio,
+	}, providers.ProviderOptions{})
+
+	for _, modelReq := range []string{"AIStudio/models/gemini-3.8-flash", "models/gemini-3.8-flash", "gemini-3.8-flash"} {
+		resp, err := p.ChatCompletion(context.Background(), &core.ChatRequest{
+			Model: modelReq,
+			Messages: []core.Message{
+				{Role: "user", Content: "hi"},
+			},
+		})
+		if err != nil {
+			t.Fatalf("ChatCompletion(%q) error = %v", modelReq, err)
+		}
+		if receivedPath != "/models/gemini-3.8-flash:generateContent" {
+			t.Errorf("Path for %q = %q, want /models/gemini-3.8-flash:generateContent", modelReq, receivedPath)
+		}
+		if receivedKey != "test-aistudio-key" {
+			t.Errorf("Header x-goog-api-key = %q, want test-aistudio-key", receivedKey)
+		}
+		if resp.Model != modelReq {
+			t.Errorf("resp.Model = %q, want %q", resp.Model, modelReq)
+		}
+		if len(resp.Choices) == 0 || resp.Choices[0].Message.Content != "Hello from Gemini 3.8 Flash!" {
+			t.Errorf("unexpected choices: %#v", resp.Choices)
+		}
+	}
+}

@@ -135,6 +135,9 @@ func (r *ModelRegistry) ResolveProviderSelector(segment, modelID string) (core.M
 	r.mu.RLock()
 	if r.qualifiedByName != nil {
 		sel, ok := lookupSelectorIndex(r.qualifiedByName, r.qualifiedByType, key)
+		if !ok {
+			sel, ok = lookupSelectorIndexWithAlternates(r.qualifiedByName, r.qualifiedByType, segment, modelID)
+		}
 		r.mu.RUnlock()
 		return sel, ok
 	}
@@ -143,8 +146,54 @@ func (r *ModelRegistry) ResolveProviderSelector(segment, modelID string) (core.M
 	r.mu.Lock()
 	r.buildSelectorIndexLocked()
 	sel, ok := lookupSelectorIndex(r.qualifiedByName, r.qualifiedByType, key)
+	if !ok {
+		sel, ok = lookupSelectorIndexWithAlternates(r.qualifiedByName, r.qualifiedByType, segment, modelID)
+	}
 	r.mu.Unlock()
 	return sel, ok
+}
+
+func lookupSelectorIndexWithAlternates(byName, byType map[string]core.ModelSelector, segment, modelID string) (core.ModelSelector, bool) {
+	for _, altKey := range alternateModelKeys(segment, modelID) {
+		if sel, ok := lookupSelectorIndex(byName, byType, altKey); ok {
+			return sel, true
+		}
+	}
+	return core.ModelSelector{}, false
+}
+
+func alternateModelKeys(segment, modelID string) []string {
+	alts := alternateModelIDs(modelID)
+	keys := make([]string, 0, len(alts))
+	for _, alt := range alts {
+		keys = append(keys, segment+"/"+alt)
+	}
+	return keys
+}
+
+func alternateModelIDs(modelID string) []string {
+	modelID = strings.TrimSpace(modelID)
+	if modelID == "" {
+		return nil
+	}
+	var alts []string
+	if strings.HasPrefix(modelID, "models/") {
+		trimmed := strings.TrimPrefix(modelID, "models/")
+		if trimmed != "" {
+			alts = append(alts, trimmed)
+		}
+	} else {
+		alts = append(alts, "models/"+modelID)
+	}
+	if strings.HasPrefix(modelID, "google/") {
+		trimmed := strings.TrimPrefix(modelID, "google/")
+		if trimmed != "" {
+			alts = append(alts, trimmed)
+		}
+	} else {
+		alts = append(alts, "google/"+modelID)
+	}
+	return alts
 }
 
 func lookupSelectorIndex(byName, byType map[string]core.ModelSelector, key string) (core.ModelSelector, bool) {
@@ -726,6 +775,11 @@ func providerModelInfo(providerModels map[string]*ModelInfo, modelID, rawModel s
 	}
 	if rawModel != "" && rawModel != modelID {
 		if info, exists := providerModels[rawModel]; exists {
+			return info, true
+		}
+	}
+	for _, alt := range alternateModelIDs(modelID) {
+		if info, exists := providerModels[alt]; exists {
 			return info, true
 		}
 	}
