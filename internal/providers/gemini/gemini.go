@@ -39,6 +39,7 @@ var Registration = providers.Registration{
 			{Name: providers.CredentialFieldAPIKeys},
 			{Name: providers.CredentialFieldBackend, Options: []string{geminiBackendAIStudio, geminiBackendVertex}},
 			{Name: providers.CredentialFieldBaseURL, Advanced: true},
+			{Name: providers.CredentialFieldProxy},
 			{Name: providers.CredentialFieldAPIMode, Advanced: true, Options: []string{geminiAPIModeNative, geminiAPIModeOpenAICompatible}},
 			{Name: providers.CredentialFieldAuthType, Advanced: true, Options: []string{geminiAuthTypeAPIKey, geminiAuthTypeGCPADC, geminiAuthTypeServiceKey}},
 			{Name: providers.CredentialFieldVertexProject, Advanced: true},

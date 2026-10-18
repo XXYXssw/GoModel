@@ -54,7 +54,7 @@ func TestDefaultProviderFactoryCredentialForms(t *testing.T) {
 			// credentials once it points at Vertex.
 			providerType: "gemini",
 			fields: []string{
-				"api_keys", "backend", "base_url", "api_mode", "auth_type",
+				"api_keys", "backend", "base_url", "proxy", "api_mode", "auth_type",
 				"vertex_project", "vertex_location", "service_account_json",
 				"service_account_file", "service_account_json_base64", "gcp_scope", "session_sticky_keys", "models", "headers",
 			},
