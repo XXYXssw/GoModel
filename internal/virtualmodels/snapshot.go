@@ -183,6 +183,15 @@ func (s snapshot) findRedirect(name, userPath string, enforceUserPaths bool) (re
 		return redirectEntry{}, false
 	}
 	entry, ok := s.redirects[name]
+	if !ok {
+		for _, alt := range alternateModelNames(name) {
+			if e, exists := s.redirects[alt]; exists {
+				entry = e
+				ok = true
+				break
+			}
+		}
+	}
 	if !ok || !entry.vm.Enabled {
 		return redirectEntry{}, false
 	}
@@ -248,6 +257,13 @@ func (s snapshot) matchingPolicy(providerName, model string) (VirtualModel, bool
 			return exact, true
 		}
 	}
+	for _, alt := range alternateModelNames(model) {
+		if key := modelselectors.ExactMatchKey(providerName, alt); key != "" {
+			if exact, ok := s.exact[key]; ok {
+				return exact, true
+			}
+		}
+	}
 	if providerName != "" {
 		if providerWide, ok := s.providerWide[providerName]; ok {
 			return providerWide, true
@@ -257,9 +273,39 @@ func (s snapshot) matchingPolicy(providerName, model string) (VirtualModel, bool
 		if modelWide, ok := s.modelWide[model]; ok {
 			return modelWide, true
 		}
+		for _, alt := range alternateModelNames(model) {
+			if modelWide, ok := s.modelWide[alt]; ok {
+				return modelWide, true
+			}
+		}
 	}
 	if s.hasGlobal {
 		return s.global, true
 	}
 	return VirtualModel{}, false
+}
+
+func alternateModelNames(model string) []string {
+	model = strings.TrimSpace(model)
+	if model == "" {
+		return nil
+	}
+	var alts []string
+	if strings.HasPrefix(model, "models/") {
+		trimmed := strings.TrimPrefix(model, "models/")
+		if trimmed != "" {
+			alts = append(alts, trimmed)
+		}
+	} else {
+		alts = append(alts, "models/"+model)
+	}
+	if strings.HasPrefix(model, "google/") {
+		trimmed := strings.TrimPrefix(model, "google/")
+		if trimmed != "" {
+			alts = append(alts, trimmed)
+		}
+	} else {
+		alts = append(alts, "google/"+model)
+	}
+	return alts
 }
